@@ -193,7 +193,7 @@ p { font-size: 1rem; }
   box-shadow: var(--shadow-lg);
 }
 .hero-image.has-bg { background:
-    linear-gradient(135deg, rgba(6,122,62,0.86) 0%, rgba(5,100,51,0.6) 100%),
+    linear-gradient(100deg, rgba(6,122,62,0.94) 0%, rgba(6,122,62,0.78) 42%, rgba(9,40,27,0.55) 100%),
     var(--hero-bg, none) center/cover no-repeat, var(--c-brand); }
 .hero-image .eyebrow { color: var(--c-accent); letter-spacing: 0.14em; font-weight: 800; text-shadow: 0 1px 8px rgba(0,0,0,0.35); }
 .hero-image h1 { color: #fff; text-shadow: 0 2px 14px rgba(0,0,0,0.45); margin: 4px 0 10px; }

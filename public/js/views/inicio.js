@@ -22,7 +22,7 @@ export async function showInicio() {
 
   const inner = `
   <div class="container">
-    <div class="hero-image">
+    <div class="hero-image has-bg" style="--hero-bg:url('/assets/hero.jpg')">
       <div class="corner-stripes"></div>
       <span class="eyebrow">Liga La Cuarta · Temporada ${esc(config.temporada || '2026')}</span>
       <h1 class="display">EL ESTÁNDAR DE<br>LAS MEJORES LIGAS</h1>
