@@ -1,0 +1,11 @@
+{
+  "name": "LIV — Liga La Cuarta",
+  "short_name": "LIV",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#067a3e",
+  "theme_color": "#067a3e",
+  "icons": [
+    { "src": "/assets/logo.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

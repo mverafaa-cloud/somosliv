@@ -1,0 +1,34 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Cualquiera puede LEER el contenido público de la liga.
+    // Solo usuarios autenticados (la organización) pueden ESCRIBIR.
+    //
+    // Para restringir la escritura a UIDs específicos, reemplaza
+    // `isSignedIn()` por `isAdmin()` y completa la lista de abajo.
+    function isSignedIn() { return request.auth != null; }
+    function isAdmin() {
+      return isSignedIn() && request.auth.uid in [
+        // "PEGA_AQUI_EL_UID_DE_MAX",
+        // "PEGA_AQUI_OTRO_UID"
+      ];
+    }
+
+    match /equipos/{id}     { allow read: if true; allow write: if isSignedIn(); }
+    match /partidos/{id}    { allow read: if true; allow write: if isSignedIn(); }
+    match /disciplina/{id}  { allow read: if true; allow write: if isSignedIn(); }
+    match /goleadores/{id}  { allow read: if true; allow write: if isSignedIn(); }
+    match /config/{id}      { allow read: if true; allow write: if isSignedIn(); }
+
+    // Inscripciones: cualquiera puede ENVIAR el formulario (create),
+    // pero solo la organización puede leerlas/gestionarlas.
+    match /inscripciones/{id} {
+      allow create: if true;
+      allow read, update, delete: if isSignedIn();
+    }
+
+    // Todo lo demás, cerrado.
+    match /{document=**} { allow read, write: if false; }
+  }
+}

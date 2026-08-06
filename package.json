@@ -1,0 +1,11 @@
+{
+  "name": "liv-liga-la-cuarta",
+  "version": "0.1.0",
+  "description": "Sitio web de la LIV (Liga La Cuarta) — liga de futbol amateur de la Region de Coquimbo.",
+  "private": true,
+  "scripts": {
+    "dev": "netlify dev",
+    "check": "node scripts/check-js.mjs"
+  },
+  "dependencies": {}
+}
