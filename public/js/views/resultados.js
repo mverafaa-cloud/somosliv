@@ -1,46 +1,96 @@
 import { getConfig, getPartidos, getEquipos, equiposById } from '../services/store.js';
 import { mount, esc, initials, fmtDateLong, parseDate } from '../ui/helpers.js';
 import { shell, loading } from '../ui/layout.js';
-import { serieChips, emptyBox } from './programacion.js';
+import { emptyBox } from './programacion.js';
 import { icon } from '../ui/icons.js';
 
-let _serie = 'all';
+// Selección multi: series = array de ids; fechas = 'all' | array de fecha_num
+let _sel = { series: null, fechas: 'all' };
 
 export async function showResultados() {
   mount(loading());
   const [config, partidos, equipos] = await Promise.all([getConfig(), getPartidos(), getEquipos()]);
   const byId = equiposById(equipos);
   const series = config.series || [];
+  const finished = partidos.filter(p => p.estado === 'finalizado' && p.golesLocal != null);
 
-  function render() {
-    const list = partidos
-      .filter(p => p.estado === 'finalizado' && p.golesLocal != null)
-      .filter(p => _serie === 'all' || p.serie === _serie)
-      .sort((a, b) => (parseDate(b.fecha) - parseDate(a.fecha)));
+  // Fechas disponibles (de partidos finalizados), ordenadas por calendario
+  const fechaDate = {};
+  finished.forEach(p => {
+    if (p.fecha_num == null) return;
+    const d = parseDate(p.fecha);
+    if (!(p.fecha_num in fechaDate) || (d && d < parseDate(fechaDate[p.fecha_num]))) fechaDate[p.fecha_num] = p.fecha;
+  });
+  const fechas = Object.keys(fechaDate).map(Number).sort((a, b) => parseDate(fechaDate[a]) - parseDate(fechaDate[b]));
 
-    const groups = {};
-    list.forEach(p => { (groups[p.fecha] = groups[p.fecha] || []).push(p); });
-    const dates = Object.keys(groups).sort((a, b) => parseDate(b) - parseDate(a));
-
-    document.getElementById('res-body').innerHTML = dates.length ? dates.map(d => `
-      <div class="fixture-day">
-        <h3>${icon('calendar', { size: 18 })} ${esc(fmtDateLong(d))}</h3>
-        ${groups[d].map(p => resultCard(p, byId, series)).join('')}
-      </div>`).join('') : emptyBox('Todavía no hay resultados cargados.');
-    document.querySelectorAll('#serie-chips .chip').forEach(c => c.classList.toggle('active', c.dataset.serie === _serie));
-  }
+  _sel = { series: series.map(s => s.id), fechas: 'all' };
 
   const inner = `
   <div class="container">
     <span class="eyebrow">Marcadores</span>
     <h1>Resultados</h1>
     <p class="subtitle mb-3">Todos los marcadores fecha a fecha de las series de la LIV.</p>
-    ${serieChips(series)}
+    <div id="res-filters"></div>
     <div id="res-body"></div>
   </div>`;
-
   mount(shell(inner, config));
-  document.querySelectorAll('#serie-chips .chip').forEach(c => c.addEventListener('click', () => { _serie = c.dataset.serie; render(); }));
+
+  function renderFilters() {
+    const serieRow = `
+      <div class="chips filter-row" id="res-serie">
+        <span class="chips-label">Serie</span>
+        ${series.map(s => `<button class="chip ${_sel.series.includes(s.id) ? 'active' : ''}" data-serie="${esc(s.id)}">${esc(s.nombre)}</button>`).join('')}
+      </div>`;
+    const fechaRow = fechas.length ? `
+      <div class="chips filter-row" id="res-fecha">
+        <span class="chips-label">Fecha</span>
+        <button class="chip ${_sel.fechas === 'all' ? 'active' : ''}" data-fecha="all">Todas</button>
+        ${fechas.map(f => `<button class="chip ${_sel.fechas !== 'all' && _sel.fechas.includes(f) ? 'active' : ''}" data-fecha="${f}">Fecha ${f}</button>`).join('')}
+      </div>` : '';
+    document.getElementById('res-filters').innerHTML = serieRow + fechaRow;
+
+    document.querySelectorAll('#res-serie .chip').forEach(c => c.addEventListener('click', () => {
+      const id = c.dataset.serie;
+      const i = _sel.series.indexOf(id);
+      if (i >= 0) { if (_sel.series.length > 1) _sel.series.splice(i, 1); }
+      else _sel.series.push(id);
+      render();
+    }));
+
+    document.querySelectorAll('#res-fecha .chip').forEach(c => c.addEventListener('click', () => {
+      const val = c.dataset.fecha;
+      if (val === 'all') { _sel.fechas = 'all'; }
+      else {
+        const f = Number(val);
+        if (_sel.fechas === 'all') _sel.fechas = [f];
+        else {
+          const i = _sel.fechas.indexOf(f);
+          if (i >= 0) _sel.fechas.splice(i, 1); else _sel.fechas.push(f);
+          if (!_sel.fechas.length) _sel.fechas = 'all';
+        }
+      }
+      render();
+    }));
+  }
+
+  function renderList() {
+    const list = finished
+      .filter(p => _sel.series.includes(p.serie))
+      .filter(p => _sel.fechas === 'all' || (p.fecha_num != null && _sel.fechas.includes(p.fecha_num)))
+      .sort((a, b) => parseDate(b.fecha) - parseDate(a.fecha)); // más reciente primero
+
+    const groups = {};
+    list.forEach(p => { (groups[p.fecha] = groups[p.fecha] || []).push(p); });
+    const dates = Object.keys(groups).sort((a, b) => parseDate(b) - parseDate(a)); // descendente
+
+    document.getElementById('res-body').innerHTML = dates.length ? dates.map(d => `
+      <div class="fixture-day">
+        <h3>${icon('calendar', { size: 18 })} ${esc(fmtDateLong(d))}</h3>
+        ${groups[d].map(p => resultCard(p, byId, series)).join('')}
+      </div>`).join('') : emptyBox('No hay resultados para los filtros seleccionados.');
+  }
+
+  function render() { renderFilters(); renderList(); }
   render();
 }
 
