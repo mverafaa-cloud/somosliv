@@ -1,11 +1,12 @@
 import { isDemo } from '../services/store.js';
 import { esc } from './helpers.js';
+import { icon } from './icons.js';
 
 // Banner que avisa cuando estamos en modo demo (Firebase sin configurar).
 export function demoNotice() {
   if (!isDemo()) return '';
   return `<div class="alert alert-warn" style="border-radius:0;text-align:center;margin:0;font-size:.85rem;">
-    ⚙️ <strong>Modo demo</strong> — datos de ejemplo. Conecta Firebase para cargar equipos, resultados y posiciones reales.
+    ${icon('info', { size: 15 })} <strong>Modo demo</strong> — datos de ejemplo. Conecta Firebase para cargar equipos, resultados y posiciones reales.
   </div>`;
 }
 

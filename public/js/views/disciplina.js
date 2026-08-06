@@ -31,7 +31,7 @@ export async function showDisciplina() {
           ${list.map(t => `
             <tr>
               <td class="muted" style="white-space:nowrap">${esc(fmtDate(t.fecha))}</td>
-              <td>${t.tipo === 'roja' ? '<span class="pill pill-red">🟥 Roja</span>' : '<span class="pill" style="background:var(--c-accent-soft);color:var(--c-accent-deep)">🟨 Amarilla</span>'}</td>
+              <td>${t.tipo === 'roja' ? '<span class="pill pill-red"><span class="tarjeta tarjeta-roja"></span> Roja</span>' : '<span class="pill" style="background:var(--c-accent-soft);color:var(--c-accent-deep)"><span class="tarjeta tarjeta-amarilla"></span> Amarilla</span>'}</td>
               <td style="font-weight:700">${esc(t.jugador || '—')}</td>
               <td class="muted">${esc(byId[t.equipo]?.nombre || t.equipo || '—')}</td>
               <td class="muted">${esc(t.motivo || '')}</td>

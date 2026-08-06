@@ -7,3 +7,9 @@ serviceAccountKey.json
 .netlify/
 .DS_Store
 Thumbs.db
+
+# Temporales de transferencia (no versionar)
+_update.zip
+LIV_deploy.zip
+_upd_tmp/
+_git_locks_borrar/

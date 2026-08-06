@@ -2,6 +2,7 @@ import { getConfig, getPartidos, getEquipos, computeStandings, getGoleadores, eq
 import { mount, esc, initials } from '../ui/helpers.js';
 import { shell, loading } from '../ui/layout.js';
 import { emptyBox } from './programacion.js';
+import { icon } from '../ui/icons.js';
 
 let _serie = null;
 
@@ -42,7 +43,7 @@ export async function showPosiciones() {
     const gs = (goleadores || []).filter(g => g.serie === _serie).sort((a, b) => b.goles - a.goles).slice(0, 10);
     document.getElementById('gol-body').innerHTML = gs.length ? `
       <div class="card">
-        <div class="card-header"><h3>⚽ Goleadores</h3></div>
+        <div class="card-header"><h3>${icon('ball', { size: 22 })} Goleadores</h3></div>
         <div class="table-wrap" style="border:none">
           <table class="tbl"><thead><tr><th class="num">#</th><th>Jugador</th><th>Equipo</th><th class="num">Goles</th></tr></thead>
           <tbody>${gs.map((g, i) => `<tr><td class="pos">${i + 1}</td><td style="font-weight:700">${esc(g.jugador)}</td><td class="muted">${esc(byId[g.equipo]?.nombre || g.equipo)}</td><td class="num pts">${g.goles}</td></tr>`).join('')}</tbody></table>

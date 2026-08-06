@@ -1,6 +1,7 @@
 import { getConfig, getPartidos, getEquipos, equiposById } from '../services/store.js';
 import { mount, esc, initials, fmtDateLong, fmtTime, parseDate } from '../ui/helpers.js';
 import { shell, loading } from '../ui/layout.js';
+import { icon } from '../ui/icons.js';
 
 let _state = { serie: 'all' };
 
@@ -22,7 +23,7 @@ export async function showProgramacion() {
 
     const body = dates.length ? dates.map(d => `
       <div class="fixture-day">
-        <h3>📅 ${esc(fmtDateLong(d))}</h3>
+        <h3>${icon('calendar', { size: 18 })} ${esc(fmtDateLong(d))}</h3>
         ${groups[d].map(p => matchCard(p, byId, series)).join('')}
       </div>`).join('') : emptyBox('Aún no hay partidos programados.');
 
@@ -56,7 +57,7 @@ export function bindChips(onChange) {
   });
 }
 export function emptyBox(msg) {
-  return `<div class="empty"><div class="ico">📭</div><p>${esc(msg)}</p></div>`;
+  return `<div class="empty"><div class="ico">${icon('inbox', { size: 42 })}</div><p>${esc(msg)}</p></div>`;
 }
 
 function matchCard(p, byId, series) {

@@ -1,6 +1,7 @@
 import { getConfig, getPartidos, getEquipos, equiposById } from '../services/store.js';
 import { mount, esc, initials, fmtDateLong, fmtTime, parseDate, everySecond } from '../ui/helpers.js';
 import { shell, loading } from '../ui/layout.js';
+import { icon } from '../ui/icons.js';
 
 export async function showInicio() {
   mount(loading('Cargando LIV…'));
@@ -14,9 +15,9 @@ export async function showInicio() {
   const nextMatches = nextDate ? prog.filter(p => p.fecha === nextDate).slice(0, 6) : [];
 
   const valores = [
-    { ico: '🤝', t: 'Sana Competencia', d: 'Fomentamos el fair play y el espíritu deportivo: rivalidad estricta dentro de la cancha, respeto y camaradería al finalizar.' },
-    { ico: '🛡️', t: 'Cero Violencia', d: 'Alejados completamente de la violencia y conductas antideportivas. Los hechos de violencia se castigan drásticamente.' },
-    { ico: '👨‍👩‍👧', t: 'Ambiente Familiar', d: 'Un espacio seguro, limpio y entretenido para que tu familia disfrute acompañándote cada fin de semana.' }
+    { ico: 'handshake', t: 'Sana Competencia', d: 'Fomentamos el fair play y el espíritu deportivo: rivalidad estricta dentro de la cancha, respeto y camaradería al finalizar.' },
+    { ico: 'shield', t: 'Cero Violencia', d: 'Alejados completamente de la violencia y conductas antideportivas. Los hechos de violencia se castigan drásticamente.' },
+    { ico: 'users', t: 'Ambiente Familiar', d: 'Un espacio seguro, limpio y entretenido para que tu familia disfrute acompañándote cada fin de semana.' }
   ];
 
   const inner = `
@@ -36,15 +37,15 @@ export async function showInicio() {
     <!-- Accesos rápidos -->
     <div class="grid grid-3 mt-2">
       <a href="/posiciones" data-link class="card hover" style="text-decoration:none">
-        <div class="card-header"><h3>🏆 Posiciones</h3></div>
+        <div class="card-header"><h3>${icon('trophy', { size: 22 })} Posiciones</h3></div>
         <p class="muted">Tabla de las series Libre y Senior +32, actualizada fecha a fecha.</p>
       </a>
       <a href="/resultados" data-link class="card hover" style="text-decoration:none">
-        <div class="card-header"><h3>✅ Resultados</h3></div>
+        <div class="card-header"><h3>${icon('check', { size: 22 })} Resultados</h3></div>
         <p class="muted">Todos los marcadores de cada jornada disputada.</p>
       </a>
       <a href="/disciplina" data-link class="card hover" style="text-decoration:none">
-        <div class="card-header"><h3>🟥 Disciplina</h3></div>
+        <div class="card-header"><h3>${icon('cards', { size: 22 })} Disciplina</h3></div>
         <p class="muted">Amonestaciones, expulsiones y sanciones del comité.</p>
       </a>
     </div>
@@ -67,7 +68,7 @@ export async function showInicio() {
       <div class="grid grid-3">
         ${valores.map((v, i) => `
           <div class="card value-card ${i === 1 ? 'on-brand' : ''}">
-            <div class="ico">${v.ico}</div>
+            <div class="ico">${icon(v.ico, { size: 34, stroke: 1.8 })}</div>
             <h3>${v.t}</h3>
             <p class="${i === 1 ? '' : 'muted'}" style="${i === 1 ? 'color:rgba(255,255,255,.9)' : ''}">${v.d}</p>
           </div>`).join('')}
@@ -79,7 +80,7 @@ export async function showInicio() {
 
     <!-- CTA inscripción -->
     <div class="hero-flat">
-      <div class="deco">⚽</div>
+      <div class="deco">${icon('ball', { size: 210, stroke: 1.2 })}</div>
       <span class="eyebrow" style="color:var(--c-ink)">¿Tienes equipo?</span>
       <h2>Corre por tu lugar cuanto antes</h2>
       <p>Los cupos por serie son limitados (8 a 10 equipos). Conversemos: queremos que seas parte de esta experiencia.</p>
@@ -106,8 +107,8 @@ function startCountdown(target) {
     const s = Math.floor(diff / 1000);
     const cell = (n, l) => `<div class="cd-cell"><div class="cd-num">${String(n).padStart(2, '0')}</div><div class="cd-lbl">${l}</div></div>`;
     el.innerHTML = (d + h + m + s > 0)
-      ? `<div style="width:100%;color:#fff;font-weight:700;margin-bottom:2px;">🚀 Estreno de la temporada</div>${cell(d, 'días')}${cell(h, 'hrs')}${cell(m, 'min')}${cell(s, 'seg')}`
-      : `<div class="cd-cell" style="min-width:auto;padding:14px 22px;"><div class="cd-num" style="font-size:1.6rem;">¡Temporada en juego! ⚽</div></div>`;
+      ? `<div style="width:100%;color:#fff;font-weight:700;margin-bottom:2px;display:flex;align-items:center;gap:7px;">${icon('rocket', { size: 18 })} Estreno de la temporada</div>${cell(d, 'días')}${cell(h, 'hrs')}${cell(m, 'min')}${cell(s, 'seg')}`
+      : `<div class="cd-cell" style="min-width:auto;padding:14px 22px;"><div class="cd-num" style="font-size:1.5rem;display:flex;align-items:center;gap:8px;">${icon('ball', { size: 26 })} ¡Temporada en juego!</div></div>`;
   });
 }
 

@@ -336,7 +336,7 @@ table.tbl td.pts { font-weight: 800; color: var(--c-ink); }
 =================================================== */
 .tabs { display: flex; gap: 4px; overflow-x: auto; margin-bottom: 18px; border-bottom: 2px solid var(--c-line); scrollbar-width: none; }
 .tabs::-webkit-scrollbar { display: none; }
-.tabs button { padding: 10px 16px; background: transparent; border: none; border-bottom: 3px solid transparent; font-weight: 700; font-size: 0.95rem; color: var(--c-muted); white-space: nowrap; }
+.tabs button { display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; background: transparent; border: none; border-bottom: 3px solid transparent; font-weight: 700; font-size: 0.95rem; color: var(--c-muted); white-space: nowrap; }
 .tabs button.active { color: var(--c-brand); border-bottom-color: var(--c-brand); }
 .tabs button:hover { color: var(--c-ink); }
 
@@ -443,6 +443,21 @@ table.tbl td.pts { font-weight: 800; color: var(--c-ink); }
 /* ===================================================
    MOTIVO DE MARCA — franjas diagonales (del dossier LIV)
 =================================================== */
+/* Íconos SVG */
+.ico-svg { display: inline-block; vertical-align: -0.18em; flex-shrink: 0; }
+.card-header h3 { display: flex; align-items: center; gap: 9px; }
+.card-header h3 .ico-svg { color: var(--c-brand); }
+.svc .ico-svg, .value-card .ico-svg { color: var(--c-brand); }
+.value-card.on-brand .ico-svg { color: #fff; }
+.eyebrow .ico-svg { vertical-align: -0.14em; }
+.bottom-nav a .ico-svg { color: inherit; }
+.menu-panel a .ico-svg { color: var(--c-muted); }
+.menu-panel a:hover .ico-svg, .menu-panel a.active .ico-svg { color: var(--c-brand); }
+/* Tarjetas de árbitro (disciplina) */
+.tarjeta { display: inline-block; width: 13px; height: 17px; border-radius: 3px; vertical-align: -3px; box-shadow: var(--shadow-xs); }
+.tarjeta-roja { background: var(--c-red); }
+.tarjeta-amarilla { background: #f2c200; }
+
 .script { font-family: var(--font-script); font-weight: 700; line-height: 1; }
 .hero-image .script, .card-tinted-dark .script { color: #fff; }
 .title-script { font-family: var(--font-script); font-weight: 700; color: var(--c-brand); font-size: clamp(1.6rem, 4vw, 2.6rem); display: block; margin-top: -2px; }

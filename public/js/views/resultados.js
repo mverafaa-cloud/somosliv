@@ -2,6 +2,7 @@ import { getConfig, getPartidos, getEquipos, equiposById } from '../services/sto
 import { mount, esc, initials, fmtDateLong, parseDate } from '../ui/helpers.js';
 import { shell, loading } from '../ui/layout.js';
 import { serieChips, emptyBox } from './programacion.js';
+import { icon } from '../ui/icons.js';
 
 let _serie = 'all';
 
@@ -23,7 +24,7 @@ export async function showResultados() {
 
     document.getElementById('res-body').innerHTML = dates.length ? dates.map(d => `
       <div class="fixture-day">
-        <h3>📅 ${esc(fmtDateLong(d))}</h3>
+        <h3>${icon('calendar', { size: 18 })} ${esc(fmtDateLong(d))}</h3>
         ${groups[d].map(p => resultCard(p, byId, series)).join('')}
       </div>`).join('') : emptyBox('Todavía no hay resultados cargados.');
     document.querySelectorAll('#serie-chips .chip').forEach(c => c.classList.toggle('active', c.dataset.serie === _serie));

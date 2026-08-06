@@ -11,6 +11,7 @@ import {
 import { mount, esc, fmtDate } from '../ui/helpers.js';
 import { shell, loading } from '../ui/layout.js';
 import { toast } from '../ui/toast.js';
+import { icon } from '../ui/icons.js';
 
 let TAB = 'partidos';
 let C = {}; // cache: config, equipos, partidos, disciplina, inscripciones, av
@@ -65,11 +66,11 @@ function renderLogin() {
 
 /* ---------------- PANEL ---------------- */
 const TABS = [
-  { id: 'partidos', label: '📅 Partidos' },
-  { id: 'equipos', label: '👥 Equipos' },
-  { id: 'disciplina', label: '🟥 Disciplina' },
-  { id: 'inscripciones', label: '📝 Inscripciones' },
-  { id: 'contenido', label: '⚙️ Contenido' }
+  { id: 'partidos', label: `${icon('calendar', { size: 16 })} Partidos` },
+  { id: 'equipos', label: `${icon('users', { size: 16 })} Equipos` },
+  { id: 'disciplina', label: `${icon('cards', { size: 16 })} Disciplina` },
+  { id: 'inscripciones', label: `${icon('clipboard', { size: 16 })} Inscripciones` },
+  { id: 'contenido', label: `${icon('settings', { size: 16 })} Contenido` }
 ];
 
 function renderPanel() {
@@ -213,7 +214,7 @@ function renderDisciplina(el) {
           <div class="form-group"><label>Jugador</label><input class="input" name="jugador"></div>
         </div>
         <div class="form-row-3">
-          <div class="form-group"><label>Tipo</label><select class="select" name="tipo"><option value="amarilla">🟨 Amarilla</option><option value="roja">🟥 Roja</option></select></div>
+          <div class="form-group"><label>Tipo</label><select class="select" name="tipo"><option value="amarilla">Amarilla</option><option value="roja">Roja</option></select></div>
           <div class="form-group"><label>Fecha</label><input class="input" name="fecha" type="date"></div>
           <div class="form-group"><label>Sanción (opcional)</label><input class="input" name="sancion" placeholder="Ej: 1 fecha"></div>
         </div>
@@ -225,7 +226,7 @@ function renderDisciplina(el) {
       <thead><tr><th>Fecha</th><th>Tipo</th><th>Jugador</th><th>Equipo</th><th>Sanción</th><th></th></tr></thead>
       <tbody>${rows.map(t => `<tr>
         <td class="muted">${esc(fmtDate(t.fecha))}</td>
-        <td>${t.tipo === 'roja' ? '🟥' : '🟨'}</td>
+        <td>${t.tipo === 'roja' ? '<span class="tarjeta tarjeta-roja"></span>' : '<span class="tarjeta tarjeta-amarilla"></span>'}</td>
         <td style="font-weight:600">${esc(t.jugador || '—')}</td>
         <td class="muted">${esc(byId[t.equipo]?.nombre || t.equipo)}</td>
         <td>${esc(t.sancion || '—')}</td>
@@ -292,7 +293,7 @@ function renderContenido(el) {
         <div class="form-group" style="justify-content:end"><button class="btn btn-primary">Agregar video</button></div>
       </form>
       <div class="stack mt-2">
-        ${(av.videos || []).map((v, i) => `<div class="spread card-sm" style="border:1px solid var(--c-line);border-radius:12px"><span>🎥 ${esc(v.titulo || v.id)} <span class="muted">(${esc(v.id)})</span></span><button class="btn btn-danger btn-sm" data-delvid="${i}">✕</button></div>`).join('') || '<p class="muted">Sin videos.</p>'}
+        ${(av.videos || []).map((v, i) => `<div class="spread card-sm" style="border:1px solid var(--c-line);border-radius:12px"><span>${icon('video', { size: 16 })} ${esc(v.titulo || v.id)} <span class="muted">(${esc(v.id)})</span></span><button class="btn btn-danger btn-sm" data-delvid="${i}">✕</button></div>`).join('') || '<p class="muted">Sin videos.</p>'}
       </div>
     </div>`;
   el.querySelector('#f-c').onsubmit = (ev) => {

@@ -1,25 +1,26 @@
 import { getConfig } from '../services/store.js';
 import { mount, esc } from '../ui/helpers.js';
 import { shell, loading } from '../ui/layout.js';
+import { icon } from '../ui/icons.js';
 
 export async function showLIV() {
   mount(loading());
   const config = await getConfig();
 
   const servicios = [
-    { i: '🌱', l: '4 canchas de pasto natural' },
-    { i: '🚿', l: 'Baños, camarines y duchas' },
-    { i: '🏛️', l: 'Club House 2° piso panorámico' },
-    { i: '💧', l: 'Drenaje superior' },
-    { i: '🅿️', l: 'Estacionamientos' },
-    { i: '🔥', l: 'Quinchos' },
-    { i: '🌴', l: 'Áreas verdes' }
+    { i: 'sprout', l: '4 canchas de pasto natural' },
+    { i: 'droplets', l: 'Baños, camarines y duchas' },
+    { i: 'building', l: 'Club House 2° piso panorámico' },
+    { i: 'droplet', l: 'Drenaje superior' },
+    { i: 'parking', l: 'Estacionamientos' },
+    { i: 'flame', l: 'Quinchos' },
+    { i: 'trees', l: 'Áreas verdes' }
   ];
 
   const experiencia = [
-    { i: '⛑️', t: 'Turnos y Kinesiólogos', d: 'Atención primaria garantizada con profesionales de la salud en cancha, stand en el recinto y servicios adicionales como masajes. Turnos con planillas impresas por la propia liga.' },
-    { i: '🧑‍⚖️', t: 'Cuerpo Arbitral', d: 'Dirigidos por una terna arbitral calificada, asegurando criterios justos, fluidez en el juego y respeto al reglamento. Evaluamos a cada árbitro fecha a fecha.' },
-    { i: '📸', t: 'Cobertura Total', d: 'Cobertura audiovisual de primer nivel: fotografía profesional, grabación de partidos con tecnología VeoPro y estadísticas completas, todo centralizado en la web y redes.' }
+    { i: 'pulse', t: 'Turnos y Kinesiólogos', d: 'Atención primaria garantizada con profesionales de la salud en cancha, stand en el recinto y servicios adicionales como masajes. Turnos con planillas impresas por la propia liga.' },
+    { i: 'flag', t: 'Cuerpo Arbitral', d: 'Dirigidos por una terna arbitral calificada, asegurando criterios justos, fluidez en el juego y respeto al reglamento. Evaluamos a cada árbitro fecha a fecha.' },
+    { i: 'camera', t: 'Cobertura Total', d: 'Cobertura audiovisual de primer nivel: fotografía profesional, grabación de partidos con tecnología VeoPro y estadísticas completas, todo centralizado en la web y redes.' }
   ];
 
   const porque = [
@@ -56,7 +57,7 @@ export async function showLIV() {
       <h2>¿Dónde latirá la pasión?</h2>
       <p class="subtitle mb-2">${esc(config.sede || 'Complejo Deggiano')} — ${esc(config.sedeUbicacion || 'Peñuelas, entre La Serena y Coquimbo')}, con excelentes accesos y uno de los mejores drenajes deportivos de la región, ideal para no parar de jugar nunca.</p>
       <div class="svc-grid">
-        ${servicios.map(s => `<div class="svc"><div class="ico">${s.i}</div><div class="lbl">${esc(s.l)}</div></div>`).join('')}
+        ${servicios.map(s => `<div class="svc"><div class="ico">${icon(s.i, { size: 26 })}</div><div class="lbl">${esc(s.l)}</div></div>`).join('')}
       </div>
     </div>
 
@@ -67,7 +68,7 @@ export async function showLIV() {
       <div class="grid grid-3">
         ${experiencia.map(e => `
           <div class="card">
-            <div style="font-size:2.2rem">${e.i}</div>
+            <div style="color:var(--c-brand)">${icon(e.i, { size: 32 })}</div>
             <h3 style="color:var(--c-brand);margin:8px 0">${esc(e.t)}</h3>
             <p class="muted">${esc(e.d)}</p>
           </div>`).join('')}
@@ -88,7 +89,7 @@ export async function showLIV() {
     </div>
 
     <div class="hero-flat">
-      <div class="deco">⚽</div>
+      <div class="deco">${icon('ball', { size: 210, stroke: 1.2 })}</div>
       <h2>Sé parte de la LIV</h2>
       <p>Cupos limitados por serie. Inscribe a tu equipo y vive cada sábado como el mejor día de la semana.</p>
       <a href="/admision" data-link class="btn btn-primary btn-lg mt-2">Ver admisión</a>
