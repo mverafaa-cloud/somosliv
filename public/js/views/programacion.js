@@ -3,7 +3,8 @@ import { mount, esc, initials, fmtDateLong, fmtTime, parseDate } from '../ui/hel
 import { shell, loading } from '../ui/layout.js';
 import { icon } from '../ui/icons.js';
 
-let _state = { serie: 'all' };
+// Selección multi: series = array de ids; fechas = 'all' | array de fecha_num
+let _sel = { series: null, fechas: 'all' };
 
 export async function showProgramacion() {
   mount(loading());
@@ -11,50 +12,95 @@ export async function showProgramacion() {
   const byId = equiposById(equipos);
   const series = config.series || [];
 
-  function render() {
-    const list = partidos
-      .filter(p => _state.serie === 'all' || p.serie === _state.serie)
-      .sort((a, b) => (parseDate(a.fecha) - parseDate(b.fecha)) || (a.hora || '').localeCompare(b.hora || ''));
+  // Fechas disponibles (fecha_num distintos), ordenadas por fecha real de calendario
+  const fechaDate = {};
+  partidos.forEach(p => {
+    if (p.fecha_num == null) return;
+    const d = parseDate(p.fecha);
+    if (!(p.fecha_num in fechaDate) || (d && d < parseDate(fechaDate[p.fecha_num]))) fechaDate[p.fecha_num] = p.fecha;
+  });
+  const fechas = Object.keys(fechaDate).map(Number).sort((a, b) => parseDate(fechaDate[a]) - parseDate(fechaDate[b]));
 
-    // Agrupar por fecha
-    const groups = {};
-    list.forEach(p => { (groups[p.fecha] = groups[p.fecha] || []).push(p); });
-    const dates = Object.keys(groups).sort((a, b) => parseDate(a) - parseDate(b));
-
-    const body = dates.length ? dates.map(d => `
-      <div class="fixture-day">
-        <h3>${icon('calendar', { size: 18 })} ${esc(fmtDateLong(d))}</h3>
-        ${groups[d].map(p => matchCard(p, byId, series)).join('')}
-      </div>`).join('') : emptyBox('Aún no hay partidos programados.');
-
-    document.getElementById('fixture-body').innerHTML = body;
-    document.querySelectorAll('#serie-chips .chip').forEach(c => c.classList.toggle('active', c.dataset.serie === _state.serie));
-  }
+  // Reset a "todas" cada vez que se abre la sección
+  _sel = { series: series.map(s => s.id), fechas: 'all' };
 
   const inner = `
   <div class="container">
     <span class="eyebrow">Calendario</span>
     <h1>Programación</h1>
     <p class="subtitle mb-3">Días, horarios y canchas de cada jornada en ${esc(config.sede || 'Complejo Deggiano')}.</p>
-    ${serieChips(series)}
+    <div id="prog-filters"></div>
     <div id="fixture-body"></div>
   </div>`;
-
   mount(shell(inner, config));
-  bindChips(render);
+
+  function renderFilters() {
+    const serieRow = `
+      <div class="chips filter-row" id="prog-serie">
+        <span class="chips-label">Serie</span>
+        ${series.map(s => `<button class="chip ${_sel.series.includes(s.id) ? 'active' : ''}" data-serie="${esc(s.id)}">${esc(s.nombre)}</button>`).join('')}
+      </div>`;
+    const fechaRow = fechas.length ? `
+      <div class="chips filter-row" id="prog-fecha">
+        <span class="chips-label">Fecha</span>
+        <button class="chip ${_sel.fechas === 'all' ? 'active' : ''}" data-fecha="all">Todas</button>
+        ${fechas.map(f => `<button class="chip ${_sel.fechas !== 'all' && _sel.fechas.includes(f) ? 'active' : ''}" data-fecha="${f}">Fecha ${f}</button>`).join('')}
+      </div>` : '';
+    document.getElementById('prog-filters').innerHTML = serieRow + fechaRow;
+
+    // Serie: multi-toggle (no permitir dejar cero series)
+    document.querySelectorAll('#prog-serie .chip').forEach(c => c.addEventListener('click', () => {
+      const id = c.dataset.serie;
+      const i = _sel.series.indexOf(id);
+      if (i >= 0) { if (_sel.series.length > 1) _sel.series.splice(i, 1); }
+      else _sel.series.push(id);
+      render();
+    }));
+
+    // Fecha: "Todas" o multi-selección de fechas
+    document.querySelectorAll('#prog-fecha .chip').forEach(c => c.addEventListener('click', () => {
+      const val = c.dataset.fecha;
+      if (val === 'all') { _sel.fechas = 'all'; }
+      else {
+        const f = Number(val);
+        if (_sel.fechas === 'all') _sel.fechas = [f];
+        else {
+          const i = _sel.fechas.indexOf(f);
+          if (i >= 0) _sel.fechas.splice(i, 1); else _sel.fechas.push(f);
+          if (!_sel.fechas.length) _sel.fechas = 'all';
+        }
+      }
+      render();
+    }));
+  }
+
+  function renderList() {
+    const list = partidos
+      .filter(p => _sel.series.includes(p.serie))
+      .filter(p => _sel.fechas === 'all' || (p.fecha_num != null && _sel.fechas.includes(p.fecha_num)))
+      .sort((a, b) => (parseDate(a.fecha) - parseDate(b.fecha)) || (a.hora || '').localeCompare(b.hora || ''));
+
+    const groups = {};
+    list.forEach(p => { (groups[p.fecha] = groups[p.fecha] || []).push(p); });
+    const dates = Object.keys(groups).sort((a, b) => parseDate(a) - parseDate(b)); // orden calendario
+
+    document.getElementById('fixture-body').innerHTML = dates.length ? dates.map(d => `
+      <div class="fixture-day">
+        <h3>${icon('calendar', { size: 18 })} ${esc(fmtDateLong(d))}</h3>
+        ${groups[d].map(p => matchCard(p, byId, series)).join('')}
+      </div>`).join('') : emptyBox('No hay partidos para los filtros seleccionados.');
+  }
+
+  function render() { renderFilters(); renderList(); }
   render();
 }
 
+// ---- Helpers compartidos por resultados.js / disciplina.js ----
 export function serieChips(series) {
   return `<div class="chips" id="serie-chips">
     <button class="chip active" data-serie="all">Todas</button>
     ${series.map(s => `<button class="chip" data-serie="${esc(s.id)}">${esc(s.nombre)}</button>`).join('')}
   </div>`;
-}
-export function bindChips(onChange) {
-  document.querySelectorAll('#serie-chips .chip').forEach(c => {
-    c.addEventListener('click', () => { _state.serie = c.dataset.serie; onChange(); });
-  });
 }
 export function emptyBox(msg) {
   return `<div class="empty"><div class="ico">${icon('inbox', { size: 42 })}</div><p>${esc(msg)}</p></div>`;

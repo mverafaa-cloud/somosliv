@@ -30,7 +30,7 @@ export async function showAdmision() {
             <li>Lista de jugadores con datos completos (nombre, edad, número de camiseta y copia de ID).</li>
           </ul>
           <div class="divider"></div>
-          <p class="muted"><strong>Categorías:</strong> Serie Libre (18+) y Serie Senior (+32). Cupos limitados: 8 a 10 equipos por serie.</p>
+          <p class="muted"><strong>Categorías:</strong> Todo Competidor (18+) y Senior +32. Cupos limitados: 8 a 10 equipos por serie.</p>
         </div>
       </div>
 
@@ -54,7 +54,7 @@ export async function showAdmision() {
           </div>
           <div class="form-group"><label>Mensaje (opcional)</label><textarea class="textarea" name="mensaje" placeholder="Cuéntanos de tu equipo…"></textarea></div>
           <button type="submit" class="btn btn-primary btn-block btn-lg" id="btn-insc">Enviar inscripción</button>
-          ${isDemo() ? '<p class="help mt-1">⚙️ Modo demo: al conectar Firebase, las inscripciones se guardan y aparecen en el panel admin.</p>' : ''}
+          ${isDemo() ? '<p class="help mt-1">Modo demo: al conectar Firebase, las inscripciones se guardan y aparecen en el panel admin.</p>' : ''}
         </form>
       </div>
     </div>
@@ -72,7 +72,7 @@ export async function showAdmision() {
     try {
       await addInscripcion(data);
       document.getElementById('form-insc').outerHTML = `
-        <div class="alert alert-success"><strong>¡Listo!</strong> Recibimos la inscripción de <strong>${esc(data.equipo)}</strong>. Te contactaremos pronto. ⚽</div>`;
+        <div class="alert alert-success"><strong>¡Listo!</strong> Recibimos la inscripción de <strong>${esc(data.equipo)}</strong>. Te contactaremos pronto.</div>`;
       toast('Inscripción enviada', 'success');
     } catch (err) {
       toast(err.message || 'No se pudo enviar', 'error');

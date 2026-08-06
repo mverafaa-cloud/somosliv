@@ -9,7 +9,7 @@ serviceAccountKey.json
 Thumbs.db
 
 # Temporales de transferencia (no versionar)
-_update.zip
+_update*.zip
 LIV_deploy.zip
-_upd_tmp/
+_upd_*/
 _git_locks_borrar/

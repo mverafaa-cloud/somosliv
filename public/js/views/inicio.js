@@ -38,7 +38,7 @@ export async function showInicio() {
     <div class="grid grid-3 mt-2">
       <a href="/posiciones" data-link class="card hover" style="text-decoration:none">
         <div class="card-header"><h3>${icon('trophy', { size: 22 })} Posiciones</h3></div>
-        <p class="muted">Tabla de las series Libre y Senior +32, actualizada fecha a fecha.</p>
+        <p class="muted">Tabla de las series Todo Competidor y Senior +32, actualizada fecha a fecha.</p>
       </a>
       <a href="/resultados" data-link class="card hover" style="text-decoration:none">
         <div class="card-header"><h3>${icon('check', { size: 22 })} Resultados</h3></div>

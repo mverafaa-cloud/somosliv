@@ -8,8 +8,8 @@ export async function showReglamentos() {
 
   const reglas = [
     { t: 'Categorías / Series', b: `<ul>
-        <li><strong>Serie Libre</strong> — jugadores de 18 años en adelante.</li>
-        <li><strong>Serie Senior +32</strong> — jugadores de 32 años en adelante.</li>
+        <li><strong>Todo Competidor</strong> — jugadores de 18 años en adelante.</li>
+        <li><strong>Senior +32</strong> — jugadores de 32 años en adelante.</li>
       </ul>` },
     { t: 'Requisitos de inscripción', b: `<ul>
         <li>Equipos de hasta <strong>30 jugadores</strong> (11 en cancha).</li>
@@ -36,8 +36,8 @@ export async function showReglamentos() {
     <div class="grid grid-2 mb-3">
       <div class="card card-tinted-brand">
         <h3 style="color:var(--c-brand)">Categorías</h3>
-        <p><span class="pill pill-dark mt-1">Serie Libre · 18+</span></p>
-        <p><span class="pill pill-dark mt-1">Serie Senior · +32</span></p>
+        <p><span class="pill pill-dark mt-1">Todo Competidor · 18+</span></p>
+        <p><span class="pill pill-dark mt-1">Senior · +32</span></p>
       </div>
       <div class="card card-tinted-accent">
         <h3>Inscripción</h3>

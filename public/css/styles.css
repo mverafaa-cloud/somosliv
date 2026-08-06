@@ -344,6 +344,8 @@ table.tbl td.pts { font-weight: 800; color: var(--c-ink); }
 .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
 .chip { padding: 7px 14px; border-radius: var(--r-pill); background: var(--c-bg-alt); color: var(--c-ink); font-weight: 700; font-size: 0.85rem; border: 1.5px solid transparent; cursor: pointer; }
 .chip.active { background: var(--c-brand); color: #fff; }
+.filter-row { align-items: center; margin-bottom: 12px; }
+.chips-label { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--c-muted); margin-right: 6px; }
 
 /* ===================================================
    CONTENIDO (reglamentos, LIV, textos largos)
