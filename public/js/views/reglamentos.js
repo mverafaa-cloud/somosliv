@@ -27,7 +27,7 @@ export async function showReglamentos() {
         <li>Todo jugador debe portar <strong>cédula o pasaporte vigente</strong>; la Liga puede exigirlo en cualquier momento, incluso durante un partido.</li>
         <li>Cambios de planilla solo hasta la <strong>fecha 3</strong>, aprobados por el Directorio.</li>
         <li>Cada equipo designa un <strong>delegado oficial</strong> como único interlocutor ante la Liga.</li>
-        <li><strong>Categorías:</strong> Serie Honor — libre, 18 años o más. Serie Senior — nacidos en 1994 o antes (+32), con un máximo de 2 jugadores nacidos en 1995/1996.</li>
+        <li><strong>Categorías:</strong> Junior — libre, 18 años o más. Senior — nacidos en 1994 o antes (+32), con un máximo de 2 jugadores nacidos en 1995/1996.</li>
       </ul>` },
     { t: 'Formato de competencia', b: `<ul>
         <li><strong>10 equipos</strong>, fase regular de todos contra todos según el fixture oficial.</li>
@@ -37,9 +37,9 @@ export async function showReglamentos() {
       </ul>` },
     { t: 'Días, horarios y complejo', b: `<p>La competencia se juega en el <strong>Complejo Deggiano</strong>. Bloques horarios referenciales por categoría:</p>
       <div class="table-wrap" style="margin:10px 0"><table class="tbl"><thead><tr><th>Horario</th><th>Categoría</th></tr></thead><tbody>
-        <tr><td>09:00 – 10:30</td><td>Serie Senior</td></tr>
-        <tr><td>10:30 – 12:00</td><td>Senior / Honor</td></tr>
-        <tr><td>12:00 – 13:30</td><td>Serie Honor</td></tr>
+        <tr><td>09:00 – 10:30</td><td>Senior</td></tr>
+        <tr><td>10:30 – 12:00</td><td>Senior / Junior</td></tr>
+        <tr><td>12:00 – 13:30</td><td>Junior</td></tr>
       </tbody></table></div>
       <p>La banca es exclusiva para jugadores en planilla, cuerpo técnico y delegado; no se permiten espectadores en ella.</p>` },
     { t: 'Puntualidad y walkover (W.O.)', b: `<ul>
@@ -127,15 +127,15 @@ export async function showReglamentos() {
     <p class="subtitle mb-3">Reglamento oficial de LIV — Temporada 2026. Descarga el documento completo de tu serie y revisa acá lo más relevante.</p>
 
     <div class="grid grid-2 mb-3">
-      ${dl('Serie Honor', 'Reglamento-LIV-Honor-2026.pdf')}
-      ${dl('Serie Senior', 'Reglamento-LIV-Senior-2026.pdf')}
+      ${dl('Junior', 'Reglamento-LIV-Junior-2026.pdf')}
+      ${dl('Senior', 'Reglamento-LIV-Senior-2026.pdf')}
     </div>
 
     <div class="grid grid-2 mb-3">
       <div class="card card-tinted-brand">
         <h3 style="color:var(--c-brand)">Categorías</h3>
-        <p class="mt-1"><span class="pill pill-dark">Serie Honor</span> &nbsp;Libre · 18 años o más</p>
-        <p class="mt-1"><span class="pill pill-dark">Serie Senior</span> &nbsp;+32 (nacidos 1994 o antes) · máx. 2 de 1995/1996</p>
+        <p class="mt-1"><span class="pill pill-dark">Junior (Jr)</span> &nbsp;Libre · 18 años o más</p>
+        <p class="mt-1"><span class="pill pill-dark">Senior (Sr)</span> &nbsp;+32 (nacidos 1994 o antes) · máx. 2 de 1995/1996</p>
       </div>
       <div class="card card-tinted-accent">
         <h3>Inscripción</h3>

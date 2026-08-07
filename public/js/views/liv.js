@@ -44,7 +44,7 @@ export async function showLIV() {
       <div class="card card-tinted-brand">
         <h3 style="color:var(--c-brand)">La LIV en corto</h3>
         <div class="stat-grid" style="margin:14px 0 0">
-          <div class="stat" style="background:#fff"><div class="stat-label">Series</div><div class="stat-value">2</div><div class="stat-hint">Todo Competidor y Senior +32</div></div>
+          <div class="stat" style="background:#fff"><div class="stat-label">Series</div><div class="stat-value">2</div><div class="stat-hint">Junior y Senior</div></div>
           <div class="stat" style="background:#fff"><div class="stat-label">Sede</div><div class="stat-value" style="font-size:1.2rem">${esc(config.sede || 'Complejo Deggiano')}</div><div class="stat-hint">${esc(config.sedeUbicacion || '')}</div></div>
           <div class="stat" style="background:#fff"><div class="stat-label">Se juega</div><div class="stat-value" style="font-size:1.2rem">Sábados</div><div class="stat-hint">Todo el día</div></div>
         </div>

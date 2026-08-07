@@ -30,7 +30,7 @@ export async function showAdmision() {
             <li>Lista de jugadores con datos completos (nombre, edad, número de camiseta y copia de ID).</li>
           </ul>
           <div class="divider"></div>
-          <p class="muted"><strong>Categorías:</strong> Todo Competidor (18+) y Senior +32. Cupos limitados: 8 a 10 equipos por serie.</p>
+          <p class="muted"><strong>Categorías:</strong> Junior (18+) y Senior (+32). Cupos limitados: 8 a 10 equipos por serie.</p>
         </div>
       </div>
 

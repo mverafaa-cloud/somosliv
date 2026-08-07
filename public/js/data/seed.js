@@ -24,8 +24,8 @@ export const SEED = {
       telefono: ''
     },
     series: [
-      { id: 'libre',  nombre: 'Todo Competidor', detalle: '18 años en adelante' },
-      { id: 'senior', nombre: 'Senior +32',      detalle: '32 años en adelante' }
+      { id: 'libre',  nombre: 'Junior', detalle: '18 años en adelante' },
+      { id: 'senior', nombre: 'Senior', detalle: '+32 · nacidos 1994 o antes' }
     ]
   },
 
