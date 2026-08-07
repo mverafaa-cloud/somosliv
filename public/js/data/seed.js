@@ -18,10 +18,10 @@ export const SEED = {
     mision: 'Nuestra misión es transformar radicalmente el fútbol amateur en la región. Queremos implementar un ambiente familiar y de sana competencia dentro de un complejo deportivo de primer nivel. Ofrecemos un servicio de alta calidad, donde el jugador y su familia son el núcleo central dentro de un marco organizativo profesional. Una experiencia distinta a lo que la región está acostumbrada, donde tendremos servicios de altísima calidad para que tu equipo espere cada sábado como el mejor día de la semana.',
     valorInscripcion: 1800000,
     contacto: {
-      instagram: 'https://instagram.com/',
-      whatsapp: '',
-      email: '',
-      telefono: ''
+      instagram: '',
+      whatsapp: '+56976136043',
+      email: 'liv.torneos@gmail.com',
+      telefono: '+56976136043'
     },
     series: [
       { id: 'libre',  nombre: 'Junior', detalle: '18 años en adelante' },
