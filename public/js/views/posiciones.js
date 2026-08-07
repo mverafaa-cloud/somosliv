@@ -2,6 +2,7 @@ import { getConfig, getPartidos, getEquipos, computeStandings, getGoleadores, eq
 import { mount, esc, initials } from '../ui/helpers.js';
 import { shell, loading } from '../ui/layout.js';
 import { emptyBox } from './programacion.js';
+import { preSeason } from '../ui/layout.js';
 import { icon } from '../ui/icons.js';
 
 let _serie = null;
@@ -11,6 +12,12 @@ export async function showPosiciones() {
   const [config, partidos, equipos, goleadores] = await Promise.all([getConfig(), getPartidos(), getEquipos(), getGoleadores()]);
   const series = config.series || [];
   const byId = equiposById(equipos);
+
+  if (!equipos.length) {
+    mount(shell(`<div class="container"><span class="eyebrow">Tabla</span><h1>Posiciones</h1>${preSeason(config, 'la tabla de posiciones')}</div>`, config));
+    return;
+  }
+
   if (!_serie || !series.find(s => s.id === _serie)) _serie = series[0]?.id || null;
 
   function render() {

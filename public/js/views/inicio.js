@@ -29,24 +29,24 @@ export async function showInicio() {
       <p>Transformamos el fútbol amateur de la Región de Coquimbo: organización profesional, sana competencia y un ambiente familiar en ${esc(config.sede || 'Complejo Deggiano')}.</p>
       <div class="hero-actions">
         <a href="/admision" data-link class="btn btn-accent btn-lg">Inscribe tu equipo</a>
-        <a href="/programacion" data-link class="btn btn-ghost-light btn-lg">Ver programación</a>
+        <a href="/liv" data-link class="btn btn-ghost-light btn-lg">Conoce la LIV</a>
       </div>
       ${config.lanzamiento ? `<div class="countdown" id="cd"></div>` : ''}
     </div>
 
-    <!-- Accesos rápidos -->
+    <!-- Accesos rápidos (foco captación) -->
     <div class="grid grid-3 mt-2">
-      <a href="/posiciones" data-link class="card hover" style="text-decoration:none">
-        <div class="card-header"><h3>${icon('trophy', { size: 22 })} Posiciones</h3></div>
-        <p class="muted">Tabla de las series Junior y Senior, actualizada fecha a fecha.</p>
+      <a href="/admision" data-link class="card hover card-tinted-accent" style="text-decoration:none">
+        <div class="card-header"><h3>${icon('clipboard', { size: 22 })} Inscribe tu equipo</h3></div>
+        <p>Cupos limitados por serie (Junior y Senior). Asegura tu lugar antes del estreno.</p>
       </a>
-      <a href="/resultados" data-link class="card hover" style="text-decoration:none">
-        <div class="card-header"><h3>${icon('check', { size: 22 })} Resultados</h3></div>
-        <p class="muted">Todos los marcadores de cada jornada disputada.</p>
+      <a href="/reglamentos" data-link class="card hover" style="text-decoration:none">
+        <div class="card-header"><h3>${icon('book', { size: 22 })} Reglamento</h3></div>
+        <p class="muted">Categorías, formato, requisitos y descarga del reglamento oficial 2026.</p>
       </a>
-      <a href="/disciplina" data-link class="card hover" style="text-decoration:none">
-        <div class="card-header"><h3>${icon('cards', { size: 22 })} Disciplina</h3></div>
-        <p class="muted">Amonestaciones, expulsiones y sanciones del comité.</p>
+      <a href="/liv" data-link class="card hover" style="text-decoration:none">
+        <div class="card-header"><h3>${icon('info', { size: 22 })} Conoce la liga</h3></div>
+        <p class="muted">Nuestra propuesta, la sede Complejo Deggiano y la experiencia LIV.</p>
       </a>
     </div>
 

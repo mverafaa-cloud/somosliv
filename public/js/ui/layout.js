@@ -1,12 +1,24 @@
-import { isDemo } from '../services/store.js';
-import { esc } from './helpers.js';
+import { esc, fmtDateLong } from './helpers.js';
 import { icon } from './icons.js';
 
-// Banner que avisa cuando estamos en modo demo (Firebase sin configurar).
+// Banner de modo demo — desactivado para el lanzamiento comercial.
 export function demoNotice() {
-  if (!isDemo()) return '';
-  return `<div class="alert alert-warn" style="border-radius:0;text-align:center;margin:0;font-size:.85rem;">
-    ${icon('info', { size: 15 })} <strong>Modo demo</strong> — datos de ejemplo. Conecta Firebase para cargar equipos, resultados y posiciones reales.
+  return '';
+}
+
+// Estado "temporada por comenzar" para las secciones sin datos aún.
+export function preSeason(config = {}, que = 'la información') {
+  const fecha = config.lanzamiento ? fmtDateLong(config.lanzamiento) : null;
+  return `
+  <div class="card center" style="padding:56px 24px;max-width:640px;margin:8px auto">
+    <div style="color:var(--c-brand)">${icon('calendar', { size: 46 })}</div>
+    <h2 class="mt-2" style="margin-bottom:6px">La temporada 2026 aún no comienza</h2>
+    ${fecha ? `<p class="subtitle">Estreno: <strong>${esc(fecha)}</strong> en ${esc(config.sede || 'Complejo Deggiano')}.</p>` : ''}
+    <p class="muted mt-1">Muy pronto verás acá ${esc(que)}, fecha a fecha.</p>
+    <div class="row mt-3" style="justify-content:center">
+      <a href="/admision" data-link class="btn btn-primary">Inscribe tu equipo</a>
+      <a href="/reglamentos" data-link class="btn btn-ghost">Ver reglamento</a>
+    </div>
   </div>`;
 }
 

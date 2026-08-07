@@ -1,6 +1,6 @@
 import { getConfig, getDisciplina, getEquipos, equiposById } from '../services/store.js';
 import { mount, esc, fmtDate, parseDate } from '../ui/helpers.js';
-import { shell, loading } from '../ui/layout.js';
+import { shell, loading, preSeason } from '../ui/layout.js';
 import { serieChips, emptyBox } from './programacion.js';
 
 let _serie = 'all';
@@ -10,6 +10,11 @@ export async function showDisciplina() {
   const [config, tarjetas, equipos] = await Promise.all([getConfig(), getDisciplina(), getEquipos()]);
   const byId = equiposById(equipos);
   const series = config.series || [];
+
+  if (!tarjetas.length) {
+    mount(shell(`<div class="container"><span class="eyebrow">Comité de disciplina</span><h1>Disciplina</h1>${preSeason(config, 'las amonestaciones y sanciones')}</div>`, config));
+    return;
+  }
 
   function render() {
     const list = tarjetas

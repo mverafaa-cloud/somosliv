@@ -1,6 +1,6 @@
 import { getConfig, getPartidos, getEquipos, equiposById } from '../services/store.js';
 import { mount, esc, initials, fmtDateLong, fmtTime, parseDate } from '../ui/helpers.js';
-import { shell, loading } from '../ui/layout.js';
+import { shell, loading, preSeason } from '../ui/layout.js';
 import { icon } from '../ui/icons.js';
 
 // Selección multi: series = array de ids; fechas = 'all' | array de fecha_num
@@ -11,6 +11,11 @@ export async function showProgramacion() {
   const [config, partidos, equipos] = await Promise.all([getConfig(), getPartidos(), getEquipos()]);
   const byId = equiposById(equipos);
   const series = config.series || [];
+
+  if (!partidos.length) {
+    mount(shell(`<div class="container"><span class="eyebrow">Calendario</span><h1>Programación</h1>${preSeason(config, 'la programación de cada jornada')}</div>`, config));
+    return;
+  }
 
   // Fechas disponibles (fecha_num distintos), ordenadas por fecha real de calendario
   const fechaDate = {};

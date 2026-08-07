@@ -1,6 +1,6 @@
 import { getConfig, getPartidos, getEquipos, equiposById } from '../services/store.js';
 import { mount, esc, initials, fmtDateLong, parseDate } from '../ui/helpers.js';
-import { shell, loading } from '../ui/layout.js';
+import { shell, loading, preSeason } from '../ui/layout.js';
 import { emptyBox } from './programacion.js';
 import { icon } from '../ui/icons.js';
 
@@ -13,6 +13,11 @@ export async function showResultados() {
   const byId = equiposById(equipos);
   const series = config.series || [];
   const finished = partidos.filter(p => p.estado === 'finalizado' && p.golesLocal != null);
+
+  if (!finished.length) {
+    mount(shell(`<div class="container"><span class="eyebrow">Marcadores</span><h1>Resultados</h1>${preSeason(config, 'los marcadores de cada fecha')}</div>`, config));
+    return;
+  }
 
   // Fechas disponibles (de partidos finalizados), ordenadas por calendario
   const fechaDate = {};
