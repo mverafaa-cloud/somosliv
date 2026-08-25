@@ -1,16 +1,20 @@
-import { getConfig, getPartidos, getEquipos, equiposById } from '../services/store.js';
+import { getConfig, getPartidos, getEquipos, equiposById, getFixture } from '../services/store.js';
 import { mount, esc, initials, fmtDateLong, fmtTime, parseDate } from '../ui/helpers.js';
 import { shell, loading, preSeason } from '../ui/layout.js';
 import { icon } from '../ui/icons.js';
 
 // Selección multi: series = array de ids; fechas = 'all' | array de fecha_num
 let _sel = { series: null, fechas: 'all' };
+let _fx = 'all'; // fecha seleccionada en el fixture publicado
 
 export async function showProgramacion() {
   mount(loading());
-  const [config, partidos, equipos] = await Promise.all([getConfig(), getPartidos(), getEquipos()]);
+  const [config, partidos, equipos, fixture] = await Promise.all([getConfig(), getPartidos(), getEquipos(), getFixture()]);
   const byId = equiposById(equipos);
   const series = config.series || [];
+
+  // Prioridad: fixture publicado (lo ven todos). Si no hay, cae a partidos/preseason.
+  if (fixture) { renderPublicFixture(config, fixture); return; }
 
   if (!partidos.length) {
     mount(shell(`<div class="container"><span class="eyebrow">Calendario</span><h1>Programación</h1>${preSeason(config, 'la programación de cada jornada')}</div>`, config));
@@ -98,6 +102,69 @@ export async function showProgramacion() {
 
   function render() { renderFilters(); renderList(); }
   render();
+}
+
+/* ================= FIXTURE PUBLICADO (público, todo el detalle) ================= */
+const HORDEN = ['10:40', '12:20'];
+
+function renderPublicFixture(config, fx) {
+  const rounds = fx.fechas.slice().sort((a, b) => a.n - b.n);
+  if (!(rounds.some(r => r.n === _fx))) _fx = 'all';
+
+  const inner = `
+  <div class="container">
+    <span class="eyebrow">Calendario</span>
+    <h1>Programación</h1>
+    <p class="subtitle mb-2">Fixture oficial · <strong>Serie ${esc(fx.serie || 'Junior')}</strong> · Temporada ${esc(fx.temporada || config.temporada || '2026')} · ${esc(config.sede || 'Complejo Deggiano')}.</p>
+    <div class="chips filter-row mb-2" id="fx-fechas">
+      <span class="chips-label">Fecha</span>
+      <button class="chip ${_fx === 'all' ? 'active' : ''}" data-fx="all">Todas</button>
+      ${rounds.map(r => `<button class="chip ${_fx === r.n ? 'active' : ''}" data-fx="${r.n}">Fecha ${r.n}</button>`).join('')}
+    </div>
+    <div id="fx-body"></div>
+    <div class="card-sm mt-2" style="background:var(--c-brand-soft);border-radius:12px;padding:10px 14px;font-size:.88rem">
+      <strong>Cómo leer el fixture:</strong> ${icon('flame', { size: 12 })} clásico de la jornada · ${icon('video', { size: 13, cls: 'ico-grab' })} partido grabado · <strong>Cam. L/V</strong> = número de camarín del equipo local / visita · <strong>Premio</strong> = marca que presenta el premio al mejor jugador.
+    </div>
+  </div>`;
+  mount(shell(inner, config));
+
+  const body = document.getElementById('fx-body');
+  function draw() {
+    const shown = _fx === 'all' ? rounds : rounds.filter(r => r.n === _fx);
+    body.innerHTML = shown.map(fechaBlock).join('');
+    document.querySelectorAll('#fx-fechas .chip').forEach(c => c.classList.toggle('active', String(_fx) === c.dataset.fx));
+  }
+  document.querySelectorAll('#fx-fechas .chip').forEach(c => c.addEventListener('click', () => {
+    _fx = c.dataset.fx === 'all' ? 'all' : Number(c.dataset.fx); draw();
+  }));
+  draw();
+}
+
+function fechaBlock(rd) {
+  const parts = (rd.partidos || []).slice().sort((a, b) => (HORDEN.indexOf(a.horario) - HORDEN.indexOf(b.horario)) || (a.cancha - b.cancha));
+  const cams = [...new Set(parts.filter(p => p.grabado).map(p => p.cancha))].sort((a, b) => a - b);
+  const nGrab = parts.filter(p => p.grabado).length;
+  return `
+    <div class="card mb-2">
+      <div class="spread mb-1">
+        <h3 style="margin:0">${icon('calendar', { size: 18 })} Fecha ${rd.n} <span class="muted" style="font-weight:400;font-size:.9rem">· ${esc(fmtDateLong(rd.fecha))}</span></h3>
+        ${nGrab ? `<span class="muted" style="font-size:.85rem">${icon('video', { size: 14 })} ${nGrab} grabados · cámaras en cancha ${cams.join(' y ')}</span>` : ''}
+      </div>
+      <div class="table-wrap"><table class="tbl fixture-pub">
+        <thead><tr><th>Hora</th><th>Cancha</th><th>Partido</th><th>Cam. L/V</th><th>Grab.</th><th>Premio</th></tr></thead>
+        <tbody>
+          ${parts.map(p => `
+            <tr class="${p.clasico ? 'is-clasico' : ''}">
+              <td style="white-space:nowrap;font-weight:600">${esc(p.horario)}</td>
+              <td style="white-space:nowrap">Cancha ${esc(p.cancha)}</td>
+              <td>${p.clasico ? `<span class="pill pill-brand" style="margin-right:6px">${icon('flame', { size: 12 })} Clásico</span>` : ''}<strong>${esc(p.local)}</strong> <span class="muted">vs</span> <strong>${esc(p.visita)}</strong></td>
+              <td class="muted" style="white-space:nowrap">${p.camarinLocal ?? '—'} / ${p.camarinVisita ?? '—'}</td>
+              <td>${p.grabado ? icon('video', { size: 16, cls: 'ico-grab' }) : '<span class="muted">—</span>'}</td>
+              <td><span class="pill pill-grey">${esc(p.premio || '—')}</span></td>
+            </tr>`).join('')}
+        </tbody>
+      </table></div>
+    </div>`;
 }
 
 // ---- Helpers compartidos por resultados.js / disciplina.js ----

@@ -55,8 +55,9 @@ async function boot() {
     lastUid = uid;
     renderHeader();
     router.highlight(window.location.pathname);
-    // Si estamos en /admin, re-render para reflejar login/logout.
-    if (window.location.pathname === '/admin') router.handle();
+    // Si estamos en una vista con sesión, re-render para reflejar login/logout.
+    const pth = window.location.pathname;
+    if (pth === '/admin' || pth === '/sorteo') router.handle();
   });
 
   router.handle();

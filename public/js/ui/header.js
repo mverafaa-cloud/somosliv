@@ -1,4 +1,4 @@
-import { getUser, isAdmin, isLogged, logout } from '../services/store.js';
+import { getUser, isAdmin, isLogged, isPlanillero, logout } from '../services/store.js';
 import { icon } from './icons.js';
 
 export const NAV = [
@@ -36,7 +36,8 @@ export function renderHeader() {
     <nav class="desktop-nav">
       ${NAV.map(n => `<a href="${n.href}" data-link>${n.label}</a>`).join('')}
       ${admin ? `<a href="/sorteo" data-link class="nav-admin">${icon('shuffle', { size: 16 })} Sorteo</a>` : ''}
-      ${admin ? `<a href="/admin" data-link class="nav-admin">${icon('settings', { size: 16 })} Admin</a>` : '<a href="/admin" data-link class="nav-admin" title="Acceso organización">·</a>'}
+      ${isPlanillero() ? `<a href="/admin" data-link class="nav-admin">${icon('check', { size: 16 })} Resultados</a>` : ''}
+      ${admin ? `<a href="/admin" data-link class="nav-admin">${icon('settings', { size: 16 })} Admin</a>` : (isPlanillero() ? '' : '<a href="/admin" data-link class="nav-admin" title="Acceso organización">·</a>')}
     </nav>
     <button class="nav-menu-btn" id="btn-menu" aria-label="Menú">${icon('menu', { size: 22 })}</button>
   `;
@@ -67,7 +68,7 @@ export function renderHeader() {
       ${NAV.map(n => `<a href="${n.href}" data-link><span class="ic">${icon(n.icon)}</span> ${n.label}</a>`).join('')}
       <div class="divider"></div>
       ${admin ? `<a href="/sorteo" data-link><span class="ic">${icon('shuffle')}</span> Sorteo Fixture</a>` : ''}
-      <a href="/admin" data-link><span class="ic">${icon('settings')}</span> ${admin ? 'Panel Admin' : 'Acceso organización'}</a>
+      <a href="/admin" data-link><span class="ic">${icon(isPlanillero() ? 'check' : 'settings')}</span> ${admin ? 'Panel Admin' : (isPlanillero() ? 'Cargar resultados' : 'Acceso organización')}</a>
       ${logged ? `<a href="#" id="menu-logout"><span class="ic">${icon('logout')}</span> Cerrar sesión</a>` : ''}
     </div>
   `;

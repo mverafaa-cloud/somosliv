@@ -37,6 +37,8 @@ export function adminLogout() {
   notifyAuth();
 }
 export function isLogged() { return !!_user || _localAdmin; }
+// Planillero = usuario autenticado en Firebase que NO es admin.
+export function isPlanillero() { return !!_user && !isAdmin(); }
 
 function configReal() {
   const c = window.__FIREBASE_CONFIG__ || {};
@@ -141,6 +143,69 @@ export async function addInscripcion(data) {
 export const getInscripciones = () => readAll('inscripciones', '__none__');
 export const updateInscripcion = (d) => upsert('inscripciones', d);
 export const deleteInscripcion = (id) => remove('inscripciones', id);
+
+// ---------- FIXTURE PUBLICADO ----------
+// En modo Firebase: se arma desde la colección 'partidos' (lo que cargan/editan
+// admin y planilleros en vivo). En modo demo: archivo estático /data/fixture.json.
+export async function getFixture() {
+  if (mode === 'firebase') {
+    const [partidos, equipos] = await Promise.all([readAll('partidos', 'partidos'), readAll('equipos', 'equipos')]);
+    const jr = partidos.filter(p => (p.serie || 'libre') === 'libre' && p.fecha_num != null);
+    if (!jr.length) return null;
+    const byId = {}; equipos.forEach(e => byId[e.id] = e);
+    const groups = {};
+    jr.forEach(p => { (groups[p.fecha_num] = groups[p.fecha_num] || []).push(p); });
+    const fechas = Object.keys(groups).map(Number).sort((a, b) => a - b).map(n => {
+      const ps = groups[n];
+      const fecha = ps.map(p => p.fecha).filter(Boolean).sort()[0] || null;
+      return {
+        n, fecha,
+        partidos: ps.map(p => ({
+          localId: p.local, visitaId: p.visita,
+          local: byId[p.local]?.nombre || p.local, visita: byId[p.visita]?.nombre || p.visita,
+          horario: p.hora, cancha: p.cancha, camarinLocal: p.camarinLocal, camarinVisita: p.camarinVisita,
+          grabado: !!p.grabado, clasico: !!p.clasico, premio: p.premio,
+          estado: p.estado, golesLocal: p.golesLocal, golesVisita: p.golesVisita
+        }))
+      };
+    });
+    return { serie: 'Junior', fechas };
+  }
+  // demo: archivo estático
+  try {
+    const r = await fetch('/data/fixture.json', { cache: 'no-store' });
+    if (!r.ok) return null;
+    const data = await r.json();
+    return (data && Array.isArray(data.fechas) && data.fechas.length) ? data : null;
+  } catch (_) { return null; }
+}
+
+// Publica el fixture del sorteo a Firestore (colección 'partidos').
+// Reemplaza el calendario pero PRESERVA los marcadores ya cargados (mismo id).
+export async function publishFixture(fixture) {
+  requireFb();
+  const { collection, doc, getDocs, writeBatch } = fb.fsMod;
+  const snap = await getDocs(collection(fb.db, 'partidos'));
+  const existing = {}; snap.docs.forEach(d => existing[d.id] = d.data());
+  const batch = writeBatch(fb.db);
+  snap.docs.forEach(d => batch.delete(doc(fb.db, 'partidos', d.id)));
+  let count = 0;
+  (fixture.fechas || []).forEach(f => (f.partidos || []).forEach(p => {
+    const id = `f${f.n}-${p.localId}-${p.visitaId}`.replace(/[^a-zA-Z0-9_-]/g, '');
+    const prev = existing[id];
+    batch.set(doc(fb.db, 'partidos', id), {
+      serie: fixture.serieId || 'libre', fecha_num: f.n, fecha: f.fecha || '', hora: p.horario || '',
+      local: p.localId, visita: p.visitaId, cancha: p.cancha,
+      camarinLocal: p.camarinLocal ?? null, camarinVisita: p.camarinVisita ?? null,
+      grabado: !!p.grabado, clasico: !!p.clasico, premio: p.premio || '',
+      golesLocal: prev?.golesLocal ?? null, golesVisita: prev?.golesVisita ?? null,
+      estado: prev?.estado || 'programado'
+    });
+    count++;
+  }));
+  await batch.commit();
+  return count;
+}
 
 // ---------- AUDIOVISUAL ----------
 export async function getAudiovisual() {

@@ -572,3 +572,7 @@ table.sorteo-tbl tr.is-clasico { background:var(--c-brand-soft); }
 table.sorteo-bal td, table.sorteo-bal th { padding:7px 8px; font-size:.86rem; }
 .ico-grab { color:var(--c-brand); vertical-align:middle; }
 @media (max-width:640px){ .prefs-grid{ grid-template-columns:1fr; } }
+
+/* Fixture público (Programación) */
+table.fixture-pub td, table.fixture-pub th { padding:8px 10px; font-size:.92rem; }
+table.fixture-pub tr.is-clasico { background:var(--c-brand-soft); }

@@ -1,4 +1,4 @@
-import { isAdmin, logout, getConfig, getEquipos } from '../services/store.js';
+import { isAdmin, logout, getConfig, getEquipos, isDemo, publishFixture } from '../services/store.js';
 import { mount, esc } from '../ui/helpers.js';
 import { shell, loading } from '../ui/layout.js';
 import { icon } from '../ui/icons.js';
@@ -219,8 +219,10 @@ function renderResultado() {
         <span class="pill pill-grey">equilibrio ${R.score}</span>
         <button class="btn btn-ghost btn-sm" id="btn-print">${icon('file', { size: 15 })} Imprimir</button>
         <button class="btn btn-ghost btn-sm" id="btn-json">${icon('download', { size: 15 })} JSON</button>
+        <button class="btn btn-primary btn-sm" id="btn-publish">${icon('rocket', { size: 15 })} Publicar en la web</button>
       </div>
     </div>
+    <div id="publish-help"></div>
 
     ${R.rounds.map(fechaCard).join('')}
 
@@ -332,6 +334,78 @@ function bind() {
   // Resultado
   const bp = document.getElementById('btn-print'); if (bp) bp.onclick = () => window.print();
   const bj = document.getElementById('btn-json'); if (bj) bj.onclick = downloadJSON;
+  const bpub = document.getElementById('btn-publish'); if (bpub) bpub.onclick = publicar;
+}
+
+// Estructura canónica que consume la web pública (/data/fixture.json).
+function buildFixturePublic() {
+  const R = S.result;
+  const byId = Object.fromEntries(S.params.teams.map(t => [t.id, t.nombre]));
+  return {
+    serie: 'Junior', serieId: 'libre', temporada: cfg.temporada || '2026',
+    publicado: new Date().toISOString(),
+    camarinesPorCancha: CAMARINES,
+    fechas: R.rounds.map(rd => ({
+      n: rd.n, fecha: rd.fecha,
+      partidos: rd.matches.slice()
+        .sort((a, b) => (HOR.indexOf(a.horario) - HOR.indexOf(b.horario)) || (a.cancha - b.cancha))
+        .map(m => ({
+          localId: m.local, visitaId: m.visita,
+          local: byId[m.local], visita: byId[m.visita],
+          horario: m.horario, cancha: m.cancha,
+          camarinLocal: (m.camarines || [])[0] ?? null,
+          camarinVisita: (m.camarines || [])[1] ?? null,
+          grabado: !!m.grabado, clasico: !!m.clasico, premio: m.marca
+        }))
+    }))
+  };
+}
+
+async function publicar() {
+  if (!S.result) { toast('Primero genera un sorteo', 'error'); return; }
+  const data = buildFixturePublic();
+  const help = document.getElementById('publish-help');
+  const btn = document.getElementById('btn-publish');
+
+  if (!isDemo()) {
+    // Modo Firebase: escribe el fixture directo a la base (queda grabado y en vivo).
+    if (btn) { btn.disabled = true; btn.textContent = 'Publicando…'; }
+    try {
+      const n = await publishFixture(data);
+      toast(`Fixture publicado (${n} partidos). Ya está en vivo.`, 'success');
+      if (help) help.innerHTML = `
+        <div class="card mb-3" style="border-left:4px solid var(--c-brand)">
+          <h3 style="margin:0 0 6px">${icon('check', { size: 18 })} Fixture publicado</h3>
+          <p style="margin:0">Quedó grabado en la base y ya aparece en <a href="/programacion" data-link>Programación</a> para todos. Los planilleros ya pueden cargar los resultados de cada partido.</p>
+          <p class="muted" style="margin:6px 0 0">Si vuelves a publicar un sorteo nuevo, se reemplaza el calendario pero se conservan los marcadores ya cargados.</p>
+        </div>`;
+    } catch (err) {
+      toast(err.message || 'No se pudo publicar', 'error');
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerHTML = `${icon('rocket', { size: 15 })} Publicar en la web`; }
+    }
+    return;
+  }
+
+  // Modo demo (sin Firebase): descarga el archivo estático.
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'fixture.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  if (help) help.innerHTML = `
+    <div class="card mb-3" style="border-left:4px solid var(--c-brand)">
+      <h3 style="margin:0 0 6px">${icon('rocket', { size: 18 })} Publicar este fixture para todos</h3>
+      <p style="margin:0 0 6px">Se descargó <strong>fixture.json</strong>. Para que quede grabado y lo vea cualquiera que entre al sitio:</p>
+      <ol style="margin:0 0 6px 18px">
+        <li>Guarda el archivo en <code>public/data/fixture.json</code> del proyecto LIV.</li>
+        <li>Haz <code>git add -A · git commit · git push</code>.</li>
+        <li>Purga la caché de Cloudflare (o espera unos minutos).</li>
+      </ol>
+      <p class="muted" style="margin:0">Aparecerá en la pestaña <strong>Programación</strong> con todo el detalle. También puedes pedirle a Claude que suba el archivo por ti.</p>
+    </div>`;
+  toast('fixture.json descargado — súbelo a public/data/ y publica', 'success');
 }
 
 function downloadJSON() {

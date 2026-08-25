@@ -1,5 +1,5 @@
 import {
-  getUser, isAdmin, isDemo, login, logout, adminLogin,
+  getUser, isAdmin, isPlanillero, isDemo, login, logout, adminLogin,
   getConfig, saveConfig,
   getEquipos, saveEquipo, deleteEquipo,
   getPartidos, savePartido, deletePartido,
@@ -17,9 +17,10 @@ let TAB = 'partidos';
 let C = {}; // cache: config, equipos, partidos, disciplina, inscripciones, av
 
 export async function showAdmin() {
-  if (!isAdmin()) return renderLogin();
+  if (!isAdmin() && !isPlanillero()) return renderLogin();
   mount(loading('Cargando panel…'));
   await loadAll();
+  if (!isAdmin() && TAB !== 'resultados' && TAB !== 'disciplina') TAB = 'resultados';
   renderPanel();
 }
 
@@ -38,9 +39,10 @@ export function renderLogin(redirect) {
     <div class="center mb-3"><img src="/assets/logo-mark.png" alt="LIV" style="height:90px;margin:0 auto"></div>
     <div class="card">
       <h2 class="mb-1">Acceso organización</h2>
-      <p class="muted mb-2">Ingresa con tu usuario y contraseña de administración.</p>
+      <p class="muted mb-2">Ingresa con tu email y contraseña. ${isDemo() ? '' : 'Planilleros: usen la cuenta que les compartió la organización.'}</p>
+      ${isDemo() ? '<div class="alert alert-warn" style="font-size:.9rem">Firebase aún no está activo: por ahora solo funciona el acceso <strong>Admin</strong>. Al activarlo, aquí entran también los planilleros.</div>' : ''}
       <form id="login-form">
-        <div class="form-group"><label>Usuario</label><input class="input" name="user" autocomplete="username" required></div>
+        <div class="form-group"><label>Email o usuario</label><input class="input" name="user" autocomplete="username" required placeholder="tucorreo@… o Admin"></div>
         <div class="form-group"><label>Contraseña</label><input class="input" name="pass" type="password" autocomplete="current-password" required></div>
         <button class="btn btn-primary btn-block btn-lg" id="btn-login">Ingresar</button>
       </form>
@@ -48,16 +50,25 @@ export function renderLogin(redirect) {
     <p class="center mt-2"><a href="/" data-link class="muted">← Volver al sitio</a></p>
   </div>`;
   mount(shell(inner, {}));
-  document.getElementById('login-form').addEventListener('submit', (e) => {
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('btn-login');
     const { user, pass } = Object.fromEntries(new FormData(e.target).entries());
+    const id = (user || '').trim();
     btn.disabled = true; btn.textContent = 'Ingresando…';
     try {
-      adminLogin(user.trim(), pass);
-      toast('Bienvenido', 'success');
-      if (window.renderHeader) window.renderHeader();
-      window.__router.handle();
+      if (id.toLowerCase() === 'admin') {
+        // Respaldo local (funciona con o sin Firebase).
+        adminLogin('Admin', pass);
+        toast('Bienvenido', 'success');
+        if (window.renderHeader) window.renderHeader();
+        window.__router.handle();
+      } else {
+        // Cuenta Firebase (admin o planillero).
+        await login(id, pass);
+        toast('Bienvenido', 'success');
+        // main.js re-renderiza al detectar el cambio de sesión.
+      }
     } catch (err) {
       toast(err.message || 'No se pudo iniciar sesión', 'error');
       btn.disabled = false; btn.textContent = 'Ingresar';
@@ -66,26 +77,36 @@ export function renderLogin(redirect) {
 }
 
 /* ---------------- PANEL ---------------- */
-const TABS = [
-  { id: 'partidos', label: `${icon('calendar', { size: 16 })} Partidos` },
-  { id: 'equipos', label: `${icon('users', { size: 16 })} Equipos` },
-  { id: 'disciplina', label: `${icon('cards', { size: 16 })} Disciplina` },
-  { id: 'inscripciones', label: `${icon('clipboard', { size: 16 })} Inscripciones` },
-  { id: 'contenido', label: `${icon('settings', { size: 16 })} Contenido` }
+const ALL_TABS = [
+  { id: 'resultados', label: `${icon('check', { size: 16 })} Resultados`, roles: ['admin', 'planillero'] },
+  { id: 'disciplina', label: `${icon('cards', { size: 16 })} Disciplina`, roles: ['admin', 'planillero'] },
+  { id: 'partidos', label: `${icon('calendar', { size: 16 })} Partidos`, roles: ['admin'] },
+  { id: 'equipos', label: `${icon('users', { size: 16 })} Equipos`, roles: ['admin'] },
+  { id: 'inscripciones', label: `${icon('clipboard', { size: 16 })} Inscripciones`, roles: ['admin'] },
+  { id: 'contenido', label: `${icon('settings', { size: 16 })} Contenido`, roles: ['admin'] }
 ];
 
+function tabsForRole() {
+  const role = isAdmin() ? 'admin' : 'planillero';
+  return ALL_TABS.filter(t => t.roles.includes(role));
+}
+
 function renderPanel() {
+  const admin = isAdmin();
+  const tabs = tabsForRole();
+  if (!tabs.some(t => t.id === TAB)) TAB = tabs[0].id;
   const inner = `
   <div class="container">
     <div class="spread mb-2">
-      <div><span class="eyebrow">Panel de administración</span><h1 style="margin:0">LIV Admin</h1></div>
+      <div><span class="eyebrow">${admin ? 'Panel de administración' : 'Carga de resultados'}</span><h1 style="margin:0">${admin ? 'LIV Admin' : 'Planillero'}</h1></div>
       <div class="row">
         <span class="pill ${isDemo() ? 'pill-red' : 'pill-green'}">${isDemo() ? 'DEMO (sin Firebase)' : 'Conectado'}</span>
+        ${admin ? `<a href="/sorteo" data-link class="btn btn-ghost btn-sm">${icon('shuffle', { size: 15 })} Sorteo</a>` : ''}
         <button class="btn btn-ghost btn-sm" id="btn-logout">Cerrar sesión</button>
       </div>
     </div>
     <div class="tabs" id="admin-tabs">
-      ${TABS.map(t => `<button data-tab="${t.id}" class="${TAB === t.id ? 'active' : ''}">${t.label}</button>`).join('')}
+      ${tabs.map(t => `<button data-tab="${t.id}" class="${TAB === t.id ? 'active' : ''}">${t.label}</button>`).join('')}
     </div>
     <div id="tab-content"></div>
   </div>`;
@@ -97,11 +118,68 @@ function renderPanel() {
 
 function renderTab() {
   const el = document.getElementById('tab-content');
+  if (TAB === 'resultados') return renderResultados(el);
   if (TAB === 'equipos') return renderEquipos(el);
   if (TAB === 'partidos') return renderPartidos(el);
   if (TAB === 'disciplina') return renderDisciplina(el);
   if (TAB === 'inscripciones') return renderInscripciones(el);
   if (TAB === 'contenido') return renderContenido(el);
+}
+
+/* ---------- RESULTADOS (carga rápida de marcadores) ---------- */
+function renderResultados(el) {
+  const byId = equiposById(C.equipos);
+  const rows = C.partidos.slice()
+    .sort((a, b) => ((a.fecha_num || 0) - (b.fecha_num || 0)) || (a.hora || '').localeCompare(b.hora || ''));
+  if (!rows.length) {
+    el.innerHTML = `<div class="alert alert-warn">Todavía no hay fixture publicado. ${isAdmin() ? 'Genera y publica el sorteo desde <a href="/sorteo" data-link>Sorteo Fixture</a>.' : 'Pídele al administrador que publique el fixture.'}</div>`;
+    return;
+  }
+  const groups = {};
+  rows.forEach(p => { (groups[p.fecha_num || 0] = groups[p.fecha_num || 0] || []).push(p); });
+  const fechas = Object.keys(groups).map(Number).sort((a, b) => a - b);
+
+  el.innerHTML = `
+    ${isDemo() ? '<div class="alert alert-warn">Modo demo: los cambios no se guardan. Activa Firebase para cargar resultados en vivo.</div>' : '<p class="muted mb-2">Ingresa el marcador y presiona <strong>Guardar</strong>. Al guardar con ambos marcadores, el partido queda <strong>finalizado</strong> y se actualiza al instante en Resultados y Posiciones.</p>'}
+    ${fechas.map(n => `
+      <div class="card mb-2">
+        <h3 class="mb-2">Fecha ${n}</h3>
+        <div class="table-wrap"><table class="tbl">
+          <thead><tr><th>Hora</th><th>Cancha</th><th>Partido</th><th class="num">Marcador</th><th>Estado</th><th></th></tr></thead>
+          <tbody>
+            ${groups[n].map(p => {
+              const L = byId[p.local]?.nombre || p.local, V = byId[p.visita]?.nombre || p.visita;
+              const fin = p.estado === 'finalizado';
+              return `<tr>
+                <td style="white-space:nowrap">${esc(p.hora || '—')}</td>
+                <td style="white-space:nowrap">${p.cancha ? 'Cancha ' + esc(p.cancha) : '—'}</td>
+                <td><strong>${esc(L)}</strong> <span class="muted">vs</span> <strong>${esc(V)}</strong></td>
+                <td class="num" style="white-space:nowrap">
+                  <input class="input res-in" type="number" min="0" data-gl="${esc(p.id)}" value="${p.golesLocal ?? ''}" style="width:56px">
+                  <span>-</span>
+                  <input class="input res-in" type="number" min="0" data-gv="${esc(p.id)}" value="${p.golesVisita ?? ''}" style="width:56px">
+                </td>
+                <td><span class="pill ${fin ? 'pill-green' : 'pill-grey'}">${fin ? 'finalizado' : 'pendiente'}</span></td>
+                <td style="text-align:right;white-space:nowrap">
+                  <button class="btn btn-primary btn-sm" data-saveres="${esc(p.id)}">Guardar</button>
+                  ${fin ? `<button class="btn btn-ghost btn-sm" data-reabrir="${esc(p.id)}">Reabrir</button>` : ''}
+                </td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table></div>
+      </div>`).join('')}`;
+
+  el.querySelectorAll('[data-saveres]').forEach(b => b.onclick = () => {
+    const id = b.dataset.saveres;
+    const gl = el.querySelector(`[data-gl="${id}"]`).value;
+    const gv = el.querySelector(`[data-gv="${id}"]`).value;
+    const both = gl !== '' && gv !== '';
+    reload('res', () => savePartido({ id, golesLocal: gl === '' ? null : +gl, golesVisita: gv === '' ? null : +gv, estado: both ? 'finalizado' : 'programado' }));
+  });
+  el.querySelectorAll('[data-reabrir]').forEach(b => b.onclick = () => {
+    reload('res', () => savePartido({ id: b.dataset.reabrir, estado: 'programado' }));
+  });
 }
 
 async function reload(key, fn) {

@@ -1,21 +1,18 @@
 // Config PÚBLICA de Firebase (no es secreta — puede ir en el repo).
-// Reemplazar estos valores por los del proyecto real:
-//   Firebase Console → Project settings → General → Your apps → SDK setup and configuration
-//
-// Mientras estos valores sean los placeholder ("REEMPLAZAR"), la web funciona
-// en modo demo (usa datos de ejemplo locales) y NO intenta conectarse a Firebase.
+// Proyecto real: SOMOSLIV.
+// La seguridad la dan las reglas de Firestore (firestore.rules), no esta config.
 window.__FIREBASE_CONFIG__ = {
-  apiKey: "REEMPLAZAR",
-  authDomain: "REEMPLAZAR.firebaseapp.com",
-  projectId: "REEMPLAZAR",
-  storageBucket: "REEMPLAZAR.appspot.com",
-  messagingSenderId: "REEMPLAZAR",
-  appId: "REEMPLAZAR"
+  apiKey: "AIzaSyBNEKWdYynkdvdAswyBK01LnnKGJ2cSils",
+  authDomain: "somosliv.firebaseapp.com",
+  projectId: "somosliv",
+  storageBucket: "somosliv.firebasestorage.app",
+  messagingSenderId: "523984792935",
+  appId: "1:523984792935:web:2ea037b2ad6fa0569013c2",
+  measurementId: "G-F3EGSCPGJF"
 };
 
-// UIDs con permiso de administrador. Se completan después de crear los usuarios
-// admin en Firebase Auth (Console → Authentication → Users → copiar el UID).
-// También se valida en firestore.rules; esto es solo para mostrar/ocultar UI.
+// UIDs con permiso de administrador (panel completo).
+// Cualquier otra cuenta autenticada entra como PLANILLERO (solo resultados y disciplina).
 window.__ADMIN_UIDS__ = [
-  // "pega-aqui-el-uid-de-max",
+  "QltrN298mHMeAw04K3dZb5SJ7I33"   // Max (admin)
 ];
