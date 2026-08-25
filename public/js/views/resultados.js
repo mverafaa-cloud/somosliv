@@ -1,5 +1,5 @@
 import { getConfig, getPartidos, getEquipos, equiposById } from '../services/store.js';
-import { mount, esc, initials, fmtDateLong, parseDate } from '../ui/helpers.js';
+import { mount, esc, initials, fmtDateLong, parseDate, teamLogo } from '../ui/helpers.js';
 import { shell, loading, preSeason } from '../ui/layout.js';
 import { emptyBox } from './programacion.js';
 import { icon } from '../ui/icons.js';
@@ -106,8 +106,8 @@ function resultCard(p, byId, series) {
   const serieName = (series.find(s => s.id === p.serie) || {}).nombre || '';
   return `
   <div class="match-card finished">
-    <div class="team home"><span class="name" style="${gl > gv ? 'font-weight:800' : ''}">${esc(L)}</span><span class="badge">${esc(initials(L))}</span></div>
+    <div class="team home"><span class="name" style="${gl > gv ? 'font-weight:800' : ''}">${esc(L)}</span>${teamLogo(byId[p.local]?.logo, L, 34)}</div>
     <div class="vs"><div class="score">${gl} - ${gv}</div><div class="meta">${serieName ? esc(serieName) : 'Final'}</div></div>
-    <div class="team"><span class="badge">${esc(initials(V))}</span><span class="name" style="${gv > gl ? 'font-weight:800' : ''}">${esc(V)}</span></div>
+    <div class="team">${teamLogo(byId[p.visita]?.logo, V, 34)}<span class="name" style="${gv > gl ? 'font-weight:800' : ''}">${esc(V)}</span></div>
   </div>`;
 }

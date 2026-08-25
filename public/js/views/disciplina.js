@@ -1,5 +1,5 @@
 import { getConfig, getDisciplina, getEquipos, equiposById } from '../services/store.js';
-import { mount, esc, fmtDate, parseDate } from '../ui/helpers.js';
+import { mount, esc, fmtDate, parseDate, teamInline } from '../ui/helpers.js';
 import { shell, loading } from '../ui/layout.js';
 import { icon } from '../ui/icons.js';
 import { serieChips, emptyBox } from './programacion.js';
@@ -123,7 +123,7 @@ export async function showDisciplina() {
               <td class="muted" style="white-space:nowrap">${esc(fmtDate(t.fecha))}</td>
               <td>${t.tipo === 'roja' ? '<span class="pill pill-red"><span class="tarjeta tarjeta-roja"></span> Roja</span>' : '<span class="pill" style="background:var(--c-accent-soft);color:var(--c-accent-deep)"><span class="tarjeta tarjeta-amarilla"></span> Amarilla</span>'}</td>
               <td style="font-weight:700">${esc(t.jugador || '—')}</td>
-              <td class="muted">${esc(byId[t.equipo]?.nombre || t.equipo || '—')}</td>
+              <td>${t.equipo ? teamInline(byId[t.equipo]?.logo, byId[t.equipo]?.nombre || t.equipo, { size: 22 }) : '<span class="muted">—</span>'}</td>
               <td class="muted">${esc(t.motivo || '')}</td>
               <td>${t.sancion ? `<span class="pill pill-dark">${esc(t.sancion)}</span>` : '<span class="muted">—</span>'}</td>
             </tr>`).join('')}

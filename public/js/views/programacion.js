@@ -1,5 +1,5 @@
 import { getConfig, getPartidos, getEquipos, equiposById, getFixture } from '../services/store.js';
-import { mount, esc, initials, fmtDateLong, fmtTime, parseDate } from '../ui/helpers.js';
+import { mount, esc, initials, fmtDateLong, fmtTime, parseDate, teamLogo, teamInline } from '../ui/helpers.js';
 import { shell, loading, preSeason } from '../ui/layout.js';
 import { icon } from '../ui/icons.js';
 
@@ -157,7 +157,7 @@ function fechaBlock(rd) {
             <tr class="${p.clasico ? 'is-clasico' : ''}">
               <td style="white-space:nowrap;font-weight:600">${esc(p.horario)}</td>
               <td style="white-space:nowrap">Cancha ${esc(p.cancha)}</td>
-              <td>${p.clasico ? `<span class="pill pill-brand" style="margin-right:6px">${icon('flame', { size: 12 })} Clásico</span>` : ''}<strong>${esc(p.local)}</strong> <span class="muted">vs</span> <strong>${esc(p.visita)}</strong></td>
+              <td><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">${p.clasico ? `<span class="pill pill-brand">${icon('flame', { size: 12 })} Clásico</span>` : ''}${teamInline(p.logoLocal, p.local, { size: 22 })} <span class="muted">vs</span> ${teamInline(p.logoVisita, p.visita, { size: 22 })}</div></td>
               <td class="muted" style="white-space:nowrap">${p.camarinLocal ?? '—'} / ${p.camarinVisita ?? '—'}</td>
               <td>${p.grabado ? icon('video', { size: 16, cls: 'ico-grab' }) : '<span class="muted">—</span>'}</td>
               <td><span class="pill pill-grey">${esc(p.premio || '—')}</span></td>
@@ -188,9 +188,9 @@ function matchCard(p, byId, series) {
     : `<div class="scheduled">${esc(fmtTime(p.hora)) || '—'}</div><div class="meta">${esc(p.cancha || '')}</div>`;
   return `
   <div class="match-card ${fin ? 'finished' : ''}">
-    <div class="team home"><span class="name">${esc(L)}</span><span class="badge">${esc(initials(L))}</span></div>
+    <div class="team home"><span class="name">${esc(L)}</span>${teamLogo(byId[p.local]?.logo, L, 34)}</div>
     <div class="vs">${mid}</div>
-    <div class="team"><span class="badge">${esc(initials(V))}</span><span class="name">${esc(V)}</span></div>
+    <div class="team">${teamLogo(byId[p.visita]?.logo, V, 34)}<span class="name">${esc(V)}</span></div>
   </div>
   <div class="match-meta-row" style="margin:-4px 4px 12px">${serieName ? `<span class="pill pill-grey">${esc(serieName)}</span>` : ''}${p.fecha_num ? `<span class="pill pill-grey">Fecha ${esc(p.fecha_num)}</span>` : ''}</div>`;
 }

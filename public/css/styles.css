@@ -299,6 +299,9 @@ table.tbl tbody td { padding: 12px 14px; border-top: 1px solid var(--c-line); ve
 table.tbl tbody tr:hover { background: var(--c-bg-alt); }
 table.tbl td.num, table.tbl th.num { text-align: center; font-variant-numeric: tabular-nums; }
 table.tbl td.pos { font-weight: 800; text-align: center; width: 46px; color: var(--c-muted); }
+.tlogo { border-radius: 50%; object-fit: contain; background: #fff; border: 1px solid var(--c-line); flex-shrink: 0; vertical-align: middle; }
+.team-inline { display: inline-flex; align-items: center; gap: 8px; vertical-align: middle; min-width: 0; }
+.team-inline .tname { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 table.tbl .team-cell { display: flex; align-items: center; gap: 10px; font-weight: 700; }
 table.tbl .team-cell .badge { width: 26px; height: 26px; border-radius: 50%; background: var(--c-brand-soft); display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 800; color: var(--c-brand); flex-shrink: 0; }
 table.tbl td.pts { font-weight: 800; color: var(--c-ink); }

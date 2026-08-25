@@ -14,6 +14,20 @@ export function initials(name) {
   return (words[0][0] + words[words.length - 1][0]).toUpperCase();
 }
 
+// Escudo pequeño del equipo (img) o badge de iniciales si no hay logo.
+export function teamLogo(logo, nombre, size = 26) {
+  const s = `width:${size}px;height:${size}px`;
+  return logo
+    ? `<img class="tlogo" src="${esc(logo)}" alt="" title="${esc(nombre || '')}" loading="lazy" style="${s}">`
+    : `<span class="badge" style="${s}">${esc(initials(nombre))}</span>`;
+}
+// Escudo + nombre en línea (para tablas y tarjetas). reverse = nombre antes del escudo.
+export function teamInline(logo, nombre, { size = 24, reverse = false } = {}) {
+  const badge = teamLogo(logo, nombre, size);
+  const name = `<span class="tname">${esc(nombre || '')}</span>`;
+  return `<span class="team-inline">${reverse ? name + badge : badge + name}</span>`;
+}
+
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
 

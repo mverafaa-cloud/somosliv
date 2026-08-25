@@ -204,6 +204,7 @@ function assembleFixture(partidos, equipos) {
       partidos: ps.map(p => ({
         localId: p.local, visitaId: p.visita,
         local: byId[p.local]?.nombre || p.local, visita: byId[p.visita]?.nombre || p.visita,
+        logoLocal: byId[p.local]?.logo || null, logoVisita: byId[p.visita]?.logo || null,
         horario: p.hora, cancha: p.cancha, camarinLocal: p.camarinLocal, camarinVisita: p.camarinVisita,
         grabado: !!p.grabado, clasico: !!p.clasico, premio: p.premio,
         estado: p.estado, golesLocal: p.golesLocal, golesVisita: p.golesVisita

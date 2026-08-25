@@ -1,5 +1,5 @@
 import { isAdmin, logout, getConfig, getEquipos, isDemo, publishFixture, sandboxOn } from '../services/store.js';
-import { mount, esc } from '../ui/helpers.js';
+import { mount, esc, teamInline } from '../ui/helpers.js';
 import { shell, loading } from '../ui/layout.js';
 import { icon } from '../ui/icons.js';
 import { toast } from '../ui/toast.js';
@@ -48,7 +48,7 @@ export async function showSorteo() {
   mount(loading('Cargando sorteo…'));
   const [config, equipos] = await Promise.all([getConfig(), getEquipos()]);
   cfg = config;
-  const teams = equipos.filter(e => e.serie === 'libre').map(e => ({ id: e.id, nombre: e.nombre }));
+  const teams = equipos.filter(e => e.serie === 'libre').map(e => ({ id: e.id, nombre: e.nombre, logo: e.logo }));
   const finalTeams = teams.length ? teams : (config.series || []).length ? [] : [];
   if (!S || S.params.teams.length !== finalTeams.length) {
     S = { params: loadState(finalTeams, config), result: null };
@@ -171,7 +171,7 @@ function renderResultado() {
   const R = S.result;
   const teams = S.params.teams;
   const marcas = S.params.marcas;
-  const byId = Object.fromEntries(teams.map(t => [t.id, t.nombre]));
+  const byId = Object.fromEntries(teams.map(t => [t.id, t]));
   const nPart = R.rounds.reduce((a, r) => a + r.matches.length, 0);
 
   const fechaCard = (rd) => {
@@ -187,7 +187,7 @@ function renderResultado() {
         <tbody>
           ${rd.matches.slice().sort((a, b) => HOR.indexOf(a.horario) - HOR.indexOf(b.horario) || a.cancha - b.cancha).map(m => `
             <tr class="${m.clasico ? 'is-clasico' : ''}">
-              <td>${m.clasico ? `<span class="pill pill-brand" style="margin-right:6px">${icon('flame', { size: 12 })} Clásico</span>` : ''}<strong>${esc(byId[m.local] || m.local)}</strong> <span class="muted">vs</span> <strong>${esc(byId[m.visita] || m.visita)}</strong></td>
+              <td><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">${m.clasico ? `<span class="pill pill-brand">${icon('flame', { size: 12 })} Clásico</span>` : ''}${teamInline(byId[m.local]?.logo, byId[m.local]?.nombre || m.local, { size: 22 })} <span class="muted">vs</span> ${teamInline(byId[m.visita]?.logo, byId[m.visita]?.nombre || m.visita, { size: 22 })}</div></td>
               <td>${m.horario}</td>
               <td>Cancha ${m.cancha}</td>
               <td class="muted">${(m.camarines || []).join(' y ')}</td>
@@ -202,7 +202,7 @@ function renderResultado() {
   const stat = R.stats;
   const balRow = (s) => `
     <tr>
-      <td style="font-weight:700">${esc(s.nombre)}</td>
+      <td>${teamInline(byId[s.id]?.logo, s.nombre, { size: 22 })}</td>
       <td class="num">${s.h1040}</td><td class="num">${s.h1220}</td>
       <td class="num">${s.c1}</td><td class="num">${s.c2}</td><td class="num">${s.c3}</td><td class="num">${s.c4}</td>
       <td class="num"><strong>${s.grab}</strong></td>

@@ -1,5 +1,5 @@
 import { getConfig, getPartidos, getEquipos, computeStandings, getGoleadores, equiposById } from '../services/store.js';
-import { mount, esc, initials } from '../ui/helpers.js';
+import { mount, esc, initials, teamInline } from '../ui/helpers.js';
 import { shell, loading } from '../ui/layout.js';
 import { emptyBox } from './programacion.js';
 import { preSeason } from '../ui/layout.js';
@@ -36,7 +36,7 @@ export async function showPosiciones() {
             ${table.map((r, i) => `
               <tr class="${i === 0 ? 'row-promote' : ''}">
                 <td class="pos">${i + 1}</td>
-                <td><div class="team-cell"><span class="badge">${esc(initials(r.equipo.nombre))}</span>${esc(r.equipo.nombre)}</div></td>
+                <td>${teamInline(r.equipo.logo, r.equipo.nombre, { size: 26 })}</td>
                 <td class="num">${r.pj}</td><td class="num">${r.pg}</td><td class="num">${r.pe}</td><td class="num">${r.pp}</td>
                 <td class="num">${r.gf}</td><td class="num">${r.gc}</td><td class="num">${r.dg > 0 ? '+' : ''}${r.dg}</td>
                 <td class="num pts">${r.pts}</td>
@@ -54,7 +54,7 @@ export async function showPosiciones() {
         <div class="card-header"><h3>${icon('ball', { size: 22 })} Goleadores</h3></div>
         <div class="table-wrap" style="border:none">
           <table class="tbl"><thead><tr><th class="num">#</th><th>Jugador</th><th>Equipo</th><th class="num">Goles</th></tr></thead>
-          <tbody>${gs.map((g, i) => `<tr><td class="pos">${i + 1}</td><td style="font-weight:700">${esc(g.jugador)}</td><td class="muted">${esc(byId[g.equipo]?.nombre || g.equipo)}</td><td class="num pts">${g.goles}</td></tr>`).join('')}</tbody></table>
+          <tbody>${gs.map((g, i) => `<tr><td class="pos">${i + 1}</td><td style="font-weight:700">${esc(g.jugador)}</td><td>${teamInline(byId[g.equipo]?.logo, byId[g.equipo]?.nombre || g.equipo, { size: 22 })}</td><td class="num pts">${g.goles}</td></tr>`).join('')}</tbody></table>
         </div>
       </div>` : '';
 
