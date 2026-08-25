@@ -1,4 +1,4 @@
-import { isAdmin, logout, getConfig, getEquipos, isDemo, publishFixture } from '../services/store.js';
+import { isAdmin, logout, getConfig, getEquipos, isDemo, publishFixture, sandboxOn } from '../services/store.js';
 import { mount, esc } from '../ui/helpers.js';
 import { shell, loading } from '../ui/layout.js';
 import { icon } from '../ui/icons.js';
@@ -280,7 +280,7 @@ function generar(nuevo) {
   // pequeño defer para que el botón muestre estado
   setTimeout(() => {
     try {
-      const R = generarFixture(p, seed, 400);
+      const R = generarFixture(p, seed, 800);
       R.seedUsed = seed;
       S.result = R;
       render();
@@ -367,12 +367,13 @@ async function publicar() {
   const help = document.getElementById('publish-help');
   const btn = document.getElementById('btn-publish');
 
-  if (!isDemo()) {
-    // Modo Firebase: escribe el fixture directo a la base (queda grabado y en vivo).
+  if (!isDemo() || sandboxOn()) {
+    // Modo Firebase (o sandbox): escribe el fixture directo (queda grabado y en vivo).
+    const sb = sandboxOn();
     if (btn) { btn.disabled = true; btn.textContent = 'Publicando…'; }
     try {
       const n = await publishFixture(data);
-      toast(`Fixture publicado (${n} partidos). Ya está en vivo.`, 'success');
+      toast(sb ? `Fixture publicado en modo prueba (${n} partidos).` : `Fixture publicado (${n} partidos). Ya está en vivo.`, 'success');
       if (help) help.innerHTML = `
         <div class="card mb-3" style="border-left:4px solid var(--c-brand)">
           <h3 style="margin:0 0 6px">${icon('check', { size: 18 })} Fixture publicado</h3>

@@ -41,6 +41,9 @@ function roundRobin(ids, rand) {
 }
 
 const CANCHAS = [1, 2, 3, 4];
+// Límites por equipo (torneo Junior de 10 equipos, 9 fechas).
+const CL_MIN = 2, CL_MAX = 2;   // clásicos por equipo (exactamente 2 → 10 clásicos totales)
+const GR_MIN = 5, GR_MAX = 6;   // grabaciones por equipo
 // Camarines por cancha (parámetro fijo del complejo).
 export const CAMARINES = { 1: [1, 2], 3: [3, 4], 2: [5, 6], 4: [7, 8] };
 
@@ -108,18 +111,25 @@ function buildOne(params, seed) {
     // quien tiene menos de una, recibe más de la otra.
     const expo = id => T[id].grab + T[id].clasico;
 
-    // ---- 1) Clásico de la jornada (a quien menos exposición tiene) ----
-    let bestIdx = 0, bestScore = -Infinity;
-    matches.forEach((m, i) => {
-      let s = -(expo(m.local) + expo(m.visita)) * 2;
-      if (T[m.local].clasico === 0) s += 40 / roundsLeft;   // cubrir equipos sin clásico, urgente al final
-      if (T[m.visita].clasico === 0) s += 40 / roundsLeft;
+    // ---- 1) Clásicos de la jornada (1 o 2), apuntando a CL_MIN–CL_MAX por equipo ----
+    const canCl = m => !m.clasico && T[m.local].clasico < CL_MAX && T[m.visita].clasico < CL_MAX;
+    const clScore = m => {
+      let s = -(expo(m.local) + expo(m.visita));
+      if (T[m.local].clasico < CL_MIN) s += 25 / roundsLeft;   // urgente llegar al mínimo
+      if (T[m.visita].clasico < CL_MIN) s += 25 / roundsLeft;
       if (rivSet.has([m.local, m.visita].sort().join('|'))) s += 100; // respeta rivalidades definidas
-      s += rand() * 0.5;
-      if (s > bestScore) { bestScore = s; bestIdx = i; }
-    });
-    matches[bestIdx].clasico = true;
-    T[matches[bestIdx].local].clasico++; T[matches[bestIdx].visita].clasico++;
+      return s + rand() * 0.4;
+    };
+    // Déficit para llegar al mínimo; con 1 clásico/fecha se cubren hasta 2 déficits.
+    const deficit = ids.reduce((a, id) => a + Math.max(0, CL_MIN - T[id].clasico), 0);
+    const nCl = deficit > (roundsLeft - 1) * 2 ? 2 : 1; // si 1/fecha no alcanza, pon 2
+    for (let k = 0; k < nCl; k++) {
+      let bi = -1, bs = -Infinity;
+      matches.forEach((m, i) => { if (!canCl(m)) return; const s = clScore(m); if (s > bs) { bs = s; bi = i; } });
+      if (bi < 0) break;
+      matches[bi].clasico = true;
+      T[matches[bi].local].clasico++; T[matches[bi].visita].clasico++;
+    }
 
     // ---- 2) Horarios (hacia el objetivo por equipo; cap 4 por horario) ----
     // "need" = cuántos partidos le faltan a un equipo en ese horario para su objetivo.
@@ -146,12 +156,23 @@ function buildOne(params, seed) {
     // Prioriza grabar a los equipos con MENOS exposición total (grab + clásico),
     // así se compensa a quien recibió menos clásicos.
     const gval = m => expo(m.local) + expo(m.visita) + rand() * 0.3;
+    const orden = matches.slice().sort((a, b) => gval(a) - gval(b));
     const recorded = [];
-    matches.slice().sort((a, b) => gval(a) - gval(b)).forEach(m => {
+    // 1ª pasada: respeta el tope GR_MAX por equipo.
+    orden.forEach(m => {
       if (recorded.length >= nGrab) return;
       if (recorded.filter(x => x.horario === m.horario).length >= 2) return;
+      if (T[m.local].grab >= GR_MAX || T[m.visita].grab >= GR_MAX) return;
       recorded.push(m);
     });
+    // 2ª pasada (rara): si los topes impidieron llegar a nGrab, completa igual (lo corrige el score global).
+    if (recorded.length < nGrab) {
+      orden.forEach(m => {
+        if (recorded.length >= nGrab || recorded.includes(m)) return;
+        if (recorded.filter(x => x.horario === m.horario).length >= 2) return;
+        recorded.push(m);
+      });
+    }
     recorded.forEach(m => m.grabado = true);
 
     // Elige el par de canchas-cámara y asigna las canchas de los grabados dentro de él.
@@ -216,6 +237,30 @@ function buildOne(params, seed) {
     return { n: ri + 1, fecha: usarFechas[ri] || null, matches };
   });
 
+  // ---- 6) Reparación de marcas: hill-climb para acercar todos a 3/3/3 ----
+  // El greedy por jornada suele dejar 1-2 equipos en 2/4/3. Recoloreamos partidos
+  // (cambia la marca de AMBOS equipos del partido) mientras baje la dispersión total.
+  {
+    const spr = obj => { const v = Object.values(obj); return Math.max(...v) - Math.min(...v); };
+    const allM = rounds.flatMap(r => r.matches);
+    let improved = true, guard = 0;
+    while (improved && guard++ < 400) {
+      improved = false;
+      for (const m of allM) {
+        const cur = m.marca;
+        for (const alt of marcas) {
+          if (alt === cur) continue;
+          const before = spr(T[m.local].marca) + spr(T[m.visita].marca);
+          T[m.local].marca[cur]--; T[m.visita].marca[cur]--;
+          T[m.local].marca[alt]++; T[m.visita].marca[alt]++;
+          const after = spr(T[m.local].marca) + spr(T[m.visita].marca);
+          if (after < before) { m.marca = alt; improved = true; }
+          else { T[m.local].marca[cur]++; T[m.visita].marca[cur]++; T[m.local].marca[alt]--; T[m.visita].marca[alt]--; }
+        }
+      }
+    }
+  }
+
   return { rounds, tally: T };
 }
 
@@ -235,22 +280,25 @@ function scoreDraw(T, params) {
     s += sinCancha * 25 + spread(t.cancha) * 2;
     // clásico: penaliza 0 fuerte + dispersión
     if (t.clasico === 0) s += 60;
-    // marcas: dispersión por equipo
-    s += spread(t.marca) * 3;
+    // marcas: dispersión por equipo (objetivo 3/3/3)
+    s += spread(t.marca) * 8;
   });
-  // EXPOSICIÓN TOTAL (grab + clásico): que se compense entre equipos — es lo que domina.
+  // Topes duros por equipo: grabados en [GR_MIN,GR_MAX] y clásicos en [CL_MIN,CL_MAX].
+  ids.forEach(id => {
+    const g = T[id].grab, c = T[id].clasico;
+    if (g < GR_MIN) s += (GR_MIN - g) * 60;
+    if (g > GR_MAX) s += (g - GR_MAX) * 60;
+    if (c < CL_MIN) s += (CL_MIN - c) * 60;
+    if (c > CL_MAX) s += (c - CL_MAX) * 60;
+  });
+  // Exposición total (grab + clásico): compensa entre equipos.
   const expo = ids.map(id => T[id].grab + T[id].clasico);
-  s += (Math.max(...expo) - Math.min(...expo)) * 9;
-  // grabaciones y clásicos por separado: penalización leve, solo para evitar extremos.
-  const grabs = ids.map(id => T[id].grab);
-  s += (Math.max(...grabs) - Math.min(...grabs)) * 1.2;
-  const cl = ids.map(id => T[id].clasico);
-  s += (Math.max(...cl) - Math.min(...cl)) * 1.5;
+  s += (Math.max(...expo) - Math.min(...expo)) * 5;
   return s;
 }
 
 // API principal: corre N restarts y devuelve el mejor.
-export function generarFixture(params, baseSeed = 1, restarts = 400) {
+export function generarFixture(params, baseSeed = 1, restarts = 800) {
   let best = null, bestScore = Infinity;
   for (let i = 0; i < restarts; i++) {
     const seed = (baseSeed * 2654435761 + i * 40503 + 12345) >>> 0;

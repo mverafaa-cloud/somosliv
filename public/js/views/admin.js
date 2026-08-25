@@ -6,6 +6,7 @@ import {
   getDisciplina, saveTarjeta, deleteTarjeta,
   getInscripciones, updateInscripcion, deleteInscripcion,
   getAudiovisual, saveAudiovisual,
+  sandboxOn, setSandbox, resetSandbox,
   equiposById
 } from '../services/store.js';
 import { mount, esc, fmtDate } from '../ui/helpers.js';
@@ -93,6 +94,7 @@ function tabsForRole() {
 
 function renderPanel() {
   const admin = isAdmin();
+  const sb = sandboxOn();
   const tabs = tabsForRole();
   if (!tabs.some(t => t.id === TAB)) TAB = tabs[0].id;
   const inner = `
@@ -100,11 +102,28 @@ function renderPanel() {
     <div class="spread mb-2">
       <div><span class="eyebrow">${admin ? 'Panel de administración' : 'Carga de resultados'}</span><h1 style="margin:0">${admin ? 'LIV Admin' : 'Planillero'}</h1></div>
       <div class="row">
-        <span class="pill ${isDemo() ? 'pill-red' : 'pill-green'}">${isDemo() ? 'DEMO (sin Firebase)' : 'Conectado'}</span>
+        <span class="pill ${sb ? 'pill-amber' : (isDemo() ? 'pill-red' : 'pill-green')}">${sb ? 'MODO PRUEBA' : (isDemo() ? 'DEMO (sin Firebase)' : 'Conectado')}</span>
         ${admin ? `<a href="/sorteo" data-link class="btn btn-ghost btn-sm">${icon('shuffle', { size: 15 })} Sorteo</a>` : ''}
         <button class="btn btn-ghost btn-sm" id="btn-logout">Cerrar sesión</button>
       </div>
     </div>
+    ${admin ? `
+    <div class="card" style="background:${sb ? 'rgba(245,158,11,.08)' : 'var(--surface, #fff)'};border:1px dashed ${sb ? '#f59e0b' : 'var(--border,#ddd)'};padding:12px 16px;margin-bottom:14px">
+      <div class="spread" style="gap:12px;flex-wrap:wrap;align-items:center">
+        <div style="min-width:220px">
+          <strong>${icon('lock', { size: 15 })} Entorno de prueba</strong>
+          <div class="muted" style="font-size:.85rem">${sb
+            ? 'Estás en un sandbox privado (solo este navegador). Genera el fixture, carga resultados y tarjetas sin afectar la web real.'
+            : 'Prueba cómo se verá la página al cargar el fixture, resultados y tarjetas — sin tocar los datos reales. Solo visible para ti en este navegador.'}</div>
+        </div>
+        <div class="row" style="gap:8px">
+          ${sb
+            ? `<button class="btn btn-secondary btn-sm" id="btn-sb-reset">Vaciar datos de prueba</button>
+               <button class="btn btn-primary btn-sm" id="btn-sb-off">Salir del modo prueba</button>`
+            : `<button class="btn btn-primary btn-sm" id="btn-sb-on">Activar modo prueba</button>`}
+        </div>
+      </div>
+    </div>` : ''}
     <div class="tabs" id="admin-tabs">
       ${tabs.map(t => `<button data-tab="${t.id}" class="${TAB === t.id ? 'active' : ''}">${t.label}</button>`).join('')}
     </div>
@@ -113,6 +132,30 @@ function renderPanel() {
   mount(shell(inner, C.config));
   document.getElementById('btn-logout').onclick = async () => { await logout(); if (window.renderHeader) window.renderHeader(); window.__router.go('/', false); };
   document.querySelectorAll('#admin-tabs button').forEach(b => b.onclick = () => { TAB = b.dataset.tab; renderPanel(); });
+  const bOn = document.getElementById('btn-sb-on');
+  if (bOn) bOn.onclick = async () => {
+    bOn.disabled = true; bOn.textContent = 'Activando…';
+    setSandbox(true);
+    try { const eq = await getEquipos(); if (!eq.length) await importEquipos(); } catch (_) {}
+    if (window.renderHeader) window.renderHeader();
+    await loadAll(); renderPanel();
+    toast('Modo prueba activado — datos privados de este navegador', 'success');
+  };
+  const bOff = document.getElementById('btn-sb-off');
+  if (bOff) bOff.onclick = async () => {
+    setSandbox(false);
+    if (window.renderHeader) window.renderHeader();
+    await loadAll(); renderPanel();
+    toast('Volviste a los datos reales', 'success');
+  };
+  const bRst = document.getElementById('btn-sb-reset');
+  if (bRst) bRst.onclick = async () => {
+    if (!confirm('¿Vaciar todos los datos de prueba (fixture, resultados, tarjetas)? Los datos reales no se tocan.')) return;
+    resetSandbox();
+    try { await importEquipos(); } catch (_) {}
+    await loadAll(); renderPanel();
+    toast('Datos de prueba vaciados', 'success');
+  };
   renderTab();
 }
 

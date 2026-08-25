@@ -1,4 +1,4 @@
-import { getUser, isAdmin, isLogged, isPlanillero, logout } from '../services/store.js';
+import { getUser, isAdmin, isLogged, isPlanillero, logout, sandboxOn } from '../services/store.js';
 import { icon } from './icons.js';
 
 export const NAV = [
@@ -21,6 +21,16 @@ export function renderHeader() {
   document.querySelector('header.app-header')?.remove();
   document.querySelector('nav.bottom-nav')?.remove();
   document.getElementById('liv-menu')?.remove();
+  document.getElementById('sandbox-bar')?.remove();
+
+  // ---- Barra de modo prueba (sandbox privado) ----
+  if (sandboxOn()) {
+    const bar = document.createElement('div');
+    bar.className = 'sandbox-bar';
+    bar.id = 'sandbox-bar';
+    bar.innerHTML = `<span>🧪 Modo prueba — datos privados de este navegador · <a href="/admin" data-link style="color:inherit;text-decoration:underline">salir</a></span>`;
+    document.body.insertBefore(bar, document.body.firstChild);
+  }
 
   const admin = isAdmin();
   const logged = isLogged();

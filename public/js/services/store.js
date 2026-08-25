@@ -40,6 +40,27 @@ export function isLogged() { return !!_user || _localAdmin; }
 // Planillero = usuario autenticado en Firebase que NO es admin.
 export function isPlanillero() { return !!_user && !isAdmin(); }
 
+// ---------- MODO PRUEBA (sandbox local, solo en tu navegador) ----------
+// Cuando está activo, TODAS las lecturas/escrituras van a localStorage en vez de
+// Firestore. Sirve para probar el sitio (cargar fixture, resultados, tarjetas)
+// sin tocar los datos reales ni que nadie más lo vea.
+const SB_KEY = 'liv_sandbox';
+export function sandboxOn() { try { return localStorage.getItem(SB_KEY) === '1'; } catch (_) { return false; } }
+export function setSandbox(on) { try { on ? localStorage.setItem(SB_KEY, '1') : localStorage.removeItem(SB_KEY); } catch (_) {} }
+export function resetSandbox() { ['partidos', 'disciplina', 'equipos', 'config', 'audiovisual'].forEach(c => { try { localStorage.removeItem('liv_sb_' + c); } catch (_) {} }); }
+function sbGet(coll) { try { return JSON.parse(localStorage.getItem('liv_sb_' + coll) || '[]'); } catch (_) { return []; } }
+function sbSet(coll, arr) { try { localStorage.setItem('liv_sb_' + coll, JSON.stringify(arr)); } catch (_) {} }
+function sbUpsert(coll, data) {
+  const arr = sbGet(coll);
+  let { id, ...rest } = data;
+  if (!id) id = 'sb' + Date.now() + Math.floor(Math.random() * 1000);
+  const i = arr.findIndex(x => x.id === id);
+  const rec = i >= 0 ? { ...arr[i], ...rest, id } : { id, ...rest };
+  if (i >= 0) arr[i] = rec; else arr.push(rec);
+  sbSet(coll, arr);
+  return id;
+}
+
 function configReal() {
   const c = window.__FIREBASE_CONFIG__ || {};
   return c.apiKey && c.apiKey !== 'REEMPLAZAR' && c.projectId && c.projectId !== 'REEMPLAZAR';
@@ -86,12 +107,14 @@ function requireFb() {
   if (mode !== 'firebase') throw new Error('Modo demo: configura Firebase para guardar cambios.');
 }
 async function readAll(coll, seedKey) {
+  if (sandboxOn()) return sbGet(coll).map(x => ({ ...x }));
   if (mode === 'demo') return (SEED[seedKey] || []).map(x => ({ ...x }));
   const { collection, getDocs } = fb.fsMod;
   const snap = await getDocs(collection(fb.db, coll));
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 async function upsert(coll, data) {
+  if (sandboxOn()) return sbUpsert(coll, data);
   requireFb();
   const { collection, doc, addDoc, setDoc } = fb.fsMod;
   const { id, ...rest } = data;
@@ -100,6 +123,7 @@ async function upsert(coll, data) {
   return ref.id;
 }
 async function remove(coll, id) {
+  if (sandboxOn()) { sbSet(coll, sbGet(coll).filter(x => x.id !== id)); return; }
   requireFb();
   const { doc, deleteDoc } = fb.fsMod;
   await deleteDoc(doc(fb.db, coll, id));
@@ -107,12 +131,14 @@ async function remove(coll, id) {
 
 // ---------- CONFIG ----------
 export async function getConfig() {
+  if (sandboxOn()) return { ...JSON.parse(JSON.stringify(SEED.config)), ...(sbGet('config')[0] || {}) };
   if (mode === 'demo') return JSON.parse(JSON.stringify(SEED.config));
   const { doc, getDoc } = fb.fsMod;
   const snap = await getDoc(doc(fb.db, 'config', 'general'));
   return snap.exists() ? { ...SEED.config, ...snap.data() } : JSON.parse(JSON.stringify(SEED.config));
 }
 export async function saveConfig(data) {
+  if (sandboxOn()) { sbSet('config', [{ ...(sbGet('config')[0] || {}), ...data }]); return; }
   requireFb();
   const { doc, setDoc } = fb.fsMod;
   await setDoc(doc(fb.db, 'config', 'general'), data, { merge: true });
@@ -126,6 +152,8 @@ export const deleteEquipo = (id) => remove('equipos', id);
 // Importa el catálogo de equipos (seed) a Firestore de una vez. Usa los mismos
 // ids, así que re-ejecutar no duplica (actualiza). Solo tiene sentido en Firebase.
 export async function importEquipos() {
+  const lista0 = SEED.equipos || [];
+  if (sandboxOn()) { sbSet('equipos', lista0.map(e => ({ ...e }))); return lista0.length; }
   requireFb();
   const { doc, writeBatch } = fb.fsMod;
   const batch = writeBatch(fb.db);
@@ -162,29 +190,33 @@ export const deleteInscripcion = (id) => remove('inscripciones', id);
 // ---------- FIXTURE PUBLICADO ----------
 // En modo Firebase: se arma desde la colección 'partidos' (lo que cargan/editan
 // admin y planilleros en vivo). En modo demo: archivo estático /data/fixture.json.
+function assembleFixture(partidos, equipos) {
+  const jr = partidos.filter(p => (p.serie || 'libre') === 'libre' && p.fecha_num != null);
+  if (!jr.length) return null;
+  const byId = {}; equipos.forEach(e => byId[e.id] = e);
+  const groups = {};
+  jr.forEach(p => { (groups[p.fecha_num] = groups[p.fecha_num] || []).push(p); });
+  const fechas = Object.keys(groups).map(Number).sort((a, b) => a - b).map(n => {
+    const ps = groups[n];
+    const fecha = ps.map(p => p.fecha).filter(Boolean).sort()[0] || null;
+    return {
+      n, fecha,
+      partidos: ps.map(p => ({
+        localId: p.local, visitaId: p.visita,
+        local: byId[p.local]?.nombre || p.local, visita: byId[p.visita]?.nombre || p.visita,
+        horario: p.hora, cancha: p.cancha, camarinLocal: p.camarinLocal, camarinVisita: p.camarinVisita,
+        grabado: !!p.grabado, clasico: !!p.clasico, premio: p.premio,
+        estado: p.estado, golesLocal: p.golesLocal, golesVisita: p.golesVisita
+      }))
+    };
+  });
+  return { serie: 'Junior', fechas };
+}
 export async function getFixture() {
+  if (sandboxOn()) return assembleFixture(sbGet('partidos'), sbGet('equipos'));
   if (mode === 'firebase') {
     const [partidos, equipos] = await Promise.all([readAll('partidos', 'partidos'), readAll('equipos', 'equipos')]);
-    const jr = partidos.filter(p => (p.serie || 'libre') === 'libre' && p.fecha_num != null);
-    if (!jr.length) return null;
-    const byId = {}; equipos.forEach(e => byId[e.id] = e);
-    const groups = {};
-    jr.forEach(p => { (groups[p.fecha_num] = groups[p.fecha_num] || []).push(p); });
-    const fechas = Object.keys(groups).map(Number).sort((a, b) => a - b).map(n => {
-      const ps = groups[n];
-      const fecha = ps.map(p => p.fecha).filter(Boolean).sort()[0] || null;
-      return {
-        n, fecha,
-        partidos: ps.map(p => ({
-          localId: p.local, visitaId: p.visita,
-          local: byId[p.local]?.nombre || p.local, visita: byId[p.visita]?.nombre || p.visita,
-          horario: p.hora, cancha: p.cancha, camarinLocal: p.camarinLocal, camarinVisita: p.camarinVisita,
-          grabado: !!p.grabado, clasico: !!p.clasico, premio: p.premio,
-          estado: p.estado, golesLocal: p.golesLocal, golesVisita: p.golesVisita
-        }))
-      };
-    });
-    return { serie: 'Junior', fechas };
+    return assembleFixture(partidos, equipos);
   }
   // demo: archivo estático
   try {
@@ -198,6 +230,25 @@ export async function getFixture() {
 // Publica el fixture del sorteo a Firestore (colección 'partidos').
 // Reemplaza el calendario pero PRESERVA los marcadores ya cargados (mismo id).
 export async function publishFixture(fixture) {
+  if (sandboxOn()) {
+    const prevArr = sbGet('partidos');
+    const existing = {}; prevArr.forEach(p => existing[p.id] = p);
+    const arr = [];
+    (fixture.fechas || []).forEach(f => (f.partidos || []).forEach(p => {
+      const id = `f${f.n}-${p.localId}-${p.visitaId}`.replace(/[^a-zA-Z0-9_-]/g, '');
+      const prev = existing[id];
+      arr.push({
+        id, serie: fixture.serieId || 'libre', fecha_num: f.n, fecha: f.fecha || '', hora: p.horario || '',
+        local: p.localId, visita: p.visitaId, cancha: p.cancha,
+        camarinLocal: p.camarinLocal ?? null, camarinVisita: p.camarinVisita ?? null,
+        grabado: !!p.grabado, clasico: !!p.clasico, premio: p.premio || '',
+        golesLocal: prev?.golesLocal ?? null, golesVisita: prev?.golesVisita ?? null,
+        estado: prev?.estado || 'programado'
+      });
+    }));
+    sbSet('partidos', arr);
+    return arr.length;
+  }
   requireFb();
   const { collection, doc, getDocs, writeBatch } = fb.fsMod;
   const snap = await getDocs(collection(fb.db, 'partidos'));
@@ -224,12 +275,14 @@ export async function publishFixture(fixture) {
 
 // ---------- AUDIOVISUAL ----------
 export async function getAudiovisual() {
+  if (sandboxOn()) return sbGet('audiovisual')[0] || JSON.parse(JSON.stringify(SEED.audiovisual));
   if (mode === 'demo') return JSON.parse(JSON.stringify(SEED.audiovisual));
   const { doc, getDoc } = fb.fsMod;
   const snap = await getDoc(doc(fb.db, 'config', 'audiovisual'));
   return snap.exists() ? snap.data() : { videos: [], galeria: [] };
 }
 export async function saveAudiovisual(data) {
+  if (sandboxOn()) { sbSet('audiovisual', [{ ...(sbGet('audiovisual')[0] || {}), ...data }]); return; }
   requireFb();
   const { doc, setDoc } = fb.fsMod;
   await setDoc(doc(fb.db, 'config', 'audiovisual'), data, { merge: true });
