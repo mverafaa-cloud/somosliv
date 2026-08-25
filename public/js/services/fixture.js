@@ -103,13 +103,17 @@ function buildOne(params, seed) {
     // localía tally
     matches.forEach(m => { T[m.local].local++; T[m.visita].visita++; });
 
-    // ---- 1) Clásico de la jornada ----
+    // Exposición = grabaciones + clásicos (visibilidad total del equipo).
+    // Clásicos y grabaciones se reparten mirando ESTA suma, para que se compensen:
+    // quien tiene menos de una, recibe más de la otra.
+    const expo = id => T[id].grab + T[id].clasico;
+
+    // ---- 1) Clásico de la jornada (a quien menos exposición tiene) ----
     let bestIdx = 0, bestScore = -Infinity;
     matches.forEach((m, i) => {
-      const cl = T[m.local].clasico, cv = T[m.visita].clasico;
-      let s = -(cl + cv) * 2;
-      if (cl === 0) s += 40 / roundsLeft;         // cubrir equipos sin clásico, urgente al final
-      if (cv === 0) s += 40 / roundsLeft;
+      let s = -(expo(m.local) + expo(m.visita)) * 2;
+      if (T[m.local].clasico === 0) s += 40 / roundsLeft;   // cubrir equipos sin clásico, urgente al final
+      if (T[m.visita].clasico === 0) s += 40 / roundsLeft;
       if (rivSet.has([m.local, m.visita].sort().join('|'))) s += 100; // respeta rivalidades definidas
       s += rand() * 0.5;
       if (s > bestScore) { bestScore = s; bestIdx = i; }
@@ -139,7 +143,9 @@ function buildOne(params, seed) {
     // 2 cámaras × 2 bloques = máx. 4 grabables. Máx. 2 grabados por horario para poder
     // empaquetarlos en 2 canchas.
     const nGrab = Math.min(grabadosPorFecha, 4, matches.length);
-    const gval = m => T[m.local].grab + T[m.visita].grab + rand() * 0.3;
+    // Prioriza grabar a los equipos con MENOS exposición total (grab + clásico),
+    // así se compensa a quien recibió menos clásicos.
+    const gval = m => expo(m.local) + expo(m.visita) + rand() * 0.3;
     const recorded = [];
     matches.slice().sort((a, b) => gval(a) - gval(b)).forEach(m => {
       if (recorded.length >= nGrab) return;
@@ -232,12 +238,14 @@ function scoreDraw(T, params) {
     // marcas: dispersión por equipo
     s += spread(t.marca) * 3;
   });
-  // grabaciones: dispersión global
+  // EXPOSICIÓN TOTAL (grab + clásico): que se compense entre equipos — es lo que domina.
+  const expo = ids.map(id => T[id].grab + T[id].clasico);
+  s += (Math.max(...expo) - Math.min(...expo)) * 9;
+  // grabaciones y clásicos por separado: penalización leve, solo para evitar extremos.
   const grabs = ids.map(id => T[id].grab);
-  s += (Math.max(...grabs) - Math.min(...grabs)) * 4;
-  // clásicos: dispersión global
+  s += (Math.max(...grabs) - Math.min(...grabs)) * 1.2;
   const cl = ids.map(id => T[id].clasico);
-  s += (Math.max(...cl) - Math.min(...cl)) * 3;
+  s += (Math.max(...cl) - Math.min(...cl)) * 1.5;
   return s;
 }
 
