@@ -85,8 +85,8 @@ function render() {
           <input class="input" type="date" id="p-inicio" value="${esc(p.inicio)}">
         </div>
         <div>
-          <label class="lbl">Grabaciones por jornada</label>
-          <input class="input" type="number" min="0" max="${teams.length / 2}" id="p-grab" value="${p.grabadosPorFecha}">
+          <label class="lbl">Grabaciones por jornada <span class="muted">(2 cámaras · máx. 4)</span></label>
+          <input class="input" type="number" min="0" max="4" id="p-grab" value="${p.grabadosPorFecha}">
         </div>
       </div>
 
@@ -161,11 +161,13 @@ function renderResultado() {
   const byId = Object.fromEntries(teams.map(t => [t.id, t.nombre]));
   const nPart = R.rounds.reduce((a, r) => a + r.matches.length, 0);
 
-  const fechaCard = (rd) => `
+  const fechaCard = (rd) => {
+    const cams = [...new Set(rd.matches.filter(m => m.grabado).map(m => m.cancha))].sort((a, b) => a - b);
+    return `
     <div class="card mb-2">
       <div class="spread mb-1">
         <h3 style="margin:0">Fecha ${rd.n} <span class="muted" style="font-weight:400;font-size:.9rem">· ${esc(fmt(rd.fecha))}</span></h3>
-        <span class="muted" style="font-size:.85rem">${rd.matches.filter(m => m.grabado).length} grabados</span>
+        <span class="muted" style="font-size:.85rem">${icon('video', { size: 14 })} ${rd.matches.filter(m => m.grabado).length} grabados · Cámaras en cancha ${cams.join(' y ')}</span>
       </div>
       <div class="table-wrap"><table class="tbl sorteo-tbl">
         <thead><tr><th>Partido</th><th>Hora</th><th>Cancha</th><th>Camarines</th><th>Grab.</th><th>Premio</th></tr></thead>
@@ -182,6 +184,7 @@ function renderResultado() {
         </tbody>
       </table></div>
     </div>`;
+  };
 
   const stat = R.stats;
   const balRow = (s) => `

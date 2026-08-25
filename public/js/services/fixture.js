@@ -113,11 +113,50 @@ function buildOne(params, seed) {
       T[d.m.local].hor[h]++; T[d.m.visita].hor[h]++;
     });
 
-    // ---- 3) Canchas (distintas dentro del mismo horario) ----
+    // ---- 3) Grabaciones + canchas ----
+    // Regla: los grabados de la jornada deben caber en SOLO 2 canchas (hay 2 cámaras).
+    // 2 cámaras × 2 bloques = máx. 4 grabables. Máx. 2 grabados por horario para poder
+    // empaquetarlos en 2 canchas.
+    const nGrab = Math.min(grabadosPorFecha, 4, matches.length);
+    const gval = m => T[m.local].grab + T[m.visita].grab + rand() * 0.3;
+    const recorded = [];
+    matches.slice().sort((a, b) => gval(a) - gval(b)).forEach(m => {
+      if (recorded.length >= nGrab) return;
+      if (recorded.filter(x => x.horario === m.horario).length >= 2) return;
+      recorded.push(m);
+    });
+    recorded.forEach(m => m.grabado = true);
+
+    // Elige el par de canchas-cámara y asigna las canchas de los grabados dentro de él.
+    const recByH = { '10:40': recorded.filter(m => m.horario === '10:40'), '12:20': recorded.filter(m => m.horario === '12:20') };
+    const PAIRS = [[1, 2], [1, 3], [1, 4], [2, 3], [2, 4], [3, 4]];
+    let bestAssign = null, bestSc = Infinity;
+    shuffle(PAIRS, rand).forEach(([cA, cB]) => {
+      const assign = new Map();
+      let ok = true;
+      HOR.forEach(h => {
+        if (!ok) return;
+        const recs = recByH[h], avail = [cA, cB];
+        if (recs.length > avail.length) { ok = false; return; }
+        const perms = recs.length === 2 ? [[avail[0], avail[1]], [avail[1], avail[0]]]
+          : recs.length === 1 ? [[cA], [cB]] : [[]];
+        let bp = perms[0], bs = Infinity;
+        perms.forEach(perm => {
+          let s = 0; recs.forEach((m, i) => { s += T[m.local].cancha[perm[i]] + T[m.visita].cancha[perm[i]]; });
+          if (s < bs) { bs = s; bp = perm; }
+        });
+        recs.forEach((m, i) => assign.set(m, bp[i]));
+      });
+      if (!ok) return;
+      let sc = 0; assign.forEach((c, m) => { sc += T[m.local].cancha[c] + T[m.visita].cancha[c]; });
+      if (sc < bestSc) { bestSc = sc; bestAssign = assign; }
+    });
+    if (bestAssign) bestAssign.forEach((c, m) => { m.cancha = c; });
+
+    // Canchas de los NO grabados (distintas dentro del horario, evitando las ya usadas).
     HOR.forEach(h => {
-      const grp = matches.filter(m => m.horario === h);
-      const usadas = new Set();
-      grp.forEach(m => {
+      const usadas = new Set(matches.filter(m => m.horario === h && m.cancha != null).map(m => m.cancha));
+      matches.filter(m => m.horario === h && m.cancha == null).forEach(m => {
         let bc = null, bs = Infinity;
         shuffle(CANCHAS, rand).forEach(c => {
           if (usadas.has(c)) return;
@@ -125,14 +164,14 @@ function buildOne(params, seed) {
           if (s < bs) { bs = s; bc = c; }
         });
         m.cancha = bc; usadas.add(bc);
-        T[m.local].cancha[bc]++; T[m.visita].cancha[bc]++;
       });
     });
 
-    // ---- 4) Grabaciones (grabadosPorFecha por jornada) ----
-    const ordenGrab = matches.map((m, i) => ({ i, s: T[m.local].grab + T[m.visita].grab + rand() * 0.3 }))
-      .sort((a, b) => a.s - b.s).slice(0, Math.min(grabadosPorFecha, matches.length));
-    ordenGrab.forEach(({ i }) => { matches[i].grabado = true; T[matches[i].local].grab++; T[matches[i].visita].grab++; });
+    // Tallies de cancha y grabación.
+    matches.forEach(m => {
+      T[m.local].cancha[m.cancha]++; T[m.visita].cancha[m.cancha]++;
+      if (m.grabado) { T[m.local].grab++; T[m.visita].grab++; }
+    });
 
     // ---- 5) Marca del premio (equitativo por equipo) ----
     matches.forEach(m => {
