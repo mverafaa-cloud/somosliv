@@ -10,7 +10,7 @@ export async function showReglamentos() {
   const highlights = [
     { v: clp(config.valorInscripcion || 1800000), l: 'Inscripción', h: '3 cuotas de $600.000' },
     { v: '16–35', l: 'Planilla', h: 'jugadores por equipo' },
-    { v: '10 min', l: 'Tolerancia', h: 'luego, el rival puede pedir los puntos' },
+    { v: '10 min', l: 'Tolerancia', h: '8 o menos = W.O. + multa $80.000' },
     { v: '≥ 1 fecha', l: 'Roja directa', h: 'suspensión mínima' },
     { v: '≥ 4 fechas', l: 'Agresión física', h: 'hasta expulsión' },
     { v: '48 h', l: 'Reclamos', h: 'plazo por escrito' }
@@ -44,23 +44,32 @@ export async function showReglamentos() {
       <p><strong>Senior</strong> juega a las 09:00 y 10:40; <strong>Junior</strong> juega a las 10:40 y 12:20.</p>
       <li style="list-style:none;margin-left:0"><strong>Camarines:</strong> la Liga designa y asigna los camarines a cada equipo; se debe respetar esa asignación.</li>
       <p style="margin-top:8px">La banca es exclusiva para jugadores en planilla, cuerpo técnico y delegado; no se permiten espectadores en ella.</p>` },
-    { t: 'Puntualidad y walkover (W.O.)', b: `<ul>
-        <li>Tolerancia máxima de <strong>10 minutos</strong> desde la hora oficial de inicio.</li>
-        <li>Pasado ese plazo, el equipo presente en cancha puede <strong>solicitar los puntos</strong> (walkover 0-3 a su favor). Si <strong>no</strong> los solicita, el partido se juega igual, pero se <strong>descuentan los minutos perdidos</strong> del tiempo de juego.</li>
-        <li>Presentarse con menos de <strong>9 jugadores</strong>: <strong>multa de $80.000</strong>.</li>
+    { t: 'Presentación de equipos y walkover (W.O.)', b: `<ul>
+        <li>Para jugar, cada equipo debe presentarse con un <strong>mínimo de 9 jugadores habilitados</strong>. Tolerancia máxima de <strong>10 minutos</strong> desde la hora oficial de inicio.</li>
+        <li>Cumplida la tolerancia con menos de 9 habilitados: <strong>W.O. automático</strong> (no hace falta que el rival lo pida). Regla objetiva: <strong>8 jugadores o menos = W.O.</strong></li>
+        <li>El W.O. implica <strong>multa de $80.000</strong> más la derrota deportiva por <strong>0-3</strong> (3 puntos para el rival).</li>
         <li>Retirarse de la cancha antes del final sin causa justificada: walkover + sanción del Comité.</li>
         <li><strong>Reincidencia en walkover (2 veces)</strong>: expulsión de la Liga sin reembolso. El W.O. no exime del pago de cuotas ni multas.</li>
       </ul>` },
     { t: 'Disciplina en cancha', b: `<ul>
         <li>Tarjetas amarillas y rojas aplicadas por la terna arbitral.</li>
         <li><strong>Roja directa:</strong> suspensión mínima de <strong>1 fecha</strong> (ampliable por el Comité).</li>
-        <li><strong>Agresión física</strong> a jugador, árbitro o cualquier persona: expulsión inmediata y suspensión mínima de <strong>4 fechas</strong>, pudiendo llegar a la expulsión del equipo.</li>
         <li>Las suspensiones se cumplen en la fecha <strong>inmediatamente siguiente</strong> del calendario.</li>
+      </ul>` },
+    { t: 'Agresión física individual', b: `<ul>
+        <li>Todo jugador expulsado por <strong>agredir físicamente</strong> a un rival, compañero, árbitro, miembro de la organización, cuerpo técnico o cualquier persona presente: <strong>suspensión mínima de 4 fechas</strong>.</li>
+        <li>Según la gravedad, consecuencias, reincidencia y demás antecedentes, la sanción puede aumentar hasta la <strong>expulsión definitiva del jugador de la LIV</strong>.</li>
+      </ul>` },
+    { t: 'Riñas, peleas y agresiones colectivas', b: `<p class="mb-2"><strong>Tolerancia cero.</strong></p><ul>
+        <li>Quien <strong>participe activamente</strong> en una riña o pelea con agresiones físicas: <strong>expulsión inmediata y definitiva de la LIV, sin apelación</strong>.</li>
+        <li>Si participan <strong>dos o más jugadores de un mismo equipo</strong>: además de la expulsión individual, el <strong>equipo completo queda expulsado de la competencia, sin apelación</strong>.</li>
+        <li><strong>Participación activa</strong> = golpes, patadas, empujones violentos o cualquier conducta física agresiva. <strong>No</strong> cuenta intervenir solo para separar o contener.</li>
+        <li>La responsabilidad se determina con el <strong>informe arbitral, los registros audiovisuales</strong> y demás antecedentes.</li>
       </ul>` },
     { t: 'Escala de sanciones', b: `<div class="table-wrap"><table class="tbl"><thead><tr><th>Nivel</th><th>Conductas (ejemplos)</th><th>Sanciones</th></tr></thead><tbody>
         <tr><td><span class="pill pill-grey">Leve</span></td><td>Atrasos, presentación incompleta, descuido menor de instalaciones, reclamos improcedentes.</td><td>Amonestación, apercibimiento y/o multa menor.</td></tr>
         <tr><td><span class="pill" style="background:var(--c-accent-soft);color:var(--c-accent-deep)">Grave</span></td><td>Agresiones verbales al arbitraje, conducta antideportiva reiterada, atraso en pagos, daño a instalaciones.</td><td>Suspensión de 1 a 3 fechas, multa y/o pérdida de puntos.</td></tr>
-        <tr><td><span class="pill pill-red">Gravísima</span></td><td>Agresión física, suplantación, falsificación de edad/documentos, fraude, reincidencia en W.O.</td><td>Suspensión prolongada o eliminación, derrota 0-3 y/o expulsión definitiva sin reembolso.</td></tr>
+        <tr><td><span class="pill pill-red">Gravísima</span></td><td>Agresión física, riñas o peleas colectivas, suplantación, falsificación de edad/documentos, fraude, reincidencia en W.O.</td><td>Suspensión prolongada o eliminación, derrota 0-3 y/o expulsión definitiva sin reembolso.</td></tr>
       </tbody></table></div>` },
     { t: 'Conducta de dirigentes, cuerpo técnico y público', b: `<ul>
         <li>Dirigentes y cuerpo técnico son <strong>responsables solidarios</strong> de la conducta de jugadores, suplentes y público de su equipo.</li>
@@ -95,6 +104,7 @@ export async function showReglamentos() {
     { t: 'Causales de expulsión de la Liga', b: `<ul>
         <li>Atraso en el pago de cuotas superior a 15 días.</li>
         <li>Agresión física de cualquier integrante del equipo.</li>
+        <li>Participación activa en riñas o peleas colectivas (dos o más jugadores del equipo).</li>
         <li>Suplantación de identidad comprobada.</li>
         <li>Falsificación de edad, documentos o antecedentes.</li>
         <li>Reincidencia en walkover (2 veces).</li>
