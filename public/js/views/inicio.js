@@ -28,7 +28,6 @@ export async function showInicio() {
   <div class="container">
     ${uniqTeams.length ? `
     <a href="/equipos" data-link class="top-teams-band" aria-label="Ver equipos inscritos">
-      <span class="top-teams-label">${icon('users', { size: 15 })} Equipos inscritos</span>
       ${logoMarquee(uniqTeams)}
     </a>` : ''}
 
