@@ -123,6 +123,21 @@ export const getEquipos = () => readAll('equipos', 'equipos');
 export const saveEquipo = (d) => upsert('equipos', d);
 export const deleteEquipo = (id) => remove('equipos', id);
 
+// Importa el catálogo de equipos (seed) a Firestore de una vez. Usa los mismos
+// ids, así que re-ejecutar no duplica (actualiza). Solo tiene sentido en Firebase.
+export async function importEquipos() {
+  requireFb();
+  const { doc, writeBatch } = fb.fsMod;
+  const batch = writeBatch(fb.db);
+  const lista = SEED.equipos || [];
+  lista.forEach(e => {
+    const { id, ...rest } = e;
+    batch.set(doc(fb.db, 'equipos', id), rest, { merge: true });
+  });
+  await batch.commit();
+  return lista.length;
+}
+
 // ---------- PARTIDOS ----------
 export const getPartidos = () => readAll('partidos', 'partidos');
 export const savePartido = (d) => upsert('partidos', d);

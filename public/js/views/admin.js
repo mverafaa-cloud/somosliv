@@ -1,7 +1,7 @@
 import {
   getUser, isAdmin, isPlanillero, isDemo, login, logout, adminLogin,
   getConfig, saveConfig,
-  getEquipos, saveEquipo, deleteEquipo,
+  getEquipos, saveEquipo, deleteEquipo, importEquipos,
   getPartidos, savePartido, deletePartido,
   getDisciplina, saveTarjeta, deleteTarjeta,
   getInscripciones, updateInscripcion, deleteInscripcion,
@@ -194,6 +194,13 @@ function serieOptions(sel) {
 function renderEquipos(el) {
   const rows = C.equipos.slice().sort((a, b) => (a.serie || '').localeCompare(b.serie) || (a.nombre || '').localeCompare(b.nombre));
   el.innerHTML = `
+    ${!rows.length && !isDemo() ? `
+    <div class="card mb-3" style="border-left:4px solid var(--c-brand)">
+      <div class="spread" style="flex-wrap:wrap;gap:10px">
+        <div><h3 style="margin:0">Cargar los equipos del catálogo</h3><p class="muted" style="margin:4px 0 0">Sube de una vez los 15 equipos (10 Junior + 5 Senior) con sus logos.</p></div>
+        <button class="btn btn-primary" id="btn-import-eq">${icon('users', { size: 16 })} Importar catálogo (15)</button>
+      </div>
+    </div>` : ''}
     <div class="card mb-3">
       <h3 class="mb-2">Agregar equipo</h3>
       <form id="f-eq" class="form-row-3">
@@ -211,6 +218,8 @@ function renderEquipos(el) {
       </tr>`).join('') || '<tr><td colspan="3" class="muted center">Sin equipos aún.</td></tr>'}</tbody>
     </table></div>`;
   el.querySelector('#f-eq').onsubmit = (ev) => { ev.preventDefault(); const d = Object.fromEntries(new FormData(ev.target).entries()); reload('eq', () => saveEquipo(d)); };
+  const bimp = el.querySelector('#btn-import-eq');
+  if (bimp) bimp.onclick = () => { bimp.disabled = true; bimp.textContent = 'Importando…'; reload('eq', () => importEquipos()); };
   el.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { if (confirm('¿Eliminar equipo?')) reload('eq', () => deleteEquipo(b.dataset.del)); });
 }
 
