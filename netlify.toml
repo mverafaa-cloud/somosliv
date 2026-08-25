@@ -3,6 +3,12 @@
   functions = "netlify/functions"
   command = "echo 'No build step needed'"
 
+# La apiKey web de Firebase es PÚBLICA por diseño (la seguridad la dan las
+# reglas de Firestore, no el ocultamiento de la clave). El escáner de secretos
+# de Netlify la marca como falso positivo, así que lo desactivamos.
+[build.environment]
+  SECRETS_SCAN_ENABLED = "false"
+
 [functions]
   node_bundler = "esbuild"
 
