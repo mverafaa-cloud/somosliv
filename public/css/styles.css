@@ -555,3 +555,21 @@ table.tbl td.pts { font-weight: 800; color: var(--c-ink); }
 .price-box { display: inline-flex; flex-direction: column; gap: 4px; }
 .price-box .amount { font-family: var(--font-display); font-size: clamp(2.4rem, 6vw, 3.6rem); color: var(--c-brand); line-height: 1; }
 .price-box .unit { font-size: 0.85rem; color: var(--c-muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
+
+/* ===== Sorteo Fixture (admin) ===== */
+.lbl { display:block; font-size:.8rem; font-weight:700; color:var(--c-ink); margin:0 0 5px; }
+.stack-sm { display:flex; flex-direction:column; gap:8px; }
+#p-excluir .row { flex-direction:row; align-items:center; gap:8px; }
+#p-excluir .row .input { max-width:260px; }
+.fechas-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px,1fr)); gap:8px; }
+.fechas-grid .row { align-items:center; gap:8px; }
+.fnum { flex:0 0 auto; font-size:.72rem; font-weight:800; color:var(--c-brand); background:var(--c-brand-soft); border-radius:6px; padding:3px 7px; }
+.prefs-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(240px,1fr)); gap:8px; }
+.pref-item { display:flex; align-items:center; justify-content:space-between; gap:10px; border:1px solid var(--c-line); border-radius:10px; padding:6px 10px; }
+.pref-item .pref-name { font-weight:600; font-size:.92rem; }
+.pref-item .select { max-width:150px; padding:6px 8px; }
+table.sorteo-tbl td, table.sorteo-tbl th { padding:8px 10px; font-size:.92rem; }
+table.sorteo-tbl tr.is-clasico { background:var(--c-brand-soft); }
+table.sorteo-bal td, table.sorteo-bal th { padding:7px 8px; font-size:.86rem; }
+.ico-grab { color:var(--c-brand); vertical-align:middle; }
+@media (max-width:640px){ .prefs-grid{ grid-template-columns:1fr; } }

@@ -1,9 +1,99 @@
 import { getConfig, getDisciplina, getEquipos, equiposById } from '../services/store.js';
 import { mount, esc, fmtDate, parseDate } from '../ui/helpers.js';
-import { shell, loading, preSeason } from '../ui/layout.js';
+import { shell, loading } from '../ui/layout.js';
+import { icon } from '../ui/icons.js';
 import { serieChips, emptyBox } from './programacion.js';
 
 let _serie = 'all';
+
+// Tipificación de rojas: via 'auto' (firme) o 'comite' (rango, apelable).
+const TIPIFICACION = [
+  { falta: 'Juego brusco grave (entrada temeraria, sin intención de agredir)', via: 'auto', sancion: '1 fecha' },
+  { falta: 'Malograr una ocasión manifiesta de gol (mano o falta)', via: 'auto', sancion: '1 fecha' },
+  { falta: 'Lenguaje o gestos ofensivos (no dirigidos como amenaza)', via: 'auto', sancion: '1 fecha' },
+  { falta: 'Conducta antideportiva grave (protesta agresiva, provocación)', via: 'comite', sancion: '1 a 2 fechas' },
+  { falta: 'Insultos, amenazas o injurias al árbitro, organización o rival', via: 'comite', sancion: '2 a 4 fechas' },
+  { falta: 'Escupir a otra persona', via: 'comite', sancion: '3 a 5 fechas' },
+  { falta: 'Intento de agresión (a jugador, árbitro u otra persona)', via: 'comite', sancion: '3 a 6 fechas' },
+  { falta: 'Agresión física a un jugador u otra persona presente', via: 'comite', sancion: 'Mín. 4 fechas, hasta expulsión' },
+  { falta: 'Agresión física al árbitro o a un organizador', via: 'comite', sancion: 'Hasta expulsión definitiva' },
+  { falta: 'Riña, pelea o agresión colectiva', via: 'comite', sancion: 'Expulsión inmediata y definitiva' }
+];
+
+const viaAuto = `<span class="pill" style="background:#e4f3ea;color:#0c3b23">Automática</span>`;
+const viaComite = `<span class="pill" style="background:#fdecec;color:#9b1c1c">Comité</span>`;
+
+function comiteBlock(config) {
+  const filas = TIPIFICACION.map(t => `
+    <tr>
+      <td>${esc(t.falta)}</td>
+      <td style="white-space:nowrap">${t.via === 'auto' ? viaAuto : viaComite}</td>
+      <td class="muted">${esc(t.sancion)}</td>
+    </tr>`).join('');
+
+  return `
+  <!-- Dos vías -->
+  <div class="grid grid-2 mb-3">
+    <div class="card card-tinted-brand">
+      <div class="card-header"><h3 style="color:var(--c-brand)">${icon('check', { size: 20 })} Sanción automática</h3></div>
+      <p class="mt-1">Se aplica directo por tabla, sin sesión. <strong>Firme e inapelable</strong>, se cumple en la fecha siguiente. Ej.: la roja por doble amarilla son <strong>1 fecha</strong>.</p>
+    </div>
+    <div class="card card-tinted-accent">
+      <div class="card-header"><h3>${icon('scale', { size: 20 })} Sanción de comité</h3></div>
+      <p class="mt-1">Faltas graves que se tipifican caso a caso. Requiere <strong>sesión del comité</strong>, que fija la sanción dentro de un rango. <strong>Sí admiten apelación.</strong></p>
+    </div>
+  </div>
+
+  <div class="card mb-3" style="border-left:4px solid var(--c-brand)">
+    <p style="margin:0"><strong>Regla práctica:</strong> si la expulsión es automática y nadie apela, el comité <strong>no se reúne</strong>. Solo sesiona cuando hay una falta que tipificar, una apelación válida o un hecho grave que investigar.</p>
+  </div>
+
+  <!-- Tipificación de rojas -->
+  <span class="eyebrow">Tipificación</span>
+  <h2 class="mb-1">Rojas directas: qué es automático y qué va a comité</h2>
+  <p class="muted mb-2">En las de comité, el número exacto de fechas lo fija el comité según gravedad, reincidencia y video.</p>
+  <div class="table-wrap mb-3"><table class="tbl">
+    <thead><tr><th>Falta (roja directa)</th><th>Vía</th><th>Sanción</th></tr></thead>
+    <tbody>${filas}</tbody>
+  </table></div>
+
+  <!-- Cómo funciona -->
+  <div class="grid grid-3 mb-3">
+    <div class="card">
+      <div class="card-header"><h3>${icon('calendar', { size: 20 })} Sesiones</h3></div>
+      <p class="muted mt-1">Los <strong>martes</strong> en la tarde-noche, solo si hay casos en tabla. El Directorio convoca y notifica a los delegados.</p>
+    </div>
+    <div class="card">
+      <div class="card-header"><h3>${icon('users', { size: 20 })} Quórum</h3></div>
+      <p class="muted mt-1">Mínimo <strong>3 miembros</strong>, siempre obligatorio el del <strong>Directorio</strong> y el de <strong>árbitros</strong>. El representante de un equipo involucrado se inhabilita.</p>
+    </div>
+    <div class="card">
+      <div class="card-header"><h3>${icon('shield', { size: 20 })} Decisión</h3></div>
+      <p class="muted mt-1">Por mayoría; en empate dirime el voto arbitral. Se resuelve con <strong>informe arbitral y video</strong>.</p>
+    </div>
+  </div>
+
+  <!-- Apelaciones + descarga -->
+  <div class="grid grid-2 mb-3">
+    <div class="card">
+      <div class="card-header"><h3>${icon('clipboard', { size: 20 })} Apelaciones</h3></div>
+      <p class="muted mt-1">Solo las sanciones de comité se apelan, por escrito y vía delegado, dentro de <strong>48 h</strong>. Las automáticas son firmes. La resolución del comité es inapelable.</p>
+    </div>
+    <div class="card">
+      <div class="row" style="gap:12px;align-items:flex-start">
+        <span style="color:var(--c-brand)">${icon('file', { size: 28 })}</span>
+        <div style="flex:1;min-width:0">
+          <h3 style="margin:0">Protocolo completo</h3>
+          <p class="muted" style="margin:2px 0 0">Tipificación, sesiones, quórum y flujo (PDF)</p>
+        </div>
+      </div>
+      <div class="row mt-2">
+        <a href="/assets/Protocolo-Comite-Disciplina-LIV-2026.pdf" download class="btn btn-primary btn-sm">${icon('download', { size: 16 })} Descargar</a>
+        <a href="/assets/Protocolo-Comite-Disciplina-LIV-2026.pdf" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">${icon('eye', { size: 16 })} Ver online</a>
+      </div>
+    </div>
+  </div>`;
+}
 
 export async function showDisciplina() {
   mount(loading());
@@ -11,12 +101,7 @@ export async function showDisciplina() {
   const byId = equiposById(equipos);
   const series = config.series || [];
 
-  if (!tarjetas.length) {
-    mount(shell(`<div class="container"><span class="eyebrow">Comité de disciplina</span><h1>Disciplina</h1>${preSeason(config, 'las amonestaciones y sanciones')}</div>`, config));
-    return;
-  }
-
-  function render() {
+  function renderData() {
     const list = tarjetas
       .filter(t => _serie === 'all' || t.serie === _serie)
       .sort((a, b) => (parseDate(b.fecha) - parseDate(a.fecha)));
@@ -45,7 +130,8 @@ export async function showDisciplina() {
         </tbody>
       </table></div>` : emptyBox('Sin registros de disciplina por ahora. ¡Buen fair play!');
 
-    document.getElementById('disc-body').innerHTML = body;
+    const el = document.getElementById('disc-body');
+    if (el) el.innerHTML = body;
     document.querySelectorAll('#serie-chips .chip').forEach(c => c.classList.toggle('active', c.dataset.serie === _serie));
   }
 
@@ -53,12 +139,17 @@ export async function showDisciplina() {
   <div class="container">
     <span class="eyebrow">Comité de disciplina</span>
     <h1>Disciplina</h1>
-    <p class="subtitle mb-3">Amonestaciones, expulsiones y sanciones. Cero violencia: los hechos graves se castigan drásticamente.</p>
+    <p class="subtitle mb-3">Cómo se sancionan las expulsiones en LIV. Lo simple se aplica por tabla; lo grave lo resuelve el comité. Cero violencia.</p>
+
+    ${comiteBlock(config)}
+
+    <span class="eyebrow">Registro de la temporada</span>
+    <h2 class="mb-2">Tarjetas y sanciones</h2>
     ${serieChips(series)}
     <div id="disc-body"></div>
   </div>`;
 
   mount(shell(inner, config));
-  document.querySelectorAll('#serie-chips .chip').forEach(c => c.addEventListener('click', () => { _serie = c.dataset.serie; render(); }));
-  render();
+  document.querySelectorAll('#serie-chips .chip').forEach(c => c.addEventListener('click', () => { _serie = c.dataset.serie; renderData(); }));
+  renderData();
 }

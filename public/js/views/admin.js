@@ -1,5 +1,5 @@
 import {
-  getUser, isAdmin, isDemo, login, logout,
+  getUser, isAdmin, isDemo, login, logout, adminLogin,
   getConfig, saveConfig,
   getEquipos, saveEquipo, deleteEquipo,
   getPartidos, savePartido, deletePartido,
@@ -17,12 +17,7 @@ let TAB = 'partidos';
 let C = {}; // cache: config, equipos, partidos, disciplina, inscripciones, av
 
 export async function showAdmin() {
-  if (!getUser()) return renderLogin();
-  if (!isAdmin()) {
-    mount(shell(`<div class="container"><div class="alert alert-error">Tu cuenta no tiene permisos de administrador. Pide que agreguen tu UID a la lista.</div><button class="btn btn-ghost" id="lo">Cerrar sesión</button></div>`));
-    document.getElementById('lo').onclick = async () => { await logout(); window.__router.go('/', false); };
-    return;
-  }
+  if (!isAdmin()) return renderLogin();
   mount(loading('Cargando panel…'));
   await loadAll();
   renderPanel();
@@ -37,30 +32,36 @@ async function loadAll() {
 }
 
 /* ---------------- LOGIN ---------------- */
-function renderLogin() {
+export function renderLogin(redirect) {
   const inner = `
   <div class="container-narrow">
     <div class="center mb-3"><img src="/assets/logo-mark.png" alt="LIV" style="height:90px;margin:0 auto"></div>
     <div class="card">
       <h2 class="mb-1">Acceso organización</h2>
-      <p class="muted mb-2">Panel de administración de la LIV.</p>
-      ${isDemo() ? '<div class="alert alert-warn">⚙️ Modo demo: para iniciar sesión y guardar datos, primero configura Firebase (ver README).</div>' : ''}
+      <p class="muted mb-2">Ingresa con tu usuario y contraseña de administración.</p>
       <form id="login-form">
-        <div class="form-group"><label>Email</label><input class="input" name="email" type="email" required></div>
-        <div class="form-group"><label>Contraseña</label><input class="input" name="pass" type="password" required></div>
+        <div class="form-group"><label>Usuario</label><input class="input" name="user" autocomplete="username" required></div>
+        <div class="form-group"><label>Contraseña</label><input class="input" name="pass" type="password" autocomplete="current-password" required></div>
         <button class="btn btn-primary btn-block btn-lg" id="btn-login">Ingresar</button>
       </form>
     </div>
     <p class="center mt-2"><a href="/" data-link class="muted">← Volver al sitio</a></p>
   </div>`;
   mount(shell(inner, {}));
-  document.getElementById('login-form').addEventListener('submit', async (e) => {
+  document.getElementById('login-form').addEventListener('submit', (e) => {
     e.preventDefault();
     const btn = document.getElementById('btn-login');
-    const { email, pass } = Object.fromEntries(new FormData(e.target).entries());
+    const { user, pass } = Object.fromEntries(new FormData(e.target).entries());
     btn.disabled = true; btn.textContent = 'Ingresando…';
-    try { await login(email, pass); toast('Bienvenido', 'success'); /* main re-renderiza al cambiar auth */ }
-    catch (err) { toast(err.message || 'No se pudo iniciar sesión', 'error'); btn.disabled = false; btn.textContent = 'Ingresar'; }
+    try {
+      adminLogin(user.trim(), pass);
+      toast('Bienvenido', 'success');
+      if (window.renderHeader) window.renderHeader();
+      window.__router.handle();
+    } catch (err) {
+      toast(err.message || 'No se pudo iniciar sesión', 'error');
+      btn.disabled = false; btn.textContent = 'Ingresar';
+    }
   });
 }
 
@@ -89,7 +90,7 @@ function renderPanel() {
     <div id="tab-content"></div>
   </div>`;
   mount(shell(inner, C.config));
-  document.getElementById('btn-logout').onclick = async () => { await logout(); window.__router.go('/', false); };
+  document.getElementById('btn-logout').onclick = async () => { await logout(); if (window.renderHeader) window.renderHeader(); window.__router.go('/', false); };
   document.querySelectorAll('#admin-tabs button').forEach(b => b.onclick = () => { TAB = b.dataset.tab; renderPanel(); });
   renderTab();
 }

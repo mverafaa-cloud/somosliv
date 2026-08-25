@@ -17,6 +17,7 @@ import { showReglamentos } from './views/reglamentos.js';
 import { showAdmision } from './views/admision.js';
 import { showAudiovisual } from './views/audiovisual.js';
 import { showAdmin } from './views/admin.js';
+import { showSorteo } from './views/sorteo.js';
 
 const app = document.getElementById('app');
 
@@ -38,11 +39,13 @@ async function boot() {
     '/reglamentos':  () => showReglamentos(),
     '/admision':     () => showAdmision(),
     '/audiovisual':  () => showAudiovisual(),
-    '/admin':        () => showAdmin()
+    '/admin':        () => showAdmin(),
+    '/sorteo':       () => showSorteo()
   });
 
   window.__router = router;
   window.toast = toast;
+  window.renderHeader = renderHeader;
 
   // Re-render de header cuando cambia el estado de sesión (para mostrar/ocultar Admin).
   let lastUid = undefined;

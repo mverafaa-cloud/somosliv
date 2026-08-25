@@ -10,7 +10,7 @@ export async function showReglamentos() {
   const highlights = [
     { v: clp(config.valorInscripcion || 1800000), l: 'Inscripción', h: '3 cuotas de $600.000' },
     { v: '16–35', l: 'Planilla', h: 'jugadores por equipo' },
-    { v: '10 min', l: 'Tolerancia', h: '8 o menos = W.O. + multa $80.000' },
+    { v: '10 min', l: 'Tolerancia', h: 'menos de 9 = riesgo de W.O. + multa $80.000' },
     { v: '≥ 1 fecha', l: 'Roja directa', h: 'suspensión mínima' },
     { v: '≥ 4 fechas', l: 'Agresión física', h: 'hasta expulsión' },
     { v: '48 h', l: 'Reclamos', h: 'plazo por escrito' }
@@ -46,7 +46,7 @@ export async function showReglamentos() {
       <p style="margin-top:8px">La banca es exclusiva para jugadores en planilla, cuerpo técnico y delegado; no se permiten espectadores en ella.</p>` },
     { t: 'Presentación de equipos y walkover (W.O.)', b: `<ul>
         <li>Para jugar, cada equipo debe presentarse con un <strong>mínimo de 9 jugadores habilitados</strong>. Tolerancia máxima de <strong>10 minutos</strong> desde la hora oficial de inicio.</li>
-        <li>Cumplida la tolerancia con menos de 9 habilitados: <strong>W.O. automático</strong> (no hace falta que el rival lo pida). Regla objetiva: <strong>8 jugadores o menos = W.O.</strong></li>
+        <li>Cumplida la tolerancia con <strong>menos de 9</strong>, el partido puede declararse <strong>W.O.</strong> No es automático: el rival puede <strong>optar por esperar</strong>, pero los <strong>minutos transcurridos se descuentan</strong> del tiempo de juego.</li>
         <li>El W.O. implica <strong>multa de $80.000</strong> más la derrota deportiva por <strong>0-3</strong> (3 puntos para el rival).</li>
         <li>Retirarse de la cancha antes del final sin causa justificada: walkover + sanción del Comité.</li>
         <li><strong>Reincidencia en walkover (2 veces)</strong>: expulsión de la Liga sin reembolso. El W.O. no exime del pago de cuotas ni multas.</li>
@@ -147,6 +147,21 @@ export async function showReglamentos() {
     <div class="grid grid-2 mb-3">
       ${dl('Junior', 'Reglamento-LIV-Junior-2026.pdf')}
       ${dl('Senior', 'Reglamento-LIV-Senior-2026.pdf')}
+    </div>
+
+    <div class="card mb-3">
+      <div class="row" style="gap:12px;align-items:flex-start">
+        <span style="color:var(--c-brand)">${icon('scale', { size: 30 })}</span>
+        <div style="flex:1;min-width:0">
+          <h3 style="margin:0">Protocolo del Comité de Disciplina</h3>
+          <p class="muted" style="margin:2px 0 0">Tipificación de faltas, sanciones automáticas y de comité, sesiones y quórum (PDF)</p>
+        </div>
+        <a href="/disciplina" data-link class="btn btn-ghost btn-sm">Ver sistema →</a>
+      </div>
+      <div class="row mt-2">
+        <a href="/assets/Protocolo-Comite-Disciplina-LIV-2026.pdf" download class="btn btn-primary btn-sm">${icon('download', { size: 16 })} Descargar</a>
+        <a href="/assets/Protocolo-Comite-Disciplina-LIV-2026.pdf" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">${icon('eye', { size: 16 })} Ver online</a>
+      </div>
     </div>
 
     <div class="grid grid-2 mb-3">

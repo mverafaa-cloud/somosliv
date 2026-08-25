@@ -13,6 +13,31 @@ let fb = null;               // { app, auth, db, authMod, fsMod }
 let _user = null;
 const authCbs = [];
 
+// ---- Admin local (gate simple, sin Firebase) ----
+// Nota: es un candado de conveniencia del lado del cliente para la organización,
+// no seguridad fuerte. Sirve para el panel interno y el Sorteo Fixture.
+const ADMIN_USER = 'Admin';
+const ADMIN_PASS = 'LIV.2026';
+let _localAdmin = false;
+try { _localAdmin = sessionStorage.getItem('liv_admin') === '1'; } catch (_) {}
+function notifyAuth() { authCbs.forEach(cb => cb(getUser())); }
+
+export function adminLogin(user, pass) {
+  if (user === ADMIN_USER && pass === ADMIN_PASS) {
+    _localAdmin = true;
+    try { sessionStorage.setItem('liv_admin', '1'); } catch (_) {}
+    notifyAuth();
+    return true;
+  }
+  throw new Error('Usuario o contraseña incorrectos.');
+}
+export function adminLogout() {
+  _localAdmin = false;
+  try { sessionStorage.removeItem('liv_admin'); } catch (_) {}
+  notifyAuth();
+}
+export function isLogged() { return !!_user || _localAdmin; }
+
 function configReal() {
   const c = window.__FIREBASE_CONFIG__ || {};
   return c.apiKey && c.apiKey !== 'REEMPLAZAR' && c.projectId && c.projectId !== 'REEMPLAZAR';
@@ -40,6 +65,7 @@ export async function initFirebase() {
 export function onAuthChange(cb) { authCbs.push(cb); cb(_user); }
 export function getUser() { return _user; }
 export function isAdmin() {
+  if (_localAdmin) return true;
   if (!_user) return false;
   const ids = window.__ADMIN_UIDS__ || [];
   return ids.length ? ids.includes(_user.uid) : true; // sin lista: cualquier usuario autenticado es admin
@@ -49,6 +75,7 @@ export async function login(email, pass) {
   await fb.authMod.signInWithEmailAndPassword(fb.auth, email, pass);
 }
 export async function logout() {
+  if (_localAdmin) adminLogout();
   if (mode === 'firebase') await fb.authMod.signOut(fb.auth);
 }
 
