@@ -157,7 +157,7 @@ function fechaBlock(rd) {
             <tr class="${p.clasico ? 'is-clasico' : ''}">
               <td style="white-space:nowrap;font-weight:600">${esc(p.horario)}</td>
               <td style="white-space:nowrap">Cancha ${esc(p.cancha)}</td>
-              <td><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">${p.clasico ? `<span class="pill pill-brand">${icon('flame', { size: 12 })} Clásico</span>` : ''}${teamInline(p.logoLocal, p.local, { size: 22 })} <span class="muted">vs</span> ${teamInline(p.logoVisita, p.visita, { size: 22 })}</div></td>
+              <td><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">${teamInline(p.logoLocal, p.local, { size: 22 })} <span class="muted">vs</span> ${teamInline(p.logoVisita, p.visita, { size: 22 })}${p.clasico ? `<span class="pill pill-brand">${icon('flame', { size: 12 })} Clásico</span>` : ''}</div></td>
               <td class="muted" style="white-space:nowrap">${p.camarinLocal ?? '—'} / ${p.camarinVisita ?? '—'}</td>
               <td>${p.grabado ? icon('video', { size: 16, cls: 'ico-grab' }) : '<span class="muted">—</span>'}</td>
               <td><span class="pill pill-grey">${esc(p.premio || '—')}</span></td>

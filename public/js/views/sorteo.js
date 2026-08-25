@@ -187,7 +187,7 @@ function renderResultado() {
         <tbody>
           ${rd.matches.slice().sort((a, b) => HOR.indexOf(a.horario) - HOR.indexOf(b.horario) || a.cancha - b.cancha).map(m => `
             <tr class="${m.clasico ? 'is-clasico' : ''}">
-              <td><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">${m.clasico ? `<span class="pill pill-brand">${icon('flame', { size: 12 })} Clásico</span>` : ''}${teamInline(byId[m.local]?.logo, byId[m.local]?.nombre || m.local, { size: 22 })} <span class="muted">vs</span> ${teamInline(byId[m.visita]?.logo, byId[m.visita]?.nombre || m.visita, { size: 22 })}</div></td>
+              <td><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">${teamInline(byId[m.local]?.logo, byId[m.local]?.nombre || m.local, { size: 22 })} <span class="muted">vs</span> ${teamInline(byId[m.visita]?.logo, byId[m.visita]?.nombre || m.visita, { size: 22 })}${m.clasico ? `<span class="pill pill-brand">${icon('flame', { size: 12 })} Clásico</span>` : ''}</div></td>
               <td>${m.horario}</td>
               <td>Cancha ${m.cancha}</td>
               <td class="muted">${(m.camarines || []).join(' y ')}</td>
