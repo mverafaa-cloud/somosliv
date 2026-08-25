@@ -61,6 +61,16 @@ export function shell(innerHtml, config = {}) {
   return `${demoNotice()}${innerHtml}${footer(config)}`;
 }
 
+// Banner de logos de equipos (marquee horizontal auto-desplazable).
+export function logoMarquee(teams = []) {
+  const list = teams.filter(t => t.logo);
+  if (!list.length) return '';
+  const chip = (t) => `<div class="logo-chip" title="${esc(t.nombre)}"><img src="${esc(t.logo)}" alt="${esc(t.nombre)}" loading="lazy"></div>`;
+  // Duplicamos la lista para un loop continuo.
+  const track = list.concat(list).map(chip).join('');
+  return `<div class="logo-marquee"><div class="logo-track">${track}</div></div>`;
+}
+
 export function loading(msg = 'Cargando…') {
   return `<div class="loading-page"><div class="spinner"></div><p>${esc(msg)}</p></div>`;
 }

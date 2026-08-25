@@ -29,8 +29,26 @@ export const SEED = {
     ]
   },
 
-  // La temporada aún no comienza: sin datos hasta la carga oficial.
-  equipos: [],
+  // Equipos inscritos 2026 (con logo). serie: 'libre' = Junior · 'senior' = Senior.
+  equipos: [
+    // ---- Junior ----
+    { id: 'jr-los-pibes',       nombre: 'Los Pibes',           serie: 'libre',  logo: '/assets/equipos/los-pibes.png' },
+    { id: 'jr-camilo-enriquez', nombre: 'Camilo Enríquez',     serie: 'libre',  logo: '/assets/equipos/camilo-enriquez.png' },
+    { id: 'jr-bunker',          nombre: 'Bunker',              serie: 'libre',  logo: '/assets/equipos/bunker.png' },
+    { id: 'jr-mesa-cuadrada',   nombre: 'Mesa Cuadrada',       serie: 'libre',  logo: '/assets/equipos/mesa-cuadrada.png' },
+    { id: 'jr-huracan',         nombre: 'Huracán',             serie: 'libre',  logo: '/assets/equipos/huracan.png' },
+    { id: 'jr-40-grados',       nombre: '40 Grados',           serie: 'libre',  logo: '/assets/equipos/40-grados.png' },
+    { id: 'jr-capibara',        nombre: 'Capibara',            serie: 'libre',  logo: '/assets/equipos/capibara.png' },
+    { id: 'jr-bayern',          nombre: 'Bayern Llevenpilsen', serie: 'libre',  logo: '/assets/equipos/bayern.png' },
+    { id: 'jr-los-prados',      nombre: 'Los Prados',          serie: 'libre',  logo: '/assets/equipos/los-prados.png' },
+    { id: 'jr-arquitectura',    nombre: 'Arquitectura',        serie: 'libre',  logo: '/assets/equipos/arquitectura.png' },
+    // ---- Senior ----
+    { id: 'sr-arquitectura',    nombre: 'Arquitectura',        serie: 'senior', logo: '/assets/equipos/arquitectura.png' },
+    { id: 'sr-camilo-enriquez', nombre: 'Camilo Enríquez',     serie: 'senior', logo: '/assets/equipos/camilo-enriquez.png' },
+    { id: 'sr-afc',             nombre: 'AFC',                 serie: 'senior', logo: '/assets/equipos/afc.png' },
+    { id: 'sr-arsenal',         nombre: 'Arsenal',             serie: 'senior', logo: '/assets/equipos/arsenal.png' },
+    { id: 'sr-los-pibes',       nombre: 'Los Pibes',           serie: 'senior', logo: '/assets/equipos/los-pibes.png' }
+  ],
   partidos: [],
   disciplina: [],
   goleadores: [],

@@ -8,6 +8,7 @@ import { toast } from './ui/toast.js';
 
 import { showInicio } from './views/inicio.js';
 import { showLIV } from './views/liv.js';
+import { showEquipos } from './views/equipos.js';
 import { showProgramacion } from './views/programacion.js';
 import { showResultados } from './views/resultados.js';
 import { showPosiciones } from './views/posiciones.js';
@@ -29,6 +30,7 @@ async function boot() {
   const router = new Router({
     '/':             () => showInicio(),
     '/liv':          () => showLIV(),
+    '/equipos':      () => showEquipos(),
     '/programacion': () => showProgramacion(),
     '/resultados':   () => showResultados(),
     '/posiciones':   () => showPosiciones(),

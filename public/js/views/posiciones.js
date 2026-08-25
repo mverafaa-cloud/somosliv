@@ -13,7 +13,8 @@ export async function showPosiciones() {
   const series = config.series || [];
   const byId = equiposById(equipos);
 
-  if (!equipos.length) {
+  const jugados = partidos.filter(p => p.estado === 'finalizado' && p.golesLocal != null).length;
+  if (!equipos.length || !jugados) {
     mount(shell(`<div class="container"><span class="eyebrow">Tabla</span><h1>Posiciones</h1>${preSeason(config, 'la tabla de posiciones')}</div>`, config));
     return;
   }

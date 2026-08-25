@@ -348,6 +348,41 @@ table.tbl td.pts { font-weight: 800; color: var(--c-ink); }
 .chips-label { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--c-muted); margin-right: 6px; }
 
 /* ===================================================
+   EQUIPOS — banner de logos + grilla
+=================================================== */
+.logo-marquee {
+  overflow: hidden; position: relative; padding: 6px 0;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+}
+.logo-track { display: flex; gap: 18px; width: max-content; animation: marquee 38s linear infinite; }
+.logo-marquee:hover .logo-track { animation-play-state: paused; }
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.logo-chip {
+  flex: 0 0 auto; width: 96px; height: 96px; border-radius: 18px;
+  background: #fff; border: 1px solid var(--c-line); box-shadow: var(--shadow-xs);
+  display: flex; align-items: center; justify-content: center; padding: 12px;
+}
+.logo-chip img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+.equipos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
+.equipo-card {
+  background: var(--c-surface); border: 1px solid var(--c-line); border-radius: var(--r-lg);
+  padding: 18px 14px; text-align: center; transition: box-shadow .15s, transform .12s;
+}
+.equipo-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.equipo-card .badge-lg {
+  width: 92px; height: 92px; margin: 0 auto 10px; border-radius: 16px;
+  background: var(--c-bg-alt); display: flex; align-items: center; justify-content: center; padding: 10px;
+}
+.equipo-card .badge-lg img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.equipo-card .nom { font-weight: 700; font-size: 0.95rem; line-height: 1.2; }
+@media (max-width: 520px) {
+  .equipos-grid { grid-template-columns: repeat(2, 1fr); }
+  .logo-chip { width: 78px; height: 78px; }
+}
+
+/* ===================================================
    CONTENIDO (reglamentos, LIV, textos largos)
 =================================================== */
 .prose { max-width: 760px; }

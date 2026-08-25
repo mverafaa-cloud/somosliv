@@ -4,6 +4,7 @@ import { icon } from './icons.js';
 export const NAV = [
   { href: '/',              label: 'Inicio',       icon: 'home' },
   { href: '/liv',           label: 'LIV',          icon: 'info' },
+  { href: '/equipos',       label: 'Equipos',      icon: 'users' },
   { href: '/programacion',  label: 'Programación', icon: 'calendar' },
   { href: '/resultados',    label: 'Resultados',   icon: 'check' },
   { href: '/posiciones',    label: 'Posiciones',   icon: 'trophy' },
@@ -14,7 +15,7 @@ export const NAV = [
 ];
 
 // Ítems primarios del bottom nav (mobile). El resto va en el menú.
-const BOTTOM = ['/', '/programacion', '/posiciones', '/disciplina'];
+const BOTTOM = ['/', '/equipos', '/admision', '/reglamentos'];
 
 export function renderHeader() {
   document.querySelector('header.app-header')?.remove();

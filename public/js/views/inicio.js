@@ -1,12 +1,16 @@
 import { getConfig, getPartidos, getEquipos, equiposById } from '../services/store.js';
 import { mount, esc, initials, fmtDateLong, fmtTime, parseDate, everySecond } from '../ui/helpers.js';
-import { shell, loading } from '../ui/layout.js';
+import { shell, loading, logoMarquee } from '../ui/layout.js';
 import { icon } from '../ui/icons.js';
 
 export async function showInicio() {
   mount(loading('Cargando LIV…'));
   const [config, partidos, equipos] = await Promise.all([getConfig(), getPartidos(), getEquipos()]);
   const byId = equiposById(equipos);
+
+  // Equipos únicos (por nombre) para el banner de logos.
+  const seenT = new Set(); const uniqTeams = [];
+  equipos.forEach(e => { if (!seenT.has(e.nombre)) { seenT.add(e.nombre); uniqTeams.push(e); } });
 
   // Próxima fecha programada
   const prog = partidos.filter(p => p.estado === 'programado' && parseDate(p.fecha))
@@ -49,6 +53,16 @@ export async function showInicio() {
         <p class="muted">Nuestra propuesta, la sede Complejo Deggiano y la experiencia LIV.</p>
       </a>
     </div>
+
+    <!-- Equipos inscritos -->
+    ${uniqTeams.length ? `
+    <div class="section">
+      <div class="spread">
+        <div><span class="eyebrow">Ya confirmados</span><h2 style="margin:0">Equipos inscritos</h2></div>
+        <a href="/equipos" data-link class="btn btn-ghost btn-sm">Ver todos</a>
+      </div>
+      <div class="mt-2">${logoMarquee(uniqTeams)}</div>
+    </div>` : ''}
 
     <!-- Próxima fecha -->
     ${nextMatches.length ? `
