@@ -26,6 +26,12 @@ export async function showInicio() {
 
   const inner = `
   <div class="container">
+    ${uniqTeams.length ? `
+    <a href="/equipos" data-link class="top-teams-band" aria-label="Ver equipos inscritos">
+      <span class="top-teams-label">${icon('users', { size: 15 })} Equipos inscritos</span>
+      ${logoMarquee(uniqTeams)}
+    </a>` : ''}
+
     <div class="hero-image has-bg" style="--hero-bg:url('/assets/hero.jpg')">
       <div class="corner-stripes"></div>
       <span class="eyebrow">Liga La Cuarta · Temporada ${esc(config.temporada || '2026')}</span>
@@ -53,16 +59,6 @@ export async function showInicio() {
         <p class="muted">Nuestra propuesta, la sede Complejo Deggiano y la experiencia LIV.</p>
       </a>
     </div>
-
-    <!-- Equipos inscritos -->
-    ${uniqTeams.length ? `
-    <div class="section">
-      <div class="spread">
-        <div><span class="eyebrow">Ya confirmados</span><h2 style="margin:0">Equipos inscritos</h2></div>
-        <a href="/equipos" data-link class="btn btn-ghost btn-sm">Ver todos</a>
-      </div>
-      <div class="mt-2">${logoMarquee(uniqTeams)}</div>
-    </div>` : ''}
 
     <!-- Próxima fecha -->
     ${nextMatches.length ? `

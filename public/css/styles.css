@@ -365,6 +365,26 @@ table.tbl td.pts { font-weight: 800; color: var(--c-ink); }
 }
 .logo-chip img { max-width: 100%; max-height: 100%; object-fit: contain; }
 
+/* Franja superior de logos (Inicio, entre header y hero) */
+.top-teams-band {
+  display: block; text-decoration: none; color: inherit;
+  background: var(--c-surface); border: 1px solid var(--c-line);
+  border-radius: var(--r-lg); box-shadow: var(--shadow-xs);
+  padding: 8px 14px 10px; margin: 14px 0 18px;
+  transition: box-shadow .18s ease, border-color .18s ease;
+}
+.top-teams-band:hover { box-shadow: var(--shadow-sm); border-color: var(--c-brand); }
+.top-teams-band .top-teams-label {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--c-brand); margin-bottom: 2px;
+}
+.top-teams-band .logo-marquee { padding: 2px 0; }
+.top-teams-band .logo-chip { width: 64px; height: 64px; border-radius: 13px; padding: 8px; }
+@media (max-width: 640px) {
+  .top-teams-band .logo-chip { width: 54px; height: 54px; }
+}
+
 .equipos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
 .equipo-card {
   background: var(--c-surface); border: 1px solid var(--c-line); border-radius: var(--r-lg);
