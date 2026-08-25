@@ -44,6 +44,7 @@ const CANCHAS = [1, 2, 3, 4];
 // Límites por equipo (torneo Junior de 10 equipos, 9 fechas).
 const CL_MIN = 2, CL_MAX = 2;   // clásicos por equipo (exactamente 2 → 10 clásicos totales)
 const GR_MIN = 5, GR_MAX = 6;   // grabaciones por equipo
+const N_1040 = 2;               // partidos a las 10:40 por jornada (el resto va a 12:20)
 // Camarines por cancha (parámetro fijo del complejo).
 export const CAMARINES = { 1: [1, 2], 3: [3, 4], 2: [5, 6], 4: [7, 8] };
 
@@ -131,20 +132,21 @@ function buildOne(params, seed) {
       T[matches[bi].local].clasico++; T[matches[bi].visita].clasico++;
     }
 
-    // ---- 2) Horarios (hacia el objetivo por equipo; cap 4 por horario) ----
-    // "need" = cuántos partidos le faltan a un equipo en ese horario para su objetivo.
+    // ---- 2) Horarios: SIEMPRE 2 partidos a las 10:40 y el resto (3) a las 12:20 ----
+    // El split por jornada es FIJO; la preferencia por % solo decide QUÉ partidos
+    // caen en cada bloque. "need" = cuántos partidos le faltan a un equipo en ese
+    // horario para acercarse a su objetivo (según su % de preferencia).
     const need = (id, h) => targets[id][h] - T[id].hor[h];
-    const items = matches.map(m => {
-      const d1040 = need(m.local, '10:40') + need(m.visita, '10:40');
-      const d1220 = need(m.local, '12:20') + need(m.visita, '12:20');
-      return { m, h: d1040 >= d1220 ? '10:40' : '12:20', strength: Math.abs(d1040 - d1220) + rand() * 0.01 };
-    });
-    items.sort((a, b) => b.strength - a.strength); // resuelve primero las preferencias fuertes
-    const cap = { '10:40': 0, '12:20': 0 };
-    items.forEach(it => {
-      let h = it.h;
-      if (cap[h] >= 4) h = (h === '10:40' ? '12:20' : '10:40');
-      it.m.horario = h; cap[h]++;
+    const n1040 = Math.min(N_1040, matches.length); // partidos a las 10:40 (fijo)
+    // "want12" alto = ese partido prefiere/necesita más el 12:20.
+    const want12 = matches.map(m => ({
+      m, w: (need(m.local, '12:20') + need(m.visita, '12:20'))
+           - (need(m.local, '10:40') + need(m.visita, '10:40')) + rand() * 0.02
+    }));
+    want12.sort((a, b) => b.w - a.w); // los que más quieren 12:20 primero
+    want12.forEach((it, i) => {
+      const h = i < (matches.length - n1040) ? '12:20' : '10:40';
+      it.m.horario = h;
       T[it.m.local].hor[h]++; T[it.m.visita].hor[h]++;
     });
 
