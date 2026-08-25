@@ -109,17 +109,24 @@ function render() {
         ${p.marcas.map((m, i) => `<input class="input" data-marca="${i}" value="${esc(m)}" placeholder="Marca ${i + 1}">`).join('')}
       </div>
 
-      <label class="lbl mt-2">Preferencia de horario por equipo <span class="muted">(opcional)</span></label>
+      <label class="lbl mt-2">Preferencia de horario por equipo <span class="muted">(opcional — % de sus partidos en ese horario)</span></label>
       <div class="prefs-grid">
-        ${teams.map(t => `
+        ${teams.map(t => {
+          const pr = prefOf(t.id);
+          return `
           <div class="pref-item">
             <span class="pref-name">${esc(t.nombre)}</span>
-            <select class="select" data-pref="${esc(t.id)}">
-              <option value="" ${p.preferHorario[t.id] ? '' : 'selected'}>Sin preferencia</option>
-              <option value="10:40" ${p.preferHorario[t.id] === '10:40' ? 'selected' : ''}>10:40</option>
-              <option value="12:20" ${p.preferHorario[t.id] === '12:20' ? 'selected' : ''}>12:20</option>
-            </select>
-          </div>`).join('')}
+            <div class="pref-ctl">
+              <select class="select" data-pref-h="${esc(t.id)}">
+                <option value="" ${pr.h ? '' : 'selected'}>Sin pref.</option>
+                <option value="10:40" ${pr.h === '10:40' ? 'selected' : ''}>10:40</option>
+                <option value="12:20" ${pr.h === '12:20' ? 'selected' : ''}>12:20</option>
+              </select>
+              <input class="input pct-in" type="number" min="10" max="100" step="5" data-pref-pct="${esc(t.id)}" value="${pr.pct}" ${pr.h ? '' : 'disabled'}>
+              <span class="pct-sign">%</span>
+            </div>
+          </div>`;
+        }).join('')}
       </div>
 
       <label class="lbl mt-2">Clásicos / rivalidades <span class="muted">(opcional — si defines pares, se priorizan como clásico de la jornada)</span></label>
@@ -152,6 +159,12 @@ function render() {
 }
 
 function nameOf(id) { return (S.params.teams.find(t => t.id === id) || {}).nombre || id; }
+function prefOf(id) {
+  const v = (S.params.preferHorario || {})[id];
+  if (!v) return { h: '', pct: 80 };
+  if (typeof v === 'string') return { h: v, pct: 100 };
+  return { h: v.h || '', pct: v.pct == null ? 80 : v.pct };
+}
 
 /* ------------------ RESULTADO ------------------ */
 function renderResultado() {
@@ -244,7 +257,13 @@ function readParams() {
   p.excluir = [...document.querySelectorAll('[data-ex]')].map(i => i.value).filter(Boolean);
   p.fechas = [...document.querySelectorAll('[data-f]')].map(i => i.value).filter(Boolean);
   p.marcas = [...document.querySelectorAll('[data-marca]')].map((i, k) => i.value.trim() || `Marca ${k + 1}`);
-  document.querySelectorAll('[data-pref]').forEach(sel => { p.preferHorario[sel.dataset.pref] = sel.value; });
+  document.querySelectorAll('[data-pref-h]').forEach(sel => {
+    const id = sel.dataset.prefH, h = sel.value;
+    const pctEl = document.querySelector(`[data-pref-pct="${id}"]`);
+    let pct = pctEl ? +pctEl.value : 80;
+    if (!(pct >= 10 && pct <= 100)) pct = 80;
+    p.preferHorario[id] = h ? { h, pct } : '';
+  });
   persist();
 }
 
@@ -277,6 +296,12 @@ function bind() {
 
   document.getElementById('btn-gen').onclick = () => generar(false);
   document.getElementById('btn-regen').onclick = () => generar(true);
+
+  // habilita/deshabilita el % según el horario elegido
+  document.querySelectorAll('[data-pref-h]').forEach(sel => sel.onchange = () => {
+    const pctEl = document.querySelector(`[data-pref-pct="${sel.dataset.prefH}"]`);
+    if (pctEl) { pctEl.disabled = !sel.value; if (sel.value && !pctEl.value) pctEl.value = 80; }
+  });
 
   document.getElementById('p-recalc').onclick = () => {
     readParams();

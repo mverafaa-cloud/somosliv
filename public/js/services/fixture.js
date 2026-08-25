@@ -44,6 +44,32 @@ const CANCHAS = [1, 2, 3, 4];
 // Camarines por cancha (parámetro fijo del complejo).
 export const CAMARINES = { 1: [1, 2], 3: [3, 4], 2: [5, 6], 4: [7, 8] };
 
+// Normaliza la preferencia de horario: acepta string ('10:40') o {h, pct}.
+function normPref(v) {
+  if (!v) return null;
+  if (typeof v === 'string') return v ? { h: v, pct: 100 } : null;
+  if (v.h) return { h: v.h, pct: Math.min(100, Math.max(0, v.pct == null ? 100 : v.pct)) };
+  return null;
+}
+// Objetivo de partidos por horario para cada equipo (según % de preferencia o balance).
+function horarioTargets(params) {
+  const N = params.teams.length - 1; // partidos por equipo en round-robin par
+  const tg = {};
+  params.teams.forEach(t => {
+    const pr = normPref((params.preferHorario || {})[t.id]);
+    if (pr) {
+      const a = Math.round(pr.pct / 100 * N);
+      const other = pr.h === '10:40' ? '12:20' : '10:40';
+      tg[t.id] = { '10:40': 0, '12:20': 0 };
+      tg[t.id][pr.h] = a; tg[t.id][other] = N - a;
+    } else {
+      const a = Math.ceil(N / 2);
+      tg[t.id] = { '10:40': a, '12:20': N - a };
+    }
+  });
+  return tg;
+}
+
 function emptyTally(teamIds, marcas) {
   const t = {};
   teamIds.forEach(id => {
@@ -67,6 +93,7 @@ function buildOne(params, seed) {
   const usarFechas = fechas.slice(0, nRounds);
   const T = emptyTally(ids, marcas);
   const HOR = ['10:40', '12:20'];
+  const targets = horarioTargets(params);
   const rivSet = new Set((rivalries || []).map(p => [p[0], p[1]].sort().join('|')));
 
   const rounds = pairsByRound.map((pairs, ri) => {
@@ -90,27 +117,21 @@ function buildOne(params, seed) {
     matches[bestIdx].clasico = true;
     T[matches[bestIdx].local].clasico++; T[matches[bestIdx].visita].clasico++;
 
-    // ---- 2) Horarios (cap 4 por horario) ----
-    // Deseo por partido; luego se resuelve capacidad.
-    const desire = matches.map(m => {
-      const pL = preferHorario[m.local], pV = preferHorario[m.visita];
-      if (pL && pV && pL === pV) return { m, h: pL, forced: 2 };
-      if (pL && !pV) return { m, h: pL, forced: 1 };
-      if (pV && !pL) return { m, h: pV, forced: 1 };
-      if (pL && pV && pL !== pV) return { m, h: pL, forced: 1 };
-      // balance: horario donde ambos han jugado menos
-      const a = T[m.local].hor, b = T[m.visita].hor;
-      const h = (a['10:40'] + b['10:40']) <= (a['12:20'] + b['12:20']) ? '10:40' : '12:20';
-      return { m, h, forced: 0 };
+    // ---- 2) Horarios (hacia el objetivo por equipo; cap 4 por horario) ----
+    // "need" = cuántos partidos le faltan a un equipo en ese horario para su objetivo.
+    const need = (id, h) => targets[id][h] - T[id].hor[h];
+    const items = matches.map(m => {
+      const d1040 = need(m.local, '10:40') + need(m.visita, '10:40');
+      const d1220 = need(m.local, '12:20') + need(m.visita, '12:20');
+      return { m, h: d1040 >= d1220 ? '10:40' : '12:20', strength: Math.abs(d1040 - d1220) + rand() * 0.01 };
     });
-    desire.sort((x, y) => y.forced - x.forced); // primero los forzados por preferencia
+    items.sort((a, b) => b.strength - a.strength); // resuelve primero las preferencias fuertes
     const cap = { '10:40': 0, '12:20': 0 };
-    desire.forEach(d => {
-      let h = d.h;
+    items.forEach(it => {
+      let h = it.h;
       if (cap[h] >= 4) h = (h === '10:40' ? '12:20' : '10:40');
-      if (cap[h] >= 4) h = d.h; // ambos llenos (no debería con 5)
-      d.m.horario = h; cap[h]++;
-      T[d.m.local].hor[h]++; T[d.m.visita].hor[h]++;
+      it.m.horario = h; cap[h]++;
+      T[it.m.local].hor[h]++; T[it.m.visita].hor[h]++;
     });
 
     // ---- 3) Grabaciones + canchas ----
@@ -196,14 +217,13 @@ function buildOne(params, seed) {
 function scoreDraw(T, params) {
   const ids = Object.keys(T);
   const marcas = params.marcas;
-  const pref = params.preferHorario;
+  const tg = horarioTargets(params);
   const spread = (obj) => { const v = Object.values(obj); return Math.max(...v) - Math.min(...v); };
   let s = 0;
   ids.forEach(id => {
     const t = T[id];
-    // horario: preferencia respetada, o balance
-    if (pref[id]) s += (t.hor[pref[id] === '10:40' ? '12:20' : '10:40']) * 3;
-    else s += Math.abs(t.hor['10:40'] - t.hor['12:20']) * 2;
+    // horario: desviación respecto al objetivo (% de preferencia o balance)
+    s += (Math.abs(t.hor['10:40'] - tg[id]['10:40']) + Math.abs(t.hor['12:20'] - tg[id]['12:20'])) * 2.5;
     // canchas: penaliza canchas no jugadas + dispersión
     const sinCancha = CANCHAS.filter(c => t.cancha[c] === 0).length;
     s += sinCancha * 25 + spread(t.cancha) * 2;

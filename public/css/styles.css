@@ -559,10 +559,14 @@ table.tbl td.pts { font-weight: 800; color: var(--c-ink); }
 .fechas-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px,1fr)); gap:8px; }
 .fechas-grid .row { align-items:center; gap:8px; }
 .fnum { flex:0 0 auto; font-size:.72rem; font-weight:800; color:var(--c-brand); background:var(--c-brand-soft); border-radius:6px; padding:3px 7px; }
-.prefs-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(240px,1fr)); gap:8px; }
+.prefs-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap:8px; }
 .pref-item { display:flex; align-items:center; justify-content:space-between; gap:10px; border:1px solid var(--c-line); border-radius:10px; padding:6px 10px; }
-.pref-item .pref-name { font-weight:600; font-size:.92rem; }
-.pref-item .select { max-width:150px; padding:6px 8px; }
+.pref-item .pref-name { font-weight:600; font-size:.92rem; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.pref-ctl { display:flex; align-items:center; gap:5px; flex:0 0 auto; }
+.pref-ctl .select { max-width:104px; padding:6px 8px; }
+.pref-ctl .pct-in { width:60px; padding:6px 8px; }
+.pref-ctl .pct-sign { font-size:.85rem; color:var(--c-muted); }
+.pct-in:disabled { opacity:.4; }
 table.sorteo-tbl td, table.sorteo-tbl th { padding:8px 10px; font-size:.92rem; }
 table.sorteo-tbl tr.is-clasico { background:var(--c-brand-soft); }
 table.sorteo-bal td, table.sorteo-bal th { padding:7px 8px; font-size:.86rem; }
