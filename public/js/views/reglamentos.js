@@ -9,8 +9,8 @@ export async function showReglamentos() {
 
   const highlights = [
     { v: clp(config.valorInscripcion || 1800000), l: 'Inscripción', h: '3 cuotas de $600.000' },
-    { v: '16–30', l: 'Planilla', h: 'jugadores por equipo' },
-    { v: '10 min', l: 'Tolerancia', h: 'mín. 9 para no perder por W.O.' },
+    { v: '16–35', l: 'Planilla', h: 'jugadores por equipo' },
+    { v: '10 min', l: 'Tolerancia', h: 'luego, el rival puede pedir los puntos' },
     { v: '≥ 1 fecha', l: 'Roja directa', h: 'suspensión mínima' },
     { v: '≥ 4 fechas', l: 'Agresión física', h: 'hasta expulsión' },
     { v: '48 h', l: 'Reclamos', h: 'plazo por escrito' }
@@ -23,11 +23,11 @@ export async function showReglamentos() {
         <li>Los montos pagados <strong>no son reembolsables</strong>. Todo acuerdo particular debe constar por escrito (correo); ningún acuerdo verbal es válido.</li>
       </ul>` },
     { t: 'Participación y planilla de buena fe', b: `<ul>
-        <li>Planilla de buena fe de <strong>16 a 30 jugadores</strong> antes del inicio de la fase regular.</li>
+        <li>Planilla de buena fe de <strong>16 a 35 jugadores</strong> antes del inicio de la fase regular.</li>
         <li>Todo jugador debe portar <strong>cédula o pasaporte vigente</strong>; la Liga puede exigirlo en cualquier momento, incluso durante un partido.</li>
         <li>Cambios de planilla solo hasta la <strong>fecha 3</strong>, aprobados por el Directorio.</li>
         <li>Cada equipo designa un <strong>delegado oficial</strong> como único interlocutor ante la Liga.</li>
-        <li><strong>Categorías:</strong> Junior — libre, 18 años o más. Senior — nacidos en 1994 o antes (+32), con un máximo de 2 jugadores nacidos en 1995/1996.</li>
+        <li><strong>Categorías:</strong> Junior — libre, 18 años o más; excepcionalmente pueden jugar los de <strong>17 años con autorización notarial de sus padres</strong>. Senior — nacidos en 1994 o antes (+32), con un máximo de 2 jugadores nacidos en 1995/1996.</li>
       </ul>` },
     { t: 'Formato de competencia', b: `<ul>
         <li><strong>10 equipos</strong>, fase regular de todos contra todos según el fixture oficial.</li>
@@ -35,16 +35,19 @@ export async function showReglamentos() {
         <li>A futuro, LIV se disputará con sistema de <strong>Primera y Segunda División</strong>.</li>
         <li>Fixture, horarios y canchas los define el Directorio y son <strong>obligatorios</strong>: ningún equipo los modifica unilateralmente.</li>
       </ul>` },
-    { t: 'Días, horarios y complejo', b: `<p>La competencia se juega en el <strong>Complejo Deggiano</strong>. Bloques horarios referenciales por categoría:</p>
-      <div class="table-wrap" style="margin:10px 0"><table class="tbl"><thead><tr><th>Horario</th><th>Categoría</th></tr></thead><tbody>
-        <tr><td>09:00 – 10:30</td><td>Senior</td></tr>
-        <tr><td>10:30 – 12:00</td><td>Senior / Junior</td></tr>
-        <tr><td>12:00 – 13:30</td><td>Junior</td></tr>
+    { t: 'Días, horarios y complejo', b: `<p>La competencia se juega los <strong>sábados</strong> en el <strong>Complejo Deggiano</strong>. Horarios de inicio por categoría:</p>
+      <div class="table-wrap" style="margin:10px 0"><table class="tbl"><thead><tr><th>Horario de inicio</th><th>Categoría</th></tr></thead><tbody>
+        <tr><td>09:00</td><td>Senior</td></tr>
+        <tr><td>10:40</td><td>Senior / Junior</td></tr>
+        <tr><td>12:20</td><td>Junior</td></tr>
       </tbody></table></div>
-      <p>La banca es exclusiva para jugadores en planilla, cuerpo técnico y delegado; no se permiten espectadores en ella.</p>` },
+      <p><strong>Senior</strong> juega a las 09:00 y 10:40; <strong>Junior</strong> juega a las 10:40 y 12:20.</p>
+      <li style="list-style:none;margin-left:0"><strong>Camarines:</strong> la Liga designa y asigna los camarines a cada equipo; se debe respetar esa asignación.</li>
+      <p style="margin-top:8px">La banca es exclusiva para jugadores en planilla, cuerpo técnico y delegado; no se permiten espectadores en ella.</p>` },
     { t: 'Puntualidad y walkover (W.O.)', b: `<ul>
-        <li>Tolerancia máxima de <strong>10 minutos</strong>. Sin un mínimo de <strong>9 jugadores</strong> en cancha tras ese plazo: <strong>walkover 0-3</strong> en contra.</li>
-        <li>Presentarse con menos de 11 jugadores: <strong>multa de $80.000</strong>.</li>
+        <li>Tolerancia máxima de <strong>10 minutos</strong> desde la hora oficial de inicio.</li>
+        <li>Pasado ese plazo, el equipo presente en cancha puede <strong>solicitar los puntos</strong> (walkover 0-3 a su favor). Si <strong>no</strong> los solicita, el partido se juega igual, pero se <strong>descuentan los minutos perdidos</strong> del tiempo de juego.</li>
+        <li>Presentarse con menos de <strong>9 jugadores</strong>: <strong>multa de $80.000</strong>.</li>
         <li>Retirarse de la cancha antes del final sin causa justificada: walkover + sanción del Comité.</li>
         <li><strong>Reincidencia en walkover (2 veces)</strong>: expulsión de la Liga sin reembolso. El W.O. no exime del pago de cuotas ni multas.</li>
       </ul>` },
@@ -78,6 +81,11 @@ export async function showReglamentos() {
     { t: 'Salud, seguros y fuerza mayor', b: `<ul>
         <li>Cada jugador participa bajo su <strong>propia responsabilidad</strong>; se recomienda contar con seguro de accidentes deportivos.</li>
         <li>Ante lluvia, canchas inutilizables u otras emergencias, el Directorio puede suspender y <strong>reprogramar</strong> (programación obligatoria). No se suspende por motivos particulares.</li>
+      </ul>` },
+    { t: 'Comité Disciplinario', b: `<ul>
+        <li>Integrado por <strong>5 votos</strong>: <strong>1 del jefe de árbitros</strong>, <strong>1 del Directorio</strong> y <strong>3 de tres representantes de equipos distintos</strong> de la Liga.</li>
+        <li>En caso de <strong>empate</strong>, el voto del <strong>cuerpo arbitral es dirimente</strong> y define la sanción.</li>
+        <li>Se ocupa <strong>todo el material audiovisual disponible</strong> para impartir justicia y esclarecer los hechos.</li>
       </ul>` },
     { t: 'Reclamos y apelaciones', b: `<ul>
         <li>Todo reclamo se presenta <strong>por escrito (correo)</strong> por el delegado oficial, dentro de <strong>48 horas</strong> del partido o hecho.</li>
@@ -134,7 +142,7 @@ export async function showReglamentos() {
     <div class="grid grid-2 mb-3">
       <div class="card card-tinted-brand">
         <h3 style="color:var(--c-brand)">Categorías</h3>
-        <p class="mt-1"><span class="pill pill-dark">Junior (Jr)</span> &nbsp;Libre · 18 años o más</p>
+        <p class="mt-1"><span class="pill pill-dark">Junior (Jr)</span> &nbsp;Libre · 18+ (17 con autorización notarial)</p>
         <p class="mt-1"><span class="pill pill-dark">Senior (Sr)</span> &nbsp;+32 (nacidos 1994 o antes) · máx. 2 de 1995/1996</p>
       </div>
       <div class="card card-tinted-accent">
