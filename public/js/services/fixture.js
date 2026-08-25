@@ -45,6 +45,7 @@ const CANCHAS = [1, 2, 3, 4];
 const CL_MIN = 2, CL_MAX = 2;   // clásicos por equipo (exactamente 2 → 10 clásicos totales)
 const GR_MIN = 5, GR_MAX = 6;   // grabaciones por equipo
 const N_1040 = 2;               // partidos a las 10:40 por jornada (el resto va a 12:20)
+const GRAB_1040 = 1, GRAB_1220 = 2; // grabados por jornada: 1 a las 10:40 y 2 a las 12:20
 // Camarines por cancha (parámetro fijo del complejo).
 export const CAMARINES = { 1: [1, 2], 3: [3, 4], 2: [5, 6], 4: [7, 8] };
 
@@ -160,30 +161,23 @@ function buildOne(params, seed) {
     });
 
     // ---- 3) Grabaciones + canchas ----
-    // Regla: los grabados de la jornada deben caber en SOLO 2 canchas (hay 2 cámaras).
-    // 2 cámaras × 2 bloques = máx. 4 grabables. Máx. 2 grabados por horario para poder
-    // empaquetarlos en 2 canchas.
-    const nGrab = Math.min(grabadosPorFecha, 4, matches.length);
+    // Regla: 1 grabado a las 10:40 y 2 a las 12:20 (3 en total). Caben en SOLO 2 canchas
+    // (hay 2 cámaras): a las 12:20 los 2 grabados ocupan las 2 canchas-cámara; a las 10:40
+    // el único grabado ocupa una de ellas.
     // Prioriza grabar a los equipos con MENOS exposición total (grab + clásico),
     // así se compensa a quien recibió menos clásicos.
     const gval = m => expo(m.local) + expo(m.visita) + rand() * 0.3;
     const orden = matches.slice().sort((a, b) => gval(a) - gval(b));
+    const GRAB_BY_H = { '10:40': GRAB_1040, '12:20': GRAB_1220 };
     const recorded = [];
-    // 1ª pasada: respeta el tope GR_MAX por equipo.
-    orden.forEach(m => {
-      if (recorded.length >= nGrab) return;
-      if (recorded.filter(x => x.horario === m.horario).length >= 2) return;
-      if (T[m.local].grab >= GR_MAX || T[m.visita].grab >= GR_MAX) return;
-      recorded.push(m);
+    HOR.forEach(h => {
+      const pool = orden.filter(m => m.horario === h);
+      let need = Math.min(GRAB_BY_H[h], pool.length);
+      // 1ª pasada: respeta el tope GR_MAX por equipo.
+      for (const m of pool) { if (need <= 0) break; if (T[m.local].grab >= GR_MAX || T[m.visita].grab >= GR_MAX) continue; recorded.push(m); need--; }
+      // 2ª pasada (rara): si los topes impidieron cubrir la cuota, completa igual (lo corrige el score global).
+      for (const m of pool) { if (need <= 0) break; if (recorded.includes(m)) continue; recorded.push(m); need--; }
     });
-    // 2ª pasada (rara): si los topes impidieron llegar a nGrab, completa igual (lo corrige el score global).
-    if (recorded.length < nGrab) {
-      orden.forEach(m => {
-        if (recorded.length >= nGrab || recorded.includes(m)) return;
-        if (recorded.filter(x => x.horario === m.horario).length >= 2) return;
-        recorded.push(m);
-      });
-    }
     recorded.forEach(m => m.grabado = true);
 
     // Elige el par de canchas-cámara y asigna las canchas de los grabados dentro de él.
