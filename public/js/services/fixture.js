@@ -100,6 +100,16 @@ function buildOne(params, seed) {
   const targets = horarioTargets(params);
   const rivSet = new Set((rivalries || []).map(p => [p[0], p[1]].sort().join('|')));
 
+  // Cuota de clásicos POR jornada: total = CL_MIN·equipos/2 (=10), repartido como
+  // mínimo 1 en cada fecha y el sobrante (1) en una fecha al azar. Así NINGUNA
+  // fecha queda sin clásico.
+  const totalCl = Math.round((CL_MIN * ids.length) / 2);
+  const baseCl = Math.max(1, Math.floor(totalCl / nRounds));
+  const clPerRound = Array(nRounds).fill(baseCl);
+  let extraCl = totalCl - baseCl * nRounds;
+  const clOrder = shuffle([...Array(nRounds).keys()], rand);
+  for (let i = 0; extraCl > 0 && i < clOrder.length; i++, extraCl--) clPerRound[clOrder[i]]++;
+
   const rounds = pairsByRound.map((pairs, ri) => {
     const roundsLeft = nRounds - ri;
     let matches = pairs.map(([local, visita]) => ({ local, visita, cancha: null, horario: null, grabado: false, clasico: false, marca: null }));
@@ -121,9 +131,8 @@ function buildOne(params, seed) {
       if (rivSet.has([m.local, m.visita].sort().join('|'))) s += 100; // respeta rivalidades definidas
       return s + rand() * 0.4;
     };
-    // Déficit para llegar al mínimo; con 1 clásico/fecha se cubren hasta 2 déficits.
-    const deficit = ids.reduce((a, id) => a + Math.max(0, CL_MIN - T[id].clasico), 0);
-    const nCl = deficit > (roundsLeft - 1) * 2 ? 2 : 1; // si 1/fecha no alcanza, pon 2
+    // Cuota fija de esta fecha (mínimo 1). Se elige el/los mejor(es) partido(s).
+    const nCl = clPerRound[ri];
     for (let k = 0; k < nCl; k++) {
       let bi = -1, bs = -Infinity;
       matches.forEach((m, i) => { if (!canCl(m)) return; const s = clScore(m); if (s > bs) { bs = s; bi = i; } });
@@ -244,10 +253,13 @@ function buildOne(params, seed) {
   // (cambia la marca de AMBOS equipos del partido) mientras baje la dispersión total.
   {
     const spr = obj => { const v = Object.values(obj); return Math.max(...v) - Math.min(...v); };
+    const totalSpread = () => ids.reduce((a, id) => a + spr(T[id].marca), 0);
+    const setMarca = (m, mk) => { T[m.local].marca[m.marca]--; T[m.visita].marca[m.marca]--; m.marca = mk; T[m.local].marca[mk]++; T[m.visita].marca[mk]++; };
     const allM = rounds.flatMap(r => r.matches);
     let improved = true, guard = 0;
     while (improved && guard++ < 400) {
       improved = false;
+      // (a) recolorear un partido si baja la dispersión total
       for (const m of allM) {
         const cur = m.marca;
         for (const alt of marcas) {
@@ -258,6 +270,21 @@ function buildOne(params, seed) {
           const after = spr(T[m.local].marca) + spr(T[m.visita].marca);
           if (after < before) { m.marca = alt; improved = true; }
           else { T[m.local].marca[cur]++; T[m.visita].marca[cur]++; T[m.local].marca[alt]--; T[m.visita].marca[alt]--; }
+        }
+      }
+      // (b) intercambiar las marcas de DOS partidos (saca de mínimos locales del
+      //     paso (a), donde mover un solo partido queda neutro pero un swap sí ayuda)
+      if (!improved) {
+        for (let i = 0; i < allM.length && !improved; i++) {
+          for (let j = i + 1; j < allM.length; j++) {
+            const a = allM[i], b = allM[j];
+            if (a.marca === b.marca) continue;
+            const before = totalSpread();
+            const ma = a.marca, mb = b.marca;
+            setMarca(a, mb); setMarca(b, ma);
+            if (totalSpread() < before) { improved = true; break; }
+            setMarca(a, ma); setMarca(b, mb); // revertir
+          }
         }
       }
     }
@@ -305,7 +332,10 @@ export function generarFixture(params, baseSeed = 1, restarts = 800) {
   for (let i = 0; i < restarts; i++) {
     const seed = (baseSeed * 2654435761 + i * 40503 + 12345) >>> 0;
     const draw = buildOne(params, seed);
-    const sc = scoreDraw(draw.tally, params);
+    // Regla: cada fecha debe tener AL MENOS un clásico. Penaliza fuerte cualquier
+    // jornada sin clásico para que el mejor sorteo nunca deje una vacía.
+    const sinClasico = draw.rounds.filter(r => !r.matches.some(m => m.clasico)).length;
+    const sc = scoreDraw(draw.tally, params) + sinClasico * 500;
     if (sc < bestScore) { bestScore = sc; best = draw; }
   }
   return { ...best, score: bestScore, stats: computeStats(best.tally, params) };
