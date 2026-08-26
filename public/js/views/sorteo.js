@@ -19,7 +19,7 @@ function defaultParams(teams, config) {
     inicio, excluir,
     fechas: sabadosDesde(inicio, excluir, nRondas),
     grabadosPorFecha: 3,
-    marcas: ['Marca 1', 'Marca 2', 'Marca 3'],
+    marcas: ['Auspiciador 1', 'Auspiciador 2', 'Auspiciador 3', 'Auspiciador 4'],
     preferHorario: Object.fromEntries(teams.map(t => [t.id, ''])),
     rivalries: []
   };
@@ -32,6 +32,8 @@ function loadState(teams, config) {
       const p = JSON.parse(raw);
       // reasocia equipos actuales (por si cambian nombres/orden)
       p.teams = teams;
+      // Espacios de auspiciador fijos (4). La marca real se define en Admin → Contenido.
+      p.marcas = ['Auspiciador 1', 'Auspiciador 2', 'Auspiciador 3', 'Auspiciador 4'];
       p.preferHorario = p.preferHorario || {};
       teams.forEach(t => { if (!(t.id in p.preferHorario)) p.preferHorario[t.id] = ''; });
       return p;
@@ -104,10 +106,11 @@ function render() {
         ${p.fechas.map((d, i) => `<div class="row"><span class="fnum">F${i + 1}</span><input class="input" type="date" data-f="${i}" value="${esc(d)}"></div>`).join('')}
       </div>
 
-      <label class="lbl mt-2">Marcas de premio (MVP)</label>
-      <div class="grid grid-3">
-        ${p.marcas.map((m, i) => `<input class="input" data-marca="${i}" value="${esc(m)}" placeholder="Marca ${i + 1}">`).join('')}
+      <label class="lbl mt-2">Auspiciadores del premio (MVP) <span class="muted">— 4 espacios</span></label>
+      <div class="grid grid-4">
+        ${p.marcas.map((m) => `<span class="pill pill-grey" style="justify-content:center;padding:8px 10px">${esc(ausp(m))}</span>`).join('')}
       </div>
+      <p class="muted" style="font-size:.82rem;margin:6px 0 0">Se sortean como 4 espacios equilibrados. La marca real de cada auspiciador se define en <strong>Admin → Contenido</strong> y ahí se revela en el fixture, sin necesidad de volver a sortear.</p>
 
       <label class="lbl mt-2">Preferencia de horario por equipo <span class="muted">(opcional — % de sus partidos en ese horario)</span></label>
       <div class="prefs-grid">
@@ -192,7 +195,7 @@ function renderResultado() {
               <td>Cancha ${m.cancha}</td>
               <td class="muted">${(m.camarines || []).join(' y ')}</td>
               <td>${m.grabado ? icon('video', { size: 16, cls: 'ico-grab' }) : '<span class="muted">—</span>'}</td>
-              <td><span class="pill pill-grey">${esc(m.marca)}</span></td>
+              <td><span class="pill pill-grey">${esc(ausp(m.marca))}</span></td>
             </tr>`).join('')}
         </tbody>
       </table></div>
@@ -233,7 +236,7 @@ function renderResultado() {
         <th>Equipo</th><th class="num">10:40</th><th class="num">12:20</th>
         <th class="num">C1</th><th class="num">C2</th><th class="num">C3</th><th class="num">C4</th>
         <th class="num">Grab</th><th class="num">Clás</th>
-        ${marcas.map(m => `<th class="num">${esc(abbr(m))}</th>`).join('')}
+        ${marcas.map(m => `<th class="num">${esc(abbr(ausp(m)))}</th>`).join('')}
         <th class="num">L/V</th>
       </tr></thead>
       <tbody>${stat.map(balRow).join('')}</tbody>
@@ -242,6 +245,8 @@ function renderResultado() {
 }
 
 function abbr(s) { return s.length > 8 ? s.slice(0, 7) + '…' : s; }
+// Resuelve el espacio de auspiciador a su marca real (si el admin ya la definió).
+function ausp(slot) { const m = (cfg && cfg.auspiciadores) || {}; const r = m[slot]; return (r && String(r).trim()) ? String(r).trim() : slot; }
 function fmt(iso) {
   if (!iso) return '';
   const [Y, M, D] = iso.split('-').map(Number);
@@ -258,7 +263,7 @@ function readParams() {
   p.grabadosPorFecha = Math.max(0, +(document.getElementById('p-grab')?.value || 3));
   p.excluir = [...document.querySelectorAll('[data-ex]')].map(i => i.value).filter(Boolean);
   p.fechas = [...document.querySelectorAll('[data-f]')].map(i => i.value).filter(Boolean);
-  p.marcas = [...document.querySelectorAll('[data-marca]')].map((i, k) => i.value.trim() || `Marca ${k + 1}`);
+  p.marcas = ['Auspiciador 1', 'Auspiciador 2', 'Auspiciador 3', 'Auspiciador 4']; // espacios fijos
   document.querySelectorAll('[data-pref-h]').forEach(sel => {
     const id = sel.dataset.prefH, h = sel.value;
     const pctEl = document.querySelector(`[data-pref-pct="${id}"]`);

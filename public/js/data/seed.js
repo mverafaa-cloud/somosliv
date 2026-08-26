@@ -26,7 +26,11 @@ export const SEED = {
     series: [
       { id: 'libre',  nombre: 'Junior', detalle: '18 años en adelante' },
       { id: 'senior', nombre: 'Senior', detalle: '+32 · nacidos 1994 o antes' }
-    ]
+    ],
+    // Marcas que presentan el premio al MVP. Se sortean como 4 espacios
+    // ("Auspiciador 1..4"); el admin define aquí qué marca real es cada uno y
+    // recién ahí se revela en el fixture. Vacío = se muestra "Auspiciador N".
+    auspiciadores: { 'Auspiciador 1': '', 'Auspiciador 2': '', 'Auspiciador 3': '', 'Auspiciador 4': '' }
   },
 
   // Equipos inscritos 2026 (con logo). serie: 'libre' = Junior · 'senior' = Senior.

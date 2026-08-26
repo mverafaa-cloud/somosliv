@@ -416,6 +416,16 @@ function renderContenido(el) {
         <button class="btn btn-primary">Guardar contenido</button>
       </form>
     </div>
+    <div class="card mb-3">
+      <h3 class="mb-2">Auspiciadores del premio (MVP)</h3>
+      <p class="muted mb-2" style="font-size:.9rem">El fixture se sortea con 4 espacios (“Auspiciador 1–4”). Escribe aquí la marca real de cada uno y se revelará en la <a href="/programacion" data-link>Programación</a>. Deja en blanco para mantener el nombre genérico.</p>
+      <form id="f-ausp" class="grid grid-2">
+        ${['Auspiciador 1', 'Auspiciador 2', 'Auspiciador 3', 'Auspiciador 4'].map(slot => `
+          <div class="form-group"><label>${esc(slot)}</label>
+            <input class="input" data-ausp="${esc(slot)}" value="${esc((c.auspiciadores || {})[slot] || '')}" placeholder="Marca real (ej: Red Bull)"></div>`).join('')}
+        <div class="form-group" style="justify-content:end"><button class="btn btn-primary">Guardar auspiciadores</button></div>
+      </form>
+    </div>
     <div class="card">
       <h3 class="mb-2">Videos (YouTube)</h3>
       <form id="f-v" class="form-row" style="align-items:end">
@@ -436,6 +446,12 @@ function renderContenido(el) {
       contacto: { ...(c.contacto || {}), instagram: d.instagram, whatsapp: d.whatsapp, email: d.email }
     };
     reload('c', () => saveConfig(data));
+  };
+  el.querySelector('#f-ausp').onsubmit = (ev) => {
+    ev.preventDefault();
+    const auspiciadores = {};
+    el.querySelectorAll('[data-ausp]').forEach(i => { auspiciadores[i.dataset.ausp] = i.value.trim(); });
+    reload('c', () => saveConfig({ auspiciadores }));
   };
   el.querySelector('#f-v').onsubmit = (ev) => {
     ev.preventDefault();

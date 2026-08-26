@@ -131,7 +131,7 @@ function renderPublicFixture(config, fx) {
   const body = document.getElementById('fx-body');
   function draw() {
     const shown = _fx === 'all' ? rounds : rounds.filter(r => r.n === _fx);
-    body.innerHTML = shown.map(fechaBlock).join('');
+    body.innerHTML = shown.map(rd => fechaBlock(rd, config)).join('');
     document.querySelectorAll('#fx-fechas .chip').forEach(c => c.classList.toggle('active', String(_fx) === c.dataset.fx));
   }
   document.querySelectorAll('#fx-fechas .chip').forEach(c => c.addEventListener('click', () => {
@@ -140,7 +140,8 @@ function renderPublicFixture(config, fx) {
   draw();
 }
 
-function fechaBlock(rd) {
+function fechaBlock(rd, config = {}) {
+  const ausp = s => { const r = (config.auspiciadores || {})[s]; return (r && String(r).trim()) ? String(r).trim() : s; };
   const parts = (rd.partidos || []).slice().sort((a, b) => (HORDEN.indexOf(a.horario) - HORDEN.indexOf(b.horario)) || (a.cancha - b.cancha));
   const cams = [...new Set(parts.filter(p => p.grabado).map(p => p.cancha))].sort((a, b) => a - b);
   const nGrab = parts.filter(p => p.grabado).length;
@@ -160,7 +161,7 @@ function fechaBlock(rd) {
               <td><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">${teamInline(p.logoLocal, p.local, { size: 22 })} <span class="muted">vs</span> ${teamInline(p.logoVisita, p.visita, { size: 22 })}${p.clasico ? `<span class="pill pill-brand">${icon('flame', { size: 12 })} Clásico</span>` : ''}</div></td>
               <td class="muted" style="white-space:nowrap">${p.camarinLocal ?? '—'} / ${p.camarinVisita ?? '—'}</td>
               <td>${p.grabado ? icon('video', { size: 16, cls: 'ico-grab' }) : '<span class="muted">—</span>'}</td>
-              <td><span class="pill pill-grey">${esc(p.premio || '—')}</span></td>
+              <td><span class="pill pill-grey">${esc(p.premio ? ausp(p.premio) : '—')}</span></td>
             </tr>`).join('')}
         </tbody>
       </table></div>
