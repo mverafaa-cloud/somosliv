@@ -585,12 +585,18 @@ table.sorteo-bal td, table.sorteo-bal th { padding:7px 8px; font-size:.86rem; }
 table.fixture-pub td, table.fixture-pub th { padding:8px 10px; font-size:.92rem; }
 table.fixture-pub tr.is-clasico { background:var(--c-brand-soft); }
 
-/* Fixture en tarjetas — móvil-first, alineado */
-.fx-fecha-head { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 12px; margin-bottom:12px; }
+/* Fixture: tabla en desktop (como antes), tarjetas SOLO en móvil (≤860px) */
+.fx-grid.fx-mobile { display:none; }
+@media (max-width:860px){
+  .fx-desktop { display:none; }
+  .fx-grid.fx-mobile { display:grid; }
+}
+
+.fx-fecha-head { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:4px 12px; margin-bottom:12px; }
+@media (max-width:860px){ .fx-fecha-head { justify-content:flex-start; margin-bottom:12px; } }
 .fx-fecha-sub { font-size:.82rem; display:inline-flex; align-items:center; gap:5px; }
 .fx-grid { display:grid; grid-template-columns:1fr; gap:10px; }
-@media (min-width:560px){ .fx-grid { grid-template-columns:1fr 1fr; } }
-@media (min-width:920px){ .fx-grid { grid-template-columns:1fr 1fr 1fr; } }
+@media (min-width:560px) and (max-width:860px){ .fx-grid { grid-template-columns:1fr 1fr; } }
 
 .fx-tile { border:1px solid var(--c-line); border-radius:14px; padding:12px 14px; background:var(--c-surface); display:flex; flex-direction:column; gap:11px; }
 .fx-tile.is-clasico { background:var(--c-brand-soft); border-color:var(--c-brand); }
