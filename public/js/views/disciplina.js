@@ -36,7 +36,7 @@ function comiteBlock(config) {
   <div class="grid grid-2 mb-3">
     <div class="card card-tinted-brand">
       <div class="card-header"><h3 style="color:var(--c-brand)">${icon('check', { size: 20 })} Sanción automática</h3></div>
-      <p class="mt-1">Se aplica directo por tabla, sin sesión. <strong>Firme e inapelable</strong>, se cumple en la fecha siguiente. Ej.: la roja por doble amarilla son <strong>1 fecha</strong>.</p>
+      <p class="mt-1">Se aplica directo por tabla, sin sesión, y se cumple en la fecha siguiente. Ej.: la roja por <strong>doble amarilla no tiene suspensión</strong> para la fecha siguiente; una <strong>roja directa</strong> son 1 fecha.</p>
     </div>
     <div class="card card-tinted-accent">
       <div class="card-header"><h3>${icon('scale', { size: 20 })} Sanción de comité</h3></div>
@@ -65,11 +65,11 @@ function comiteBlock(config) {
     </div>
     <div class="card">
       <div class="card-header"><h3>${icon('users', { size: 20 })} Quórum</h3></div>
-      <p class="muted mt-1">Mínimo <strong>3 miembros</strong>, siempre obligatorio el del <strong>Directorio</strong> y el de <strong>árbitros</strong>. El representante de un equipo involucrado se inhabilita.</p>
+      <p class="muted mt-1"><strong>3 votos</strong>: Directorio, cuerpo arbitral y equipos (3 representantes, 1 voto). Quórum: <strong>1 de cada estamento</strong>. El representante de un equipo involucrado se inhabilita.</p>
     </div>
     <div class="card">
       <div class="card-header"><h3>${icon('shield', { size: 20 })} Decisión</h3></div>
-      <p class="muted mt-1">Por mayoría; en empate dirime el voto arbitral. Se resuelve con <strong>informe arbitral y video</strong>.</p>
+      <p class="muted mt-1">Por <strong>mayoría</strong> de los 3 votos. Se resuelve con <strong>informe arbitral y video</strong>.</p>
     </div>
   </div>
 
@@ -77,7 +77,7 @@ function comiteBlock(config) {
   <div class="grid grid-2 mb-3">
     <div class="card">
       <div class="card-header"><h3>${icon('clipboard', { size: 20 })} Apelaciones</h3></div>
-      <p class="muted mt-1">Solo las sanciones de comité se apelan, por escrito y vía delegado, dentro de <strong>48 h</strong>. Las automáticas son firmes. La resolución del comité es inapelable.</p>
+      <p class="muted mt-1"><strong>Siempre se puede apelar</strong> presentando <strong>material audiovisual</strong> que pruebe lo contrario a lo sancionado; el comité decide en base a la evidencia. El reclamo va por escrito, vía delegado, dentro de <strong>48 h</strong>.</p>
     </div>
     <div class="card">
       <div class="row" style="gap:12px;align-items:flex-start">

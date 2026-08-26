@@ -32,6 +32,8 @@ export async function showReglamentos() {
     { t: 'Formato de competencia', b: `<ul>
         <li><strong>10 equipos</strong>, fase regular de todos contra todos según el fixture oficial.</li>
         <li>Al terminar la fase regular: <strong>1° a 4°</strong> → semifinales de la <strong>Copa de Oro</strong> (define al campeón); <strong>5° a 8°</strong> → <strong>Copa de Plata</strong>; <strong>9° y 10°</strong> → partido de promoción, el perdedor desciende.</li>
+        <li>Ante <strong>igualdad de puntos</strong> en la tabla, define un <strong>partido entre los empatados</strong>; si persiste, la <strong>diferencia de goles</strong>.</li>
+        <li>Solo pueden disputar los <strong>playoffs</strong> (semifinales y finales de copa) y el <strong>partido de descenso</strong> los jugadores con <strong>al menos 3 firmas</strong> en planilla durante la fase regular.</li>
         <li>A futuro, LIV se disputará con sistema de <strong>Primera y Segunda División</strong>.</li>
         <li>Fixture, horarios y canchas los define el Directorio y son <strong>obligatorios</strong>: ningún equipo los modifica unilateralmente.</li>
       </ul>` },
@@ -49,10 +51,11 @@ export async function showReglamentos() {
         <li>Cumplida la tolerancia con <strong>menos de 9</strong>, el partido puede declararse <strong>W.O.</strong> No es automático: el rival puede <strong>optar por esperar</strong>, pero los <strong>minutos transcurridos se descuentan</strong> del tiempo de juego.</li>
         <li>El W.O. implica <strong>multa de $80.000</strong> más la derrota deportiva por <strong>0-3</strong> (3 puntos para el rival).</li>
         <li>Retirarse de la cancha antes del final sin causa justificada: walkover + sanción del Comité.</li>
-        <li><strong>Reincidencia en walkover (2 veces)</strong>: expulsión de la Liga sin reembolso. El W.O. no exime del pago de cuotas ni multas.</li>
+        <li>El W.O. no exime del pago de cuotas ni multas.</li>
       </ul>` },
     { t: 'Disciplina en cancha', b: `<ul>
         <li>Tarjetas amarillas y rojas aplicadas por la terna arbitral.</li>
+        <li><strong>Dos amarillas en un mismo partido</strong> equivalen a roja; esa expulsión <strong>no conlleva suspensión</strong> para la fecha siguiente.</li>
         <li><strong>Roja directa:</strong> suspensión mínima de <strong>1 fecha</strong> (ampliable por el Comité).</li>
         <li>Las suspensiones se cumplen en la fecha <strong>inmediatamente siguiente</strong> del calendario.</li>
       </ul>` },
@@ -61,15 +64,15 @@ export async function showReglamentos() {
         <li>Según la gravedad, consecuencias, reincidencia y demás antecedentes, la sanción puede aumentar hasta la <strong>expulsión definitiva del jugador de la LIV</strong>.</li>
       </ul>` },
     { t: 'Riñas, peleas y agresiones colectivas', b: `<p class="mb-2"><strong>Tolerancia cero.</strong></p><ul>
-        <li>Quien <strong>participe activamente</strong> en una riña o pelea con agresiones físicas: <strong>expulsión inmediata y definitiva de la LIV, sin apelación</strong>.</li>
-        <li>Si participan <strong>dos o más jugadores de un mismo equipo</strong>: además de la expulsión individual, el <strong>equipo completo queda expulsado de la competencia, sin apelación</strong>.</li>
+        <li>Quien <strong>participe activamente</strong> en una riña o pelea con agresiones físicas: <strong>expulsión inmediata y definitiva de la LIV</strong>.</li>
+        <li>Si participan <strong>dos o más jugadores de un mismo equipo</strong>: además de la expulsión individual, el <strong>equipo completo queda expulsado de la competencia</strong>.</li>
         <li><strong>Participación activa</strong> = golpes, patadas, empujones violentos o cualquier conducta física agresiva. <strong>No</strong> cuenta intervenir solo para separar o contener.</li>
         <li>La responsabilidad se determina con el <strong>informe arbitral, los registros audiovisuales</strong> y demás antecedentes.</li>
       </ul>` },
     { t: 'Escala de sanciones', b: `<div class="table-wrap"><table class="tbl"><thead><tr><th>Nivel</th><th>Conductas (ejemplos)</th><th>Sanciones</th></tr></thead><tbody>
         <tr><td><span class="pill pill-grey">Leve</span></td><td>Atrasos, presentación incompleta, descuido menor de instalaciones, reclamos improcedentes.</td><td>Amonestación, apercibimiento y/o multa menor.</td></tr>
         <tr><td><span class="pill" style="background:var(--c-accent-soft);color:var(--c-accent-deep)">Grave</span></td><td>Agresiones verbales al arbitraje, conducta antideportiva reiterada, atraso en pagos, daño a instalaciones.</td><td>Suspensión de 1 a 3 fechas, multa y/o pérdida de puntos.</td></tr>
-        <tr><td><span class="pill pill-red">Gravísima</span></td><td>Agresión física, riñas o peleas colectivas, suplantación, falsificación de edad/documentos, fraude, reincidencia en W.O.</td><td>Suspensión prolongada o eliminación, derrota 0-3 y/o expulsión definitiva sin reembolso.</td></tr>
+        <tr><td><span class="pill pill-red">Gravísima</span></td><td>Agresión física, riñas o peleas colectivas, suplantación, falsificación de edad/documentos, fraude.</td><td>Suspensión prolongada o eliminación, derrota 0-3 y/o expulsión definitiva sin reembolso.</td></tr>
       </tbody></table></div>` },
     { t: 'Conducta de dirigentes, cuerpo técnico y público', b: `<ul>
         <li>Dirigentes y cuerpo técnico son <strong>responsables solidarios</strong> de la conducta de jugadores, suplentes y público de su equipo.</li>
@@ -78,7 +81,7 @@ export async function showReglamentos() {
       </ul>` },
     { t: 'Identidad y control de jugadores', b: `<ul>
         <li>Prohibida la suplantación de identidad (<em>"jugador fantasma"</em>): 0-3 en contra, suspensión del suplantado y del suplantador por el <strong>resto de la temporada</strong> y multa.</li>
-        <li>Solo pueden jugar los inscritos en la planilla vigente. Todo jugador debe <strong>portar su cédula</strong> en cada jornada.</li>
+        <li>Solo pueden jugar los inscritos en la planilla vigente. Al <strong>firmar la planilla</strong>, cada jugador debe <strong>exhibir su cédula de identidad</strong>; los planilleros la verifican en ese momento.</li>
         <li>La Liga puede controlar la identidad <strong>antes, durante o después</strong> del partido. Negarse a exhibir el documento: partido perdido 0-3.</li>
       </ul>` },
     { t: 'Instalaciones y consumo', b: `<ul>
@@ -92,14 +95,14 @@ export async function showReglamentos() {
         <li>Ante lluvia, canchas inutilizables u otras emergencias, el Directorio puede suspender y <strong>reprogramar</strong> (programación obligatoria). No se suspende por motivos particulares.</li>
       </ul>` },
     { t: 'Comité Disciplinario', b: `<ul>
-        <li>Integrado por <strong>5 votos</strong>: <strong>1 del jefe de árbitros</strong>, <strong>1 del Directorio</strong> y <strong>3 de tres representantes de equipos distintos</strong> de la Liga.</li>
-        <li>En caso de <strong>empate</strong>, el voto del <strong>cuerpo arbitral es dirimente</strong> y define la sanción.</li>
+        <li>Integrado por <strong>3 votos</strong>: <strong>1 del cuerpo arbitral</strong>, <strong>1 del Directorio</strong> y <strong>1 de los equipos</strong> (representados por 3 delegados).</li>
+        <li><strong>Quórum mínimo</strong> para sesionar: 1 representante de cada estamento (Directorio, cuerpo arbitral y equipos).</li>
         <li>Se ocupa <strong>todo el material audiovisual disponible</strong> para impartir justicia y esclarecer los hechos.</li>
       </ul>` },
     { t: 'Reclamos y apelaciones', b: `<ul>
         <li>Todo reclamo se presenta <strong>por escrito (correo)</strong> por el delegado oficial, dentro de <strong>48 horas</strong> del partido o hecho.</li>
         <li>No se cursan reclamos verbales, anónimos o fuera de plazo. El Comité resuelve en <strong>5 días hábiles</strong>.</li>
-        <li>Las resoluciones del Comité Disciplinario son <strong>inapelables</strong> una vez notificadas.</li>
+        <li><strong>Siempre se puede apelar</strong> una sanción presentando <strong>material audiovisual</strong> que pruebe lo contrario a lo sancionado; el <strong>Comité de Disciplina decide</strong> en base a la evidencia presentada.</li>
       </ul>` },
     { t: 'Causales de expulsión de la Liga', b: `<ul>
         <li>Atraso en el pago de cuotas superior a 15 días.</li>

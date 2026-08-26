@@ -1,0 +1,204 @@
+{
+  "title": "LIV 2026 · Reunión de Delegados — Serie Junior",
+  "author": "LIV — Liga La Cuarta",
+  "slides": [
+    {
+      "layout": "portada",
+      "kicker": "REUNIÓN DE DELEGADOS · TEMPORADA 2026",
+      "title": "SERIE\nJUNIOR",
+      "script": "Complejo, torneo, reglas y comité",
+      "aside": { "title": "LIGA\nLA CUARTA", "text": "El estándar\nde las mejores\nligas", "link": "somosliv.cl" },
+      "notes": "Bienvenida. Hoy repasamos cuatro bloques: el complejo y la organización, cómo funciona el torneo, las reglas de convivencia, y el comité de disciplina. Cada equipo participa con un solo delegado como interlocutor oficial. Estreno: sábado 29 de agosto."
+    },
+
+    {
+      "layout": "split",
+      "kicker": "SECCIÓN 1 · EL COMPLEJO",
+      "title": "FORTALEZAS\nDEL COMPLEJO",
+      "script": "Peñuelas, entre La Serena y Coquimbo",
+      "image": "fotos/complejo-panoramica.jpg",
+      "items": [
+        { "n": "4", "text": "canchas de pasto natural, medidas FIFA, excelente drenaje" },
+        { "n": "290", "text": "estacionamientos (con posible ampliación)" },
+        { "n": "+", "text": "camarines, baños y duchas (pronta habilitación)" },
+        { "n": "+", "text": "club house (pronto 2° piso) y quinchos habilitados" }
+      ],
+      "footnote": "Zona céntrica, áreas verdes y ambiente familiar.",
+      "notes": "Destacar la calidad del pasto natural y el drenaje: se juega aunque llueva. Los camarines, baños y duchas están en pronta habilitación; el club house sumará un segundo piso."
+    },
+    {
+      "layout": "lista",
+      "kicker": "SECCIÓN 1 · LA ORGANIZACIÓN",
+      "title": "CÓMO\nTRABAJAMOS",
+      "rows": [
+        { "title": "EN LA CANCHA", "text": "Grabación con cámaras VEO, balones oficiales de la Liga, arbitraje renovado y planillas oficiales cada fecha." },
+        { "title": "ORDEN Y PUNTUALIDAD", "text": "Respeto estricto de los horarios y orden dentro del complejo, de principio a fin." },
+        { "title": "PREMIOS", "text": "Premio de marca todas las fechas, premios por mes y premio en efectivo al campeón." },
+        { "title": "COMUNIDAD Y DIGITAL", "text": "Página web propia, redes sociales activas y zona infantil para las familias." }
+      ],
+      "notes": "Recalcar que todo esto ya está operativo: web, grabación, arbitraje, premios. La zona infantil y el ambiente familiar son un sello de LIV."
+    },
+    {
+      "layout": "texto-foto",
+      "image": "fotos/complejo-plano-maestro.jpg",
+      "side": "right",
+      "kicker": "SECCIÓN 1 · VISIÓN",
+      "title": "HACIA UN\nCLUB, NO SOLO\nUNA LIGA",
+      "body": "El complejo está en formación, con un plan de mejora continua hacia instalaciones de mejor nivel.\n\nLa mirada de largo plazo es un complejo integral —único en la región— donde los equipos integren un club con membresías: fútbol, futbolito, tenis, pádel, quinchos, restaurante, salón de eventos y celebraciones, como socios.",
+      "notes": "Esta es la visión que queremos que los equipos compren: no vienen a jugar un torneo, vienen a ser parte de un proyecto que crece. Membresías y uso de la infraestructura como socios."
+    },
+
+    {
+      "layout": "texto-foto",
+      "image": "fotos/accion.jpg",
+      "side": "left",
+      "kicker": "SECCIÓN 2 · EL TORNEO",
+      "title": "10 EQUIPOS,\n9 FECHAS,\nUNA COPA",
+      "body": "Junior son 10 equipos, todos contra todos en 9 fechas de fase regular. Se ordenan por puntos; ante igualdad define un partido entre los empatados y luego la diferencia de goles.\n\n1° a 4° van a semifinales de la Copa de Oro, 5° a 8° a la Copa de Plata, y los últimos 2 disputan quién desciende directamente.",
+      "notes": "Dejar clarísimo el desempate: primero partido entre empatados, después diferencia de goles. Los 4 primeros pelean el título en Copa de Oro."
+    },
+    {
+      "layout": "cards",
+      "kicker": "SECCIÓN 2 · HORARIOS",
+      "title": "TRES HORARIOS",
+      "subtitle": "Preferentemente: Senior temprano, Junior más tarde.",
+      "cards": [
+        { "n": "09:00", "title": "SENIOR", "pill": "1er bloque", "text": "Arranca la jornada con la serie Senior.", "fill": "green" },
+        { "n": "10:40", "title": "SENIOR /\nJUNIOR", "pill": "bloque central", "text": "Horario compartido por ambas series." },
+        { "n": "12:20", "title": "JUNIOR", "pill": "cierre", "text": "Último bloque del día, serie Junior." }
+      ],
+      "notes": "Los 3 horarios de LIV son 9:00, 10:40 y 12:20. Preferentemente Senior juega 9:00 y 10:40; Junior juega 10:40 y 12:20."
+    },
+    {
+      "layout": "logos",
+      "kicker": "SECCIÓN 2 · LA NÓMINA",
+      "title": "LOS 10 EQUIPOS",
+      "logos": [
+        { "img": "/home/claude/LIV/public/assets/equipos/los-pibes.png", "name": "Los Pibes" },
+        { "img": "/home/claude/LIV/public/assets/equipos/camilo-enriquez.png", "name": "Camilo Enríquez" },
+        { "img": "/home/claude/LIV/public/assets/equipos/bunker.png", "name": "Bunker" },
+        { "img": "/home/claude/LIV/public/assets/equipos/mesa-cuadrada.png", "name": "Mesa Cuadrada" },
+        { "img": "/home/claude/LIV/public/assets/equipos/huracan.png", "name": "Huracán" },
+        { "img": "/home/claude/LIV/public/assets/equipos/40-grados.png", "name": "40 Grados" },
+        { "img": "/home/claude/LIV/public/assets/equipos/capibara.png", "name": "Capibara" },
+        { "img": "/home/claude/LIV/public/assets/equipos/bayern.png", "name": "Bayern Llevenpilsen" },
+        { "img": "/home/claude/LIV/public/assets/equipos/los-prados.png", "name": "Los Prados" },
+        { "img": "/home/claude/LIV/public/assets/equipos/arquitectura.png", "name": "Arquitectura" }
+      ],
+      "footnote": "La nómina oficial de la serie Junior 2026.",
+      "notes": "Confirmar que están los 10 delegados presentes."
+    },
+    {
+      "layout": "split",
+      "kicker": "SECCIÓN 2 · LAS CANCHAS",
+      "title": "CANCHA Y\nCAMARÍN",
+      "script": "La liga asigna el camarín de cada equipo",
+      "image": "fotos/complejo-cancha.jpg",
+      "items": [
+        { "n": "C1", "text": "Cancha 1 → camarines 1 y 2" },
+        { "n": "C3", "text": "Cancha 3 → camarines 3 y 4" },
+        { "n": "C2", "text": "Cancha 2 → camarines 5 y 6" },
+        { "n": "C4", "text": "Cancha 4 → camarines 7 y 8" }
+      ],
+      "footnote": "4 canchas de pasto natural. El camarín lo designa la Liga para cada equipo.",
+      "notes": "Cada cancha tiene dos camarines de preferencia asignados por la liga. Se exige usar el camarín asignado, por orden y respeto."
+    },
+    {
+      "layout": "texto-foto",
+      "image": "fotos/duo-accion.jpg",
+      "side": "right",
+      "kicker": "SECCIÓN 2 · EL FIXTURE",
+      "title": "EL FIXTURE\nYA ESTÁ\nPUBLICADO",
+      "body": "Todo el campeonato está publicado en somosliv.cl, fecha a fecha, con cada detalle:\n\nhorario, número de cancha, camarín por equipo, condición de local o visita, premio de auspiciador que se juega, y si el partido se graba o no.",
+      "notes": "Invitar a los delegados a revisar el fixture completo en la web. Una vez publicado, horarios y canchas son obligatorios y no se cambian por cuenta propia."
+    },
+
+    {
+      "layout": "lista",
+      "kicker": "SECCIÓN 3 · CONVIVENCIA",
+      "title": "TOLERANCIA\nCERO",
+      "rows": [
+        { "title": "AGRESIÓN FÍSICA", "text": "Roja por agredir: suspensión mínima de 4 fechas, ampliable hasta la expulsión definitiva de la LIV." },
+        { "title": "RIÑAS Y PELEAS", "text": "Tolerancia cero. Participar activamente = expulsión inmediata y definitiva de la Liga." },
+        { "title": "PELEAS COLECTIVAS", "text": "Si participan 2 o más jugadores de un mismo equipo, el equipo completo queda fuera de la competencia." },
+        { "title": "EVIDENCIA", "text": "Usamos todo el material audiovisual disponible para hacer cumplir el reglamento." }
+      ],
+      "notes": "Este es el punto más importante del bloque de reglas. Somos una liga familiar y la violencia se corta de raíz. Todo queda grabado."
+    },
+    {
+      "layout": "cards",
+      "kicker": "SECCIÓN 3 · PUNTUALIDAD",
+      "title": "LA HORA\nMANDA",
+      "subtitle": "Es responsabilidad de todos: organización, árbitros y equipos.",
+      "cards": [
+        { "n": "10'", "title": "TOLERANCIA", "pill": "máximo", "text": "Solo 10 minutos desde la hora oficial. Los minutos transcurridos no se recuperan.", "fill": "green" },
+        { "n": "?", "title": "ESPERAR\nO W.O.", "pill": "decide el rival", "text": "Cumplida la tolerancia, el equipo bien presentado decide esperar o pasar el W.O." },
+        { "n": "-9", "title": "MENOS DE 9", "pill": "W.O. + multa", "text": "Con menos de 9 jugadores no se puede jugar: es W.O. y tiene multa." }
+      ],
+      "notes": "Hacer mucho hincapié: la puntualidad es clave. La organización tiene todo listo a la hora, los árbitros equipados a la hora, y los equipos deben respetarla. Que tomen las medidas del caso para llegar a tiempo."
+    },
+    {
+      "layout": "cards",
+      "kicker": "SECCIÓN 3 · EL RECINTO",
+      "title": "RESPETO\nDE LA CASA",
+      "subtitle": "Liga deportiva familiar: cuidamos la tranquilidad de familias y niños.",
+      "cards": [
+        { "n": "01", "title": "ZONA DE\nBANCAS", "text": "Solo jugadores y actividad deportiva. Prohibido el mal uso y las sustancias. Se deja limpia.", "fill": "green" },
+        { "n": "02", "title": "CAMARINES", "text": "Se usa el camarín asignado por la Liga, por orden y respeto." },
+        { "n": "03", "title": "ALCOHOL", "text": "Prohibido en zonas deportivas (bancas, galerías, camarines). Solo en club house y quinchos.", "fill": "green" }
+      ],
+      "notes": "El alcohol solo en las zonas habilitadas: club house y quinchos. En bancas, galerías y camarines está estrictamente prohibido. Es una liga familiar."
+    },
+    {
+      "layout": "texto-foto",
+      "image": "fotos/duo-familia.jpg",
+      "side": "left",
+      "kicker": "SECCIÓN 3 · CUMPLIMIENTO",
+      "title": "SE FIRMA\nCON CARNET",
+      "body": "Cada jugador firma la planilla mostrando su cédula de identidad; los planilleros la verifican en ese momento.\n\nCualquier suplantación de identidad se sanciona con la suspensión del suplantado y del suplantador por toda la Liga, y el equipo infractor pierde el partido 0-3.",
+      "notes": "La firma con carnet es innegociable. La suplantación es de las faltas más graves: fuera de la liga los involucrados y 0-3 al equipo."
+    },
+
+    {
+      "layout": "detalle",
+      "kicker": "SECCIÓN 4 · DISCIPLINA",
+      "title": "COMITÉ DE\nDISCIPLINA",
+      "pill": "3 VOTOS",
+      "body": "Un órgano equilibrado que resuelve con evidencia, no con impresiones.",
+      "script": "Se apela con video",
+      "rightTitle": "CÓMO SE COMPONE",
+      "rows": [
+        { "label": "CUERPO ARBITRAL", "text": "1 voto." },
+        { "label": "DIRECTIVA", "text": "1 voto." },
+        { "label": "EQUIPOS", "text": "1 voto, a través de 3 representantes." },
+        { "label": "QUÓRUM", "text": "Mínimo 1 representante de cada estamento." },
+        { "label": "EVIDENCIA", "text": "Se resuelve con informe arbitral y material audiovisual." }
+      ],
+      "footer": "Hoy elegimos a los 3 representantes de los equipos.",
+      "notes": "Explicar que los equipos tienen voz y voto a través de sus 3 representantes. El comité sesiona solo cuando hay algo que tipificar, una apelación o un hecho grave que investigar."
+    },
+    {
+      "layout": "cards",
+      "kicker": "SECCIÓN 4 · CÓMO OPERA",
+      "title": "CUÁNDO\nSESIONA",
+      "cards": [
+        { "n": "A", "title": "SANCIÓN\nAUTOMÁTICA", "pill": "sin sesión", "text": "Se aplica directo por tabla. Ej.: la doble amarilla es roja pero no tiene suspensión para la fecha siguiente.", "fill": "green" },
+        { "n": "B", "title": "SANCIÓN DE\nCOMITÉ", "pill": "sesiona", "text": "Faltas graves que se tipifican caso a caso; el comité fija la sanción con la evidencia." },
+        { "n": "C", "title": "APELACIÓN", "pill": "con video", "text": "Siempre se puede apelar con material audiovisual; el comité decide según la evidencia presentada.", "fill": "green" }
+      ],
+      "notes": "Cerrar el bloque de reglas: lo automático se aplica solo; lo grave va a comité; y siempre existe la vía de apelación con video. La regla de oro: si hay un video que prueba lo contrario, el comité lo evalúa."
+    },
+
+    {
+      "layout": "cierre",
+      "title": "MANOS A\nLA OBRA",
+      "script": "Nos vemos el sábado 29 en Deggiano",
+      "fields": [
+        { "label": "SITIO", "value": "somosliv.cl" },
+        { "label": "SEDE", "value": "Complejo Deggiano · Peñuelas" },
+        { "label": "ESTRENO", "value": "Sábado 29 de agosto" }
+      ],
+      "notes": "Cierre: reforzar puntualidad y ambiente familiar. Cualquier duda, el delegado es el canal oficial con la Liga."
+    }
+  ]
+}
