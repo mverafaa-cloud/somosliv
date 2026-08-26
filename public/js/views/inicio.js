@@ -1,5 +1,5 @@
 import { getConfig, getPartidos, getEquipos, equiposById } from '../services/store.js';
-import { mount, esc, initials, fmtDateLong, fmtTime, parseDate, everySecond } from '../ui/helpers.js';
+import { mount, esc, initials, fmtDateLong, fmtTime, parseDate, everySecond, teamLogo } from '../ui/helpers.js';
 import { shell, loading, logoMarquee } from '../ui/layout.js';
 import { icon } from '../ui/icons.js';
 
@@ -126,8 +126,8 @@ function matchRow(p, byId) {
   const V = byId[p.visita]?.nombre || p.visita;
   return `
   <div class="match-card">
-    <div class="team home"><span class="name">${esc(L)}</span><span class="badge">${esc(initials(L))}</span></div>
+    <div class="team home"><span class="name">${esc(L)}</span>${teamLogo(byId[p.local]?.logo, L, 34)}</div>
     <div class="vs"><div class="scheduled">${esc(fmtTime(p.hora))}</div><div class="meta">${esc(p.cancha || '')}</div></div>
-    <div class="team"><span class="badge">${esc(initials(V))}</span><span class="name">${esc(V)}</span></div>
+    <div class="team">${teamLogo(byId[p.visita]?.logo, V, 34)}<span class="name">${esc(V)}</span></div>
   </div>`;
 }

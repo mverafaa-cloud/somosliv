@@ -14,7 +14,9 @@ export async function showResultados() {
   const series = config.series || [];
   const finished = partidos.filter(p => p.estado === 'finalizado' && p.golesLocal != null);
 
-  if (!finished.length) {
+  // Activa apenas hay fixture publicado. Si aún no se juega nada, muestra un
+  // estado vacío amable (no la portada de "temporada por comenzar").
+  if (!partidos.length && !equipos.length) {
     mount(shell(`<div class="container"><span class="eyebrow">Marcadores</span><h1>Resultados</h1>${preSeason(config, 'los marcadores de cada fecha')}</div>`, config));
     return;
   }
@@ -92,7 +94,7 @@ export async function showResultados() {
       <div class="fixture-day">
         <h3>${icon('calendar', { size: 18 })} ${esc(fmtDateLong(d))}</h3>
         ${groups[d].map(p => resultCard(p, byId, series)).join('')}
-      </div>`).join('') : emptyBox('No hay resultados para los filtros seleccionados.');
+      </div>`).join('') : emptyBox(finished.length ? 'No hay resultados para los filtros seleccionados.' : 'Aún no se han jugado partidos. Los marcadores aparecerán aquí apenas arranque la fecha 1.');
   }
 
   function render() { renderFilters(); renderList(); }
