@@ -584,3 +584,30 @@ table.sorteo-bal td, table.sorteo-bal th { padding:7px 8px; font-size:.86rem; }
 /* Fixture público (Programación) */
 table.fixture-pub td, table.fixture-pub th { padding:8px 10px; font-size:.92rem; }
 table.fixture-pub tr.is-clasico { background:var(--c-brand-soft); }
+
+/* Fixture en tarjetas — móvil-first, alineado */
+.fx-fecha-head { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 12px; margin-bottom:12px; }
+.fx-fecha-sub { font-size:.82rem; display:inline-flex; align-items:center; gap:5px; }
+.fx-grid { display:grid; grid-template-columns:1fr; gap:10px; }
+@media (min-width:560px){ .fx-grid { grid-template-columns:1fr 1fr; } }
+@media (min-width:920px){ .fx-grid { grid-template-columns:1fr 1fr 1fr; } }
+
+.fx-tile { border:1px solid var(--c-line); border-radius:14px; padding:12px 14px; background:var(--c-surface); display:flex; flex-direction:column; gap:11px; }
+.fx-tile.is-clasico { background:var(--c-brand-soft); border-color:var(--c-brand); }
+
+.fx-tile-top { display:flex; align-items:center; gap:8px; font-size:.85rem; color:var(--c-muted); }
+.fx-tile-top .fx-hora { font-weight:800; color:var(--c-ink); font-size:1rem; letter-spacing:-.01em; }
+.fx-tile-top .fx-cancha { font-weight:600; }
+.fx-tile-top .fx-tags { margin-left:auto; display:inline-flex; align-items:center; gap:6px; }
+.fx-tag.fx-rec { color:var(--c-brand); display:inline-flex; }
+.fx-tag.fx-cl { display:inline-flex; align-items:center; gap:3px; background:var(--c-brand); color:#fff; font-size:.7rem; font-weight:800; text-transform:uppercase; letter-spacing:.03em; padding:2px 8px; border-radius:999px; }
+
+.fx-tile-teams { display:flex; flex-direction:column; gap:8px; }
+.fx-tm { display:flex; align-items:center; gap:10px; min-width:0; }
+.fx-tm .fx-nm { font-weight:700; font-size:1.02rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.fx-tm .tlogo { width:28px; height:28px; }
+
+.fx-tile-meta { display:flex; justify-content:space-between; align-items:center; gap:8px; font-size:.8rem; color:var(--c-muted); border-top:1px solid var(--c-line); padding-top:9px; }
+.fx-tile-meta > span:first-child { display:inline-flex; align-items:center; gap:5px; }
+.fx-premio { background:var(--c-bg-alt); color:var(--c-ink); font-weight:600; padding:3px 10px; border-radius:999px; white-space:nowrap; }
+.fx-tile.is-clasico .fx-premio { background:rgba(255,255,255,.7); }

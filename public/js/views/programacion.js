@@ -146,26 +146,38 @@ function fechaBlock(rd, config = {}) {
   const cams = [...new Set(parts.filter(p => p.grabado).map(p => p.cancha))].sort((a, b) => a - b);
   const nGrab = parts.filter(p => p.grabado).length;
   return `
-    <div class="card mb-2">
-      <div class="spread mb-1">
+    <div class="card mb-2 fx-fecha">
+      <div class="fx-fecha-head">
         <h3 style="margin:0">${icon('calendar', { size: 18 })} Fecha ${rd.n} <span class="muted" style="font-weight:400;font-size:.9rem">· ${esc(fmtDateLong(rd.fecha))}</span></h3>
-        ${nGrab ? `<span class="muted" style="font-size:.85rem">${icon('video', { size: 14 })} ${nGrab} grabados · cámaras en cancha ${cams.join(' y ')}</span>` : ''}
+        ${nGrab ? `<span class="muted fx-fecha-sub">${icon('video', { size: 14 })} ${nGrab} grabados · cámaras cancha ${cams.join(' y ')}</span>` : ''}
       </div>
-      <div class="table-wrap"><table class="tbl fixture-pub">
-        <thead><tr><th>Hora</th><th>Cancha</th><th>Partido</th><th>Cam. L/V</th><th>Grab.</th><th>Premio</th></tr></thead>
-        <tbody>
-          ${parts.map(p => `
-            <tr class="${p.clasico ? 'is-clasico' : ''}">
-              <td style="white-space:nowrap;font-weight:600">${esc(p.horario)}</td>
-              <td style="white-space:nowrap">Cancha ${esc(p.cancha)}</td>
-              <td><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">${teamInline(p.logoLocal, p.local, { size: 22 })} <span class="muted">vs</span> ${teamInline(p.logoVisita, p.visita, { size: 22 })}${p.clasico ? `<span class="pill pill-brand">${icon('flame', { size: 12 })} Clásico</span>` : ''}</div></td>
-              <td class="muted" style="white-space:nowrap">${p.camarinLocal ?? '—'} / ${p.camarinVisita ?? '—'}</td>
-              <td>${p.grabado ? icon('video', { size: 16, cls: 'ico-grab' }) : '<span class="muted">—</span>'}</td>
-              <td><span class="pill pill-grey">${esc(p.premio ? ausp(p.premio) : '—')}</span></td>
-            </tr>`).join('')}
-        </tbody>
-      </table></div>
+      <div class="fx-grid">
+        ${parts.map(p => matchTile(p, ausp)).join('')}
+      </div>
     </div>`;
+}
+
+function matchTile(p, ausp) {
+  const premio = p.premio ? ausp(p.premio) : '';
+  return `
+  <div class="fx-tile ${p.clasico ? 'is-clasico' : ''}">
+    <div class="fx-tile-top">
+      <span class="fx-hora">${esc(p.horario)}</span>
+      <span class="fx-cancha">Cancha ${esc(p.cancha)}</span>
+      <span class="fx-tags">
+        ${p.grabado ? `<span class="fx-tag fx-rec" title="Partido grabado">${icon('video', { size: 13 })}</span>` : ''}
+        ${p.clasico ? `<span class="fx-tag fx-cl">${icon('flame', { size: 12 })} Clásico</span>` : ''}
+      </span>
+    </div>
+    <div class="fx-tile-teams">
+      <div class="fx-tm">${teamLogo(p.logoLocal, p.local, 26)}<span class="fx-nm">${esc(p.local)}</span></div>
+      <div class="fx-tm">${teamLogo(p.logoVisita, p.visita, 26)}<span class="fx-nm">${esc(p.visita)}</span></div>
+    </div>
+    <div class="fx-tile-meta">
+      <span title="Camarín local / visita">${icon('users', { size: 12 })} Cam. ${p.camarinLocal ?? '—'} / ${p.camarinVisita ?? '—'}</span>
+      ${premio ? `<span class="fx-premio">${esc(premio)}</span>` : ''}
+    </div>
+  </div>`;
 }
 
 // ---- Helpers compartidos por resultados.js / disciplina.js ----
