@@ -237,11 +237,11 @@ function serieOptions(sel) {
 function renderEquipos(el) {
   const rows = C.equipos.slice().sort((a, b) => (a.serie || '').localeCompare(b.serie) || (a.nombre || '').localeCompare(b.nombre));
   el.innerHTML = `
-    ${!rows.length && !isDemo() ? `
+    ${!isDemo() ? `
     <div class="card mb-3" style="border-left:4px solid var(--c-brand)">
       <div class="spread" style="flex-wrap:wrap;gap:10px">
-        <div><h3 style="margin:0">Cargar los equipos del catálogo</h3><p class="muted" style="margin:4px 0 0">Sube de una vez los 15 equipos (10 Junior + 5 Senior) con sus logos.</p></div>
-        <button class="btn btn-primary" id="btn-import-eq">${icon('users', { size: 16 })} Importar catálogo (16)</button>
+        <div><h3 style="margin:0">${rows.length ? 'Sincronizar catálogo' : 'Cargar los equipos del catálogo'}</h3><p class="muted" style="margin:4px 0 0">${rows.length ? 'Agrega los equipos del catálogo que falten (con su logo) sin borrar los actuales.' : 'Sube de una vez los 16 equipos (10 Junior + 6 Senior) con sus logos.'}</p></div>
+        <button class="btn btn-primary" id="btn-import-eq">${icon('users', { size: 16 })} ${rows.length ? 'Sincronizar catálogo (16)' : 'Importar catálogo (16)'}</button>
       </div>
     </div>` : ''}
     <div class="card mb-3">
