@@ -16,7 +16,7 @@ const TIPIFICACION = [
   { falta: 'Escupir a otra persona', via: 'comite', sancion: '3 a 5 fechas' },
   { falta: 'Intento de agresión (a jugador, árbitro u otra persona)', via: 'comite', sancion: '3 a 6 fechas' },
   { falta: 'Agresión física a un jugador u otra persona presente', via: 'comite', sancion: 'Mín. 4 fechas, hasta expulsión' },
-  { falta: 'Agresión física al árbitro o a un organizador', via: 'comite', sancion: 'Hasta expulsión definitiva' },
+  { falta: 'Agresión física al árbitro o a un organizador', via: 'comite', sancion: 'Expulsión inmediata y definitiva de la LIV · Inapelable' },
   { falta: 'Riña, pelea o agresión colectiva', via: 'comite', sancion: 'Expulsión inmediata y definitiva' }
 ];
 

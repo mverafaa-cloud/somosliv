@@ -93,7 +93,7 @@
       "kicker": "SECCIÓN 2 · LAS CANCHAS",
       "title": "CANCHA Y\nCAMARÍN",
       "script": "La liga asigna el camarín de cada equipo",
-      "image": "fotos/complejo-cancha.jpg",
+      "image": "/home/claude/LIV/deck-assets/canchas-aerea.jpg",
       "items": [
         { "n": "C1", "text": "Cancha 1 → camarines 1 y 2" },
         { "n": "C3", "text": "Cancha 3 → camarines 3 y 4" },
@@ -105,7 +105,7 @@
     },
     {
       "layout": "texto-foto",
-      "image": "fotos/duo-accion.jpg",
+      "image": "/home/claude/LIV/deck-assets/fixture-web-framed.png",
       "side": "right",
       "kicker": "SECCIÓN 2 · EL FIXTURE",
       "title": "EL FIXTURE\nYA ESTÁ\nPUBLICADO",
