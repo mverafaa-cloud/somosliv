@@ -101,87 +101,84 @@ function buildOne(params, seed) {
   const targets = horarioTargets(params);
   const rivSet = new Set((rivalries || []).map(p => [p[0], p[1]].sort().join('|')));
 
-  // Cuota de clásicos POR jornada: total = CL_MIN·equipos/2 (=10), repartido como
-  // mínimo 1 en cada fecha y el sobrante (1) en una fecha al azar. Así NINGUNA
-  // fecha queda sin clásico.
-  const totalCl = Math.round((CL_MIN * ids.length) / 2);
-  const baseCl = Math.max(1, Math.floor(totalCl / nRounds));
-  const clPerRound = Array(nRounds).fill(baseCl);
-  let extraCl = totalCl - baseCl * nRounds;
-  const clOrder = shuffle([...Array(nRounds).keys()], rand);
-  for (let i = 0; extraCl > 0 && i < clOrder.length; i++, extraCl--) clPerRound[clOrder[i]]++;
+  const clKey = m => [m.local, m.visita].sort().join('|');
 
-  const rounds = pairsByRound.map((pairs, ri) => {
-    const roundsLeft = nRounds - ri;
-    let matches = pairs.map(([local, visita]) => ({ local, visita, cancha: null, horario: null, grabado: false, clasico: false, marca: null }));
+  // ===== Fase A: construir todos los partidos + tally de localía =====
+  const allRounds = pairsByRound.map((pairs, ri) => ({
+    n: ri + 1, fecha: usarFechas[ri] || null,
+    matches: pairs.map(([local, visita]) => ({ local, visita, cancha: null, horario: null, grabado: false, clasico: false, marca: null }))
+  }));
+  allRounds.forEach(rd => rd.matches.forEach(m => { T[m.local].local++; T[m.visita].visita++; }));
 
-    // localía tally
-    matches.forEach(m => { T[m.local].local++; T[m.visita].visita++; });
+  // ===== Fase B: CLÁSICOS (global) =====
+  // (a) Las RIVALIDADES definidas son SIEMPRE clásico (son los clásicos reales).
+  // (b) Cada fecha debe tener ≥1 clásico.
+  // (c) Se completa hasta 2 clásicos por equipo (máx. 2 por fecha, para que TODOS
+  //     los clásicos quepan como grabados: 12:20 tiene 2 cámaras y 10:40 una).
+  const addCl = m => { m.clasico = true; T[m.local].clasico++; T[m.visita].clasico++; };
+  const canClG = m => !m.clasico && T[m.local].clasico < CL_MAX && T[m.visita].clasico < CL_MAX;
+  allRounds.forEach(rd => rd.matches.forEach(m => { if (rivSet.has(clKey(m)) && canClG(m)) addCl(m); }));
+  allRounds.forEach(rd => {
+    if (rd.matches.some(m => m.clasico)) return;
+    const cand = rd.matches.filter(canClG)
+      .sort((a, b) => (T[a.local].clasico + T[a.visita].clasico) - (T[b.local].clasico + T[b.visita].clasico) + (rand() - 0.5));
+    if (cand.length) addCl(cand[0]);
+  });
+  let clGuard = 0;
+  while (ids.some(id => T[id].clasico < CL_MIN) && clGuard++ < 300) {
+    let best = null, bs = -Infinity;
+    allRounds.forEach(rd => {
+      if (rd.matches.filter(m => m.clasico).length >= 2) return; // ≤2 clásicos/fecha
+      rd.matches.forEach(m => {
+        if (!canClG(m)) return;
+        const deficit = (T[m.local].clasico < CL_MIN ? 1 : 0) + (T[m.visita].clasico < CL_MIN ? 1 : 0);
+        if (!deficit) return;
+        const s = deficit * 10 - (T[m.local].clasico + T[m.visita].clasico) + rand() * 0.6;
+        if (s > bs) { bs = s; best = m; }
+      });
+    });
+    if (!best) break;
+    addCl(best);
+  }
 
-    // Exposición = grabaciones + clásicos (visibilidad total del equipo).
-    // Clásicos y grabaciones se reparten mirando ESTA suma, para que se compensen:
-    // quien tiene menos de una, recibe más de la otra.
+  // ===== Fase C: por ronda → horarios, grabaciones, canchas, marcas =====
+  const GRAB_BY_H = { '10:40': GRAB_1040, '12:20': GRAB_1220 };
+  const rounds = allRounds.map((rd) => {
+    const matches = rd.matches;
     const expo = id => T[id].grab + T[id].clasico;
 
-    // ---- 1) Clásicos de la jornada (1 o 2), apuntando a CL_MIN–CL_MAX por equipo ----
-    const canCl = m => !m.clasico && T[m.local].clasico < CL_MAX && T[m.visita].clasico < CL_MAX;
-    const clScore = m => {
-      let s = -(expo(m.local) + expo(m.visita));
-      if (T[m.local].clasico < CL_MIN) s += 25 / roundsLeft;   // urgente llegar al mínimo
-      if (T[m.visita].clasico < CL_MIN) s += 25 / roundsLeft;
-      if (rivSet.has([m.local, m.visita].sort().join('|'))) s += 100; // respeta rivalidades definidas
-      return s + rand() * 0.4;
-    };
-    // Cuota fija de esta fecha (mínimo 1). Se elige el/los mejor(es) partido(s).
-    const nCl = clPerRound[ri];
-    for (let k = 0; k < nCl; k++) {
-      let bi = -1, bs = -Infinity;
-      matches.forEach((m, i) => { if (!canCl(m)) return; const s = clScore(m); if (s > bs) { bs = s; bi = i; } });
-      if (bi < 0) break;
-      matches[bi].clasico = true;
-      T[matches[bi].local].clasico++; T[matches[bi].visita].clasico++;
-    }
-
-    // ---- 2) Horarios: SIEMPRE 2 partidos a las 10:40 y el resto (3) a las 12:20 ----
-    // El split por jornada es FIJO; la preferencia por % solo decide QUÉ partidos
-    // caen en cada bloque. "need" = cuántos partidos le faltan a un equipo en ese
-    // horario para acercarse a su objetivo (según su % de preferencia).
+    // ---- Horarios: 2 a las 10:40 y 3 a las 12:20. Los CLÁSICOS se ubican para que
+    //      TODOS puedan grabarse: hasta 2 a las 12:20 (2 cámaras) y como máx. 1 a las 10:40. ----
     const need = (id, h) => targets[id][h] - T[id].hor[h];
-    const n1040 = Math.min(N_1040, matches.length); // partidos a las 10:40 (fijo)
-    // "want12" alto = ese partido prefiere/necesita más el 12:20.
-    const want12 = matches.map(m => ({
-      m, w: (need(m.local, '12:20') + need(m.visita, '12:20'))
-           - (need(m.local, '10:40') + need(m.visita, '10:40')) + rand() * 0.02
-    }));
-    want12.sort((a, b) => b.w - a.w); // los que más quieren 12:20 primero
-    want12.forEach((it, i) => {
-      const h = i < (matches.length - n1040) ? '12:20' : '10:40';
-      it.m.horario = h;
-      T[it.m.local].hor[h]++; T[it.m.visita].hor[h]++;
-    });
+    const setH = (m, h) => { m.horario = h; T[m.local].hor[h]++; T[m.visita].hor[h]++; };
+    const n1040 = Math.min(N_1040, matches.length);
+    const clas = matches.filter(m => m.clasico);
+    const noCl = matches.filter(m => !m.clasico);
+    // Clásicos que DEBEN ir a 10:40 = los que no caben en las 2 cámaras de 12:20.
+    const clTo1040 = Math.min(GRAB_1040, n1040, Math.max(0, clas.length - GRAB_1220));
+    let slots1040 = n1040;
+    clas.forEach((m, i) => { if (i < clTo1040 && slots1040 > 0) { setH(m, '10:40'); slots1040--; } else setH(m, '12:20'); });
+    // No-clásicos: llenan lo que resta de 10:40 (por preferencia) y el resto va a 12:20.
+    const want10 = noCl.map(m => ({ m, w: (need(m.local, '10:40') + need(m.visita, '10:40')) - (need(m.local, '12:20') + need(m.visita, '12:20')) + rand() * 0.02 }));
+    want10.sort((a, b) => b.w - a.w);
+    want10.forEach(({ m }) => { if (slots1040 > 0) { setH(m, '10:40'); slots1040--; } else setH(m, '12:20'); });
 
-    // ---- 3) Grabaciones + canchas ----
-    // Regla: 1 grabado a las 10:40 y 2 a las 12:20 (3 en total). Caben en SOLO 2 canchas
-    // (hay 2 cámaras): a las 12:20 los 2 grabados ocupan las 2 canchas-cámara; a las 10:40
-    // el único grabado ocupa una de ellas.
-    // Prioriza grabar a los equipos con MENOS exposición total (grab + clásico),
-    // así se compensa a quien recibió menos clásicos.
+    // ---- Grabaciones: TODOS los clásicos grabados + completar a 1@10:40 y 2@12:20. ----
     const gval = m => expo(m.local) + expo(m.visita) + rand() * 0.3;
     const orden = matches.slice().sort((a, b) => gval(a) - gval(b));
-    const GRAB_BY_H = { '10:40': GRAB_1040, '12:20': GRAB_1220 };
-    const recorded = [];
+    const recorded = new Set(matches.filter(m => m.clasico)); // clásicos forzados
     HOR.forEach(h => {
-      const pool = orden.filter(m => m.horario === h);
-      let need = Math.min(GRAB_BY_H[h], pool.length);
-      // 1ª pasada: respeta el tope GR_MAX por equipo.
-      for (const m of pool) { if (need <= 0) break; if (T[m.local].grab >= GR_MAX || T[m.visita].grab >= GR_MAX) continue; recorded.push(m); need--; }
-      // 2ª pasada (rara): si los topes impidieron cubrir la cuota, completa igual (lo corrige el score global).
-      for (const m of pool) { if (need <= 0) break; if (recorded.includes(m)) continue; recorded.push(m); need--; }
+      const cap = GRAB_BY_H[h];
+      let have = [...recorded].filter(m => m.horario === h).length;
+      const pool = orden.filter(m => m.horario === h && !recorded.has(m));
+      for (const m of pool) { if (have >= cap) break; if (T[m.local].grab >= GR_MAX || T[m.visita].grab >= GR_MAX) continue; recorded.add(m); have++; }
+      for (const m of pool) { if (have >= cap) break; if (!recorded.has(m)) { recorded.add(m); have++; } }
     });
     recorded.forEach(m => m.grabado = true);
 
     // Elige el par de canchas-cámara y asigna las canchas de los grabados dentro de él.
-    const recByH = { '10:40': recorded.filter(m => m.horario === '10:40'), '12:20': recorded.filter(m => m.horario === '12:20') };
+    const recArr = [...recorded];
+    const recByH = { '10:40': recArr.filter(m => m.horario === '10:40'), '12:20': recArr.filter(m => m.horario === '12:20') };
     const PAIRS = [[1, 2], [1, 3], [1, 4], [2, 3], [2, 4], [3, 4]];
     let bestAssign = null, bestSc = Infinity;
     shuffle(PAIRS, rand).forEach(([cA, cB]) => {
@@ -239,7 +236,7 @@ function buildOne(params, seed) {
     // camarines derivados de la cancha
     matches.forEach(m => { m.camarines = CAMARINES[m.cancha] || []; });
 
-    return { n: ri + 1, fecha: usarFechas[ri] || null, matches };
+    return { n: rd.n, fecha: rd.fecha, matches };
   });
 
   // ---- 6) Reparación de marcas: hill-climb para acercar todos a 3/3/3 ----
@@ -326,10 +323,22 @@ export function generarFixture(params, baseSeed = 1, restarts = 800) {
   for (let i = 0; i < restarts; i++) {
     const seed = (baseSeed * 2654435761 + i * 40503 + 12345) >>> 0;
     const draw = buildOne(params, seed);
-    // Regla: cada fecha debe tener AL MENOS un clásico. Penaliza fuerte cualquier
-    // jornada sin clásico para que el mejor sorteo nunca deje una vacía.
-    const sinClasico = draw.rounds.filter(r => !r.matches.some(m => m.clasico)).length;
-    const sc = scoreDraw(draw.tally, params) + sinClasico * 500;
+    // Penalizaciones de reglas duras (el mejor sorteo debe cumplirlas todas):
+    //  · cada fecha con ≥1 clásico  · rivalidades siempre clásico
+    //  · TODO clásico grabado  · grabados 1@10:40 + 2@12:20
+    const rivKeys = new Set((params.rivalries || []).map(p => [p[0], p[1]].sort().join('|')));
+    let pen = 0;
+    draw.rounds.forEach(rd => {
+      if (!rd.matches.some(m => m.clasico)) pen += 500;
+      const g1040 = rd.matches.filter(m => m.grabado && m.horario === '10:40').length;
+      const g1220 = rd.matches.filter(m => m.grabado && m.horario === '12:20').length;
+      pen += Math.abs(g1040 - 1) * 200 + Math.abs(g1220 - 2) * 200;
+      rd.matches.forEach(m => {
+        if (m.clasico && !m.grabado) pen += 300;
+        if (rivKeys.has([m.local, m.visita].sort().join('|')) && !m.clasico) pen += 300;
+      });
+    });
+    const sc = scoreDraw(draw.tally, params) + pen;
     if (sc < bestScore) { bestScore = sc; best = draw; }
   }
   return { ...best, score: bestScore, stats: computeStats(best.tally, params) };

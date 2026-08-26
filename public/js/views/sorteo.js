@@ -10,6 +10,19 @@ const HOR = ['10:40', '12:20'];
 let S = null;      // estado: { params, result }
 let cfg = {};
 
+// Clásicos reales de la LIV Junior (por id). Solo se incluyen si ambos equipos existen.
+function defaultRivalries(teams) {
+  const ids = new Set(teams.map(t => t.id));
+  const pares = [
+    ['jr-los-pibes', 'jr-bunker'],
+    ['jr-40-grados', 'jr-capibara'],
+    ['jr-los-prados', 'jr-huracan'],
+    ['jr-camilo-enriquez', 'jr-mesa-cuadrada'],
+    ['jr-bayern', 'jr-arquitectura']
+  ];
+  return pares.filter(([a, b]) => ids.has(a) && ids.has(b));
+}
+
 function defaultParams(teams, config) {
   const inicio = config.lanzamiento || '2026-08-29';
   const excluir = ['2026-09-19', '2026-10-10'];
@@ -21,7 +34,8 @@ function defaultParams(teams, config) {
     grabadosPorFecha: 3,
     marcas: ['Auspiciador 1', 'Auspiciador 2', 'Auspiciador 3', 'Auspiciador 4'],
     preferHorario: Object.fromEntries(teams.map(t => [t.id, ''])),
-    rivalries: []
+    // Clásicos reales por defecto (solo se aplican si esos equipos existen).
+    rivalries: defaultRivalries(teams)
   };
 }
 
