@@ -241,7 +241,7 @@ function renderEquipos(el) {
     <div class="card mb-3" style="border-left:4px solid var(--c-brand)">
       <div class="spread" style="flex-wrap:wrap;gap:10px">
         <div><h3 style="margin:0">Cargar los equipos del catálogo</h3><p class="muted" style="margin:4px 0 0">Sube de una vez los 15 equipos (10 Junior + 5 Senior) con sus logos.</p></div>
-        <button class="btn btn-primary" id="btn-import-eq">${icon('users', { size: 16 })} Importar catálogo (15)</button>
+        <button class="btn btn-primary" id="btn-import-eq">${icon('users', { size: 16 })} Importar catálogo (16)</button>
       </div>
     </div>` : ''}
     <div class="card mb-3">
