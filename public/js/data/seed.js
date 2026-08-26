@@ -37,7 +37,7 @@ export const SEED = {
   equipos: [
     // ---- Junior ----
     { id: 'jr-los-pibes',       nombre: 'Los Pibes',           serie: 'libre',  logo: '/assets/equipos/los-pibes.png' },
-    { id: 'jr-camilo-enriquez', nombre: 'Camilo Enríquez',     serie: 'libre',  logo: '/assets/equipos/camilo-enriquez.png' },
+    { id: 'jr-camilo-enriquez', nombre: 'Camilo Henríquez',     serie: 'libre',  logo: '/assets/equipos/camilo-enriquez.png' },
     { id: 'jr-bunker',          nombre: 'Bunker',              serie: 'libre',  logo: '/assets/equipos/bunker.png' },
     { id: 'jr-mesa-cuadrada',   nombre: 'Mesa Cuadrada',       serie: 'libre',  logo: '/assets/equipos/mesa-cuadrada.png' },
     { id: 'jr-huracan',         nombre: 'Huracán',             serie: 'libre',  logo: '/assets/equipos/huracan.png' },
@@ -48,7 +48,7 @@ export const SEED = {
     { id: 'jr-arquitectura',    nombre: 'Arquitectura',        serie: 'libre',  logo: '/assets/equipos/arquitectura.png' },
     // ---- Senior ----
     { id: 'sr-arquitectura',    nombre: 'Arquitectura',        serie: 'senior', logo: '/assets/equipos/arquitectura.png' },
-    { id: 'sr-camilo-enriquez', nombre: 'Camilo Enríquez',     serie: 'senior', logo: '/assets/equipos/camilo-enriquez.png' },
+    { id: 'sr-camilo-enriquez', nombre: 'Camilo Henríquez',     serie: 'senior', logo: '/assets/equipos/camilo-enriquez.png' },
     { id: 'sr-afc',             nombre: 'AFC',                 serie: 'senior', logo: '/assets/equipos/afc.png' },
     { id: 'sr-arsenal',         nombre: 'Arsenal',             serie: 'senior', logo: '/assets/equipos/arsenal.png' },
     { id: 'sr-los-pibes',       nombre: 'Los Pibes',           serie: 'senior', logo: '/assets/equipos/los-pibes.png' },
