@@ -7,5 +7,7 @@
     "dev": "netlify dev",
     "check": "node scripts/check-js.mjs"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
+  }
 }
