@@ -191,27 +191,34 @@ export const deleteInscripcion = (id) => remove('inscripciones', id);
 // En modo Firebase: se arma desde la colección 'partidos' (lo que cargan/editan
 // admin y planilleros en vivo). En modo demo: archivo estático /data/fixture.json.
 function assembleFixture(partidos, equipos) {
-  const jr = partidos.filter(p => (p.serie || 'libre') === 'libre' && p.fecha_num != null);
-  if (!jr.length) return null;
   const byId = {}; equipos.forEach(e => byId[e.id] = e);
-  const groups = {};
-  jr.forEach(p => { (groups[p.fecha_num] = groups[p.fecha_num] || []).push(p); });
-  const fechas = Object.keys(groups).map(Number).sort((a, b) => a - b).map(n => {
-    const ps = groups[n];
-    const fecha = ps.map(p => p.fecha).filter(Boolean).sort()[0] || null;
-    return {
-      n, fecha,
-      partidos: ps.map(p => ({
-        localId: p.local, visitaId: p.visita,
-        local: byId[p.local]?.nombre || p.local, visita: byId[p.visita]?.nombre || p.visita,
-        logoLocal: byId[p.local]?.logo || null, logoVisita: byId[p.visita]?.logo || null,
-        horario: p.hora, cancha: p.cancha, camarinLocal: p.camarinLocal, camarinVisita: p.camarinVisita,
-        grabado: !!p.grabado, clasico: !!p.clasico, premio: p.premio,
-        estado: p.estado, golesLocal: p.golesLocal, golesVisita: p.golesVisita
-      }))
-    };
+  const mapP = p => ({
+    localId: p.local, visitaId: p.visita,
+    local: byId[p.local]?.nombre || p.local, visita: byId[p.visita]?.nombre || p.visita,
+    logoLocal: byId[p.local]?.logo || null, logoVisita: byId[p.visita]?.logo || null,
+    horario: p.hora, cancha: p.cancha, camarinLocal: p.camarinLocal, camarinVisita: p.camarinVisita,
+    grabado: !!p.grabado, clasico: !!p.clasico, premio: p.premio,
+    estado: p.estado, golesLocal: p.golesLocal, golesVisita: p.golesVisita,
+    fecha: p.fecha, amistoso: !!p.amistoso
   });
-  return { serie: 'Junior', fechas };
+  // Una serie por cada 'serie' presente en partidos (libre = Junior, senior = Senior, ...)
+  const serieIds = [...new Set(partidos.map(p => p.serie || 'libre'))];
+  const series = serieIds.map(sid => {
+    const ps = partidos.filter(p => (p.serie || 'libre') === sid);
+    const conFecha = ps.filter(p => !p.amistoso && p.fecha_num != null);
+    const amistosos = ps.filter(p => p.amistoso).map(mapP)
+      .sort((a, b) => (a.fecha || '').localeCompare(b.fecha || '') || (a.horario || '').localeCompare(b.horario || ''));
+    const groups = {};
+    conFecha.forEach(p => { (groups[p.fecha_num] = groups[p.fecha_num] || []).push(p); });
+    const fechas = Object.keys(groups).map(Number).sort((a, b) => a - b).map(n => {
+      const arr = groups[n];
+      const fecha = arr.map(p => p.fecha).filter(Boolean).sort()[0] || null;
+      return { n, fecha, partidos: arr.map(mapP) };
+    });
+    return { serieId: sid, fechas, amistosos };
+  }).filter(s => s.fechas.length || s.amistosos.length);
+  if (!series.length) return null;
+  return { series };
 }
 export async function getFixture() {
   if (sandboxOn()) return assembleFixture(sbGet('partidos'), sbGet('equipos'));

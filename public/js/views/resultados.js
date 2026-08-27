@@ -30,7 +30,7 @@ export async function showResultados() {
   });
   const fechas = Object.keys(fechaDate).map(Number).sort((a, b) => parseDate(fechaDate[a]) - parseDate(fechaDate[b]));
 
-  _sel = { series: series.map(s => s.id), fechas: 'all' };
+  _sel = { serie: 'all', fechas: 'all' };
 
   const inner = `
   <div class="container">
@@ -46,7 +46,8 @@ export async function showResultados() {
     const serieRow = `
       <div class="chips filter-row" id="res-serie">
         <span class="chips-label">Serie</span>
-        ${series.map(s => `<button class="chip ${_sel.series.includes(s.id) ? 'active' : ''}" data-serie="${esc(s.id)}">${esc(s.nombre)}</button>`).join('')}
+        <button class="chip ${_sel.serie === 'all' ? 'active' : ''}" data-serie="all">Todas</button>
+        ${series.map(s => `<button class="chip ${_sel.serie === s.id ? 'active' : ''}" data-serie="${esc(s.id)}">${esc(s.nombre)}</button>`).join('')}
       </div>`;
     const fechaRow = fechas.length ? `
       <div class="chips filter-row" id="res-fecha">
@@ -57,10 +58,7 @@ export async function showResultados() {
     document.getElementById('res-filters').innerHTML = serieRow + fechaRow;
 
     document.querySelectorAll('#res-serie .chip').forEach(c => c.addEventListener('click', () => {
-      const id = c.dataset.serie;
-      const i = _sel.series.indexOf(id);
-      if (i >= 0) { if (_sel.series.length > 1) _sel.series.splice(i, 1); }
-      else _sel.series.push(id);
+      _sel.serie = c.dataset.serie;
       render();
     }));
 
@@ -82,7 +80,7 @@ export async function showResultados() {
 
   function renderList() {
     const list = finished
-      .filter(p => _sel.series.includes(p.serie))
+      .filter(p => _sel.serie === 'all' || p.serie === _sel.serie)
       .filter(p => _sel.fechas === 'all' || (p.fecha_num != null && _sel.fechas.includes(p.fecha_num)))
       .sort((a, b) => parseDate(b.fecha) - parseDate(a.fecha)); // más reciente primero
 

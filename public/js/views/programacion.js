@@ -6,6 +6,7 @@ import { icon } from '../ui/icons.js';
 // Selección multi: series = array de ids; fechas = 'all' | array de fecha_num
 let _sel = { series: null, fechas: 'all' };
 let _fx = 'all'; // fecha seleccionada en el fixture publicado
+let _fxSerie = null; // serie seleccionada en el fixture publicado
 
 export async function showProgramacion() {
   mount(loading());
@@ -108,19 +109,22 @@ export async function showProgramacion() {
 const HORDEN = ['10:40', '12:20'];
 
 function renderPublicFixture(config, fx) {
-  const rounds = fx.fechas.slice().sort((a, b) => a.n - b.n);
-  if (!(rounds.some(r => r.n === _fx))) _fx = 'all';
+  const series = config.series || [];
+  const nameOf = id => (series.find(s => s.id === id) || {}).nombre || id;
+  const avail = (fx.series || []).filter(s => s.fechas.length || s.amistosos.length);
+  if (!avail.length) { mount(shell(`<div class="container"><span class="eyebrow">Calendario</span><h1>Programación</h1>${emptyBox('Aún no hay partidos publicados.')}</div>`, config)); return; }
+  if (!_fxSerie || !avail.find(s => s.serieId === _fxSerie)) _fxSerie = avail[0].serieId;
 
   const inner = `
   <div class="container">
     <span class="eyebrow">Calendario</span>
     <h1>Programación</h1>
-    <p class="subtitle mb-2">Fixture oficial · <strong>Serie ${esc(fx.serie || 'Junior')}</strong> · Temporada ${esc(fx.temporada || config.temporada || '2026')} · ${esc(config.sede || 'Complejo Deggiano')}.</p>
-    <div class="chips filter-row mb-2" id="fx-fechas">
-      <span class="chips-label">Fecha</span>
-      <button class="chip ${_fx === 'all' ? 'active' : ''}" data-fx="all">Todas</button>
-      ${rounds.map(r => `<button class="chip ${_fx === r.n ? 'active' : ''}" data-fx="${r.n}">Fecha ${r.n}</button>`).join('')}
-    </div>
+    <p class="subtitle mb-2">Fixture oficial · Temporada ${esc(config.temporada || '2026')} · ${esc(config.sede || 'Complejo Deggiano')}.</p>
+    ${avail.length > 1 ? `<div class="chips filter-row mb-2" id="fx-serie">
+      <span class="chips-label">Serie</span>
+      ${avail.map(s => `<button class="chip ${_fxSerie === s.serieId ? 'active' : ''}" data-serie="${esc(s.serieId)}">${esc(nameOf(s.serieId))}</button>`).join('')}
+    </div>` : ''}
+    <div class="chips filter-row mb-2" id="fx-fechas"></div>
     <div id="fx-body"></div>
     <div class="card-sm mt-2" style="background:var(--c-brand-soft);border-radius:12px;padding:10px 14px;font-size:.88rem">
       <strong>Cómo leer el fixture:</strong> ${icon('flame', { size: 12 })} clásico de la jornada · ${icon('video', { size: 13, cls: 'ico-grab' })} partido grabado · <strong>Cam. L/V</strong> = número de camarín del equipo local / visita · <strong>Premio</strong> = marca que presenta el premio al mejor jugador.
@@ -128,16 +132,62 @@ function renderPublicFixture(config, fx) {
   </div>`;
   mount(shell(inner, config));
 
-  const body = document.getElementById('fx-body');
-  function draw() {
-    const shown = _fx === 'all' ? rounds : rounds.filter(r => r.n === _fx);
-    body.innerHTML = shown.map(rd => fechaBlock(rd, config)).join('');
-    document.querySelectorAll('#fx-fechas .chip').forEach(c => c.classList.toggle('active', String(_fx) === c.dataset.fx));
+  function drawFechas(cur) {
+    const rounds = cur.fechas.slice().sort((a, b) => a.n - b.n);
+    if (!rounds.some(r => r.n === _fx)) _fx = 'all';
+    const el = document.getElementById('fx-fechas');
+    el.innerHTML = rounds.length ? `<span class="chips-label">Fecha</span>
+      <button class="chip ${_fx === 'all' ? 'active' : ''}" data-fx="all">Todas</button>
+      ${rounds.map(r => `<button class="chip ${_fx === r.n ? 'active' : ''}" data-fx="${r.n}">Fecha ${r.n}</button>`).join('')}` : '';
+    el.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
+      _fx = c.dataset.fx === 'all' ? 'all' : Number(c.dataset.fx); draw();
+    }));
   }
-  document.querySelectorAll('#fx-fechas .chip').forEach(c => c.addEventListener('click', () => {
-    _fx = c.dataset.fx === 'all' ? 'all' : Number(c.dataset.fx); draw();
+  function draw() {
+    const cur = avail.find(s => s.serieId === _fxSerie);
+    drawFechas(cur);
+    const rounds = cur.fechas.slice().sort((a, b) => a.n - b.n);
+    const shown = _fx === 'all' ? rounds : rounds.filter(r => r.n === _fx);
+    let html = shown.map(rd => fechaBlock(rd, config)).join('');
+    if (_fx === 'all' && cur.amistosos.length) html += amistososBlock(cur.amistosos);
+    document.getElementById('fx-body').innerHTML = html || emptyBox('Sin partidos en esta serie.');
+    document.querySelectorAll('#fx-serie .chip').forEach(c => c.classList.toggle('active', c.dataset.serie === _fxSerie));
+  }
+  document.querySelectorAll('#fx-serie .chip').forEach(c => c.addEventListener('click', () => {
+    _fxSerie = c.dataset.serie; _fx = 'all'; draw();
   }));
   draw();
+}
+
+function amistososBlock(list) {
+  const rows = list.slice();
+  const res = p => (p.estado === 'finalizado' && p.golesLocal != null) ? `${esc(p.golesLocal)} - ${esc(p.golesVisita)}` : null;
+  return `
+    <div class="card mb-2 fx-fecha">
+      <div class="fx-fecha-head"><h3 style="margin:0">${icon('ball', { size: 18 })} Amistosos</h3></div>
+      <div class="table-wrap fx-desktop"><table class="tbl fixture-pub">
+        <thead><tr><th>Fecha</th><th>Hora</th><th>Cancha</th><th>Partido</th><th>Resultado</th></tr></thead>
+        <tbody>
+          ${rows.map(p => `<tr>
+              <td style="white-space:nowrap">${p.fecha ? esc(fmtDateLong(p.fecha)) : '—'}</td>
+              <td style="white-space:nowrap;font-weight:600">${esc(p.horario || '—')}</td>
+              <td style="white-space:nowrap">${p.cancha ? ('Cancha ' + esc(p.cancha)) : '—'}</td>
+              <td><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">${teamInline(p.logoLocal, p.local, { size: 22 })} <span class="muted">vs</span> ${teamInline(p.logoVisita, p.visita, { size: 22 })}</div></td>
+              <td style="white-space:nowrap;font-weight:700">${res(p) || '<span class="muted">—</span>'}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table></div>
+      <div class="fx-grid fx-mobile">
+        ${rows.map(p => `<div class="fx-tile">
+            <div class="fx-tile-top"><span class="fx-hora">${esc(p.horario || '')}</span><span class="fx-cancha">${p.cancha ? ('Cancha ' + esc(p.cancha)) : ''}</span></div>
+            <div class="fx-tile-teams">
+              <div class="fx-tm">${teamLogo(p.logoLocal, p.local, 26)}<span class="fx-nm">${esc(p.local)}</span></div>
+              <div class="fx-tm">${teamLogo(p.logoVisita, p.visita, 26)}<span class="fx-nm">${esc(p.visita)}</span></div>
+            </div>
+            <div class="fx-tile-meta"><span>${p.fecha ? esc(fmtDateLong(p.fecha)) : ''}</span>${res(p) ? `<span class="fx-premio">${res(p)}</span>` : ''}</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
 }
 
 function fechaBlock(rd, config = {}) {
