@@ -282,6 +282,12 @@ function renderPartidos(el) {
           <div class="form-group"><label>N° Fecha</label><input class="input" name="fecha_num" type="number" min="1" value="${esc(p.fecha_num ?? '')}"></div>
           <div class="form-group"><label>Cancha</label><input class="input" name="cancha" value="${esc(p.cancha ?? '')}"></div>
         </div>
+        <div class="form-group" style="margin:-2px 0 10px">
+          <label style="display:flex;align-items:center;gap:8px;font-weight:600;cursor:pointer">
+            <input type="checkbox" name="amistoso" ${p.amistoso ? 'checked' : ''}>
+            Partido amistoso <span class="muted" style="font-weight:400">(no cuenta para la tabla ni para una fecha)</span>
+          </label>
+        </div>
         <div class="form-row-3">
           <div class="form-group"><label>Fecha</label><input class="input" name="fecha" type="date" value="${esc(p.fecha ?? '')}" required></div>
           <div class="form-group"><label>Hora</label><input class="input" name="hora" type="time" value="${esc(p.hora ?? '')}"></div>
@@ -319,7 +325,8 @@ function renderPartidos(el) {
   el.querySelector('#f-p').onsubmit = (ev) => {
     ev.preventDefault();
     const d = Object.fromEntries(new FormData(ev.target).entries());
-    d.fecha_num = d.fecha_num ? +d.fecha_num : null;
+    d.amistoso = !!d.amistoso;
+    d.fecha_num = d.amistoso ? null : (d.fecha_num ? +d.fecha_num : null);
     d.golesLocal = d.golesLocal === '' ? null : +d.golesLocal;
     d.golesVisita = d.golesVisita === '' ? null : +d.golesVisita;
     if (editP) d.id = editP.id;

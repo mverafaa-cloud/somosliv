@@ -105,7 +105,7 @@ function resultCard(p, byId, series) {
   const L = byId[p.local]?.nombre || p.local;
   const V = byId[p.visita]?.nombre || p.visita;
   const gl = +p.golesLocal, gv = +p.golesVisita;
-  const serieName = (series.find(s => s.id === p.serie) || {}).nombre || '';
+  const serieName = p.amistoso ? 'Amistoso' : ((series.find(s => s.id === p.serie) || {}).nombre || '');
   return `
   <div class="match-card finished">
     <div class="team home"><span class="name" style="${gl > gv ? 'font-weight:800' : ''}">${esc(L)}</span>${teamLogo(byId[p.local]?.logo, L, 34)}</div>

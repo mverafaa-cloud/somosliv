@@ -307,7 +307,7 @@ export function computeStandings(partidos, equipos, serieId) {
   teams.forEach(t => table[t.id] = { equipo: t, pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, pts: 0 });
 
   partidos
-    .filter(p => p.serie === serieId && p.estado === 'finalizado' && p.golesLocal != null && p.golesVisita != null)
+    .filter(p => p.serie === serieId && !p.amistoso && p.estado === 'finalizado' && p.golesLocal != null && p.golesVisita != null)
     .forEach(p => {
       const L = table[p.local], V = table[p.visita];
       if (!L || !V) return;
