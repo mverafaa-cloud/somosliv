@@ -187,30 +187,26 @@ function renderResultados(el) {
     ${fechas.map(n => `
       <div class="card mb-2">
         <h3 class="mb-2">Fecha ${n}</h3>
-        <div class="table-wrap"><table class="tbl">
-          <thead><tr><th>Hora</th><th>Cancha</th><th>Partido</th><th class="num">Marcador</th><th>Estado</th><th></th></tr></thead>
-          <tbody>
-            ${groups[n].map(p => {
-              const L = byId[p.local]?.nombre || p.local, V = byId[p.visita]?.nombre || p.visita;
-              const fin = p.estado === 'finalizado';
-              return `<tr>
-                <td style="white-space:nowrap">${esc(p.hora || '—')}</td>
-                <td style="white-space:nowrap">${p.cancha ? 'Cancha ' + esc(p.cancha) : '—'}</td>
-                <td><strong>${esc(L)}</strong> <span class="muted">vs</span> <strong>${esc(V)}</strong></td>
-                <td class="num" style="white-space:nowrap">
-                  <input class="input res-in" type="number" min="0" data-gl="${esc(p.id)}" value="${p.golesLocal ?? ''}" style="width:56px">
-                  <span>-</span>
-                  <input class="input res-in" type="number" min="0" data-gv="${esc(p.id)}" value="${p.golesVisita ?? ''}" style="width:56px">
-                </td>
-                <td><span class="pill ${fin ? 'pill-green' : 'pill-grey'}">${fin ? 'finalizado' : 'pendiente'}</span></td>
-                <td style="text-align:right;white-space:nowrap">
-                  <button class="btn btn-primary btn-sm" data-saveres="${esc(p.id)}">Guardar</button>
-                  ${fin ? `<button class="btn btn-ghost btn-sm" data-reabrir="${esc(p.id)}">Reabrir</button>` : ''}
-                </td>
-              </tr>`;
-            }).join('')}
-          </tbody>
-        </table></div>
+        <div class="rmatches">
+          ${groups[n].map(p => {
+            const L = byId[p.local]?.nombre || p.local, V = byId[p.visita]?.nombre || p.visita;
+            const fin = p.estado === 'finalizado';
+            return `<div class="rmatch ${fin ? 'is-fin' : ''}">
+              <div class="rmatch-top">
+                <span class="rmatch-meta">${esc(p.hora || '—')}${p.cancha ? ' · Cancha ' + esc(p.cancha) : ''}</span>
+                <span class="pill ${fin ? 'pill-green' : 'pill-grey'}">${fin ? 'Finalizado' : 'Pendiente'}</span>
+              </div>
+              <div class="rteam"><span class="rteam-name">${esc(L)}</span>
+                <input class="rscore" type="number" inputmode="numeric" min="0" data-gl="${esc(p.id)}" value="${p.golesLocal ?? ''}" placeholder="0"></div>
+              <div class="rteam"><span class="rteam-name">${esc(V)}</span>
+                <input class="rscore" type="number" inputmode="numeric" min="0" data-gv="${esc(p.id)}" value="${p.golesVisita ?? ''}" placeholder="0"></div>
+              <div class="rmatch-actions">
+                <button class="btn btn-primary btn-block" data-saveres="${esc(p.id)}">Guardar</button>
+                ${fin ? `<button class="btn btn-ghost" data-reabrir="${esc(p.id)}">Reabrir</button>` : ''}
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
       </div>`).join('')}`;
 
   el.querySelectorAll('[data-saveres]').forEach(b => b.onclick = () => {

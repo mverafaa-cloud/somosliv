@@ -617,3 +617,18 @@ table.fixture-pub tr.is-clasico { background:var(--c-brand-soft); }
 .fx-tile-meta > span:first-child { display:inline-flex; align-items:center; gap:5px; }
 .fx-premio { background:var(--c-bg-alt); color:var(--c-ink); font-weight:600; padding:3px 10px; border-radius:999px; white-space:nowrap; }
 .fx-tile.is-clasico .fx-premio { background:rgba(255,255,255,.7); }
+
+/* ===== Carga de resultados (planillero) — tarjetas táctiles, móvil-friendly ===== */
+.rmatches { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:14px; }
+.rmatch { border:1.5px solid var(--c-line-2); border-radius:var(--r-md); padding:14px; background:var(--c-surface); }
+.rmatch.is-fin { border-color:var(--c-brand); background:var(--c-brand-soft); }
+.rmatch-top { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
+.rmatch-meta { font-size:.82rem; color:var(--c-muted); font-weight:600; }
+.rteam { display:flex; align-items:center; gap:12px; margin:8px 0; }
+.rteam-name { flex:1; font-weight:700; font-size:1.05rem; line-height:1.15; min-width:0; }
+.rscore { width:66px; height:54px; flex:0 0 auto; text-align:center; font-size:1.6rem; font-weight:800;
+  padding:0; border:1.5px solid var(--c-line-2); border-radius:var(--r-md); background:var(--c-surface); color:var(--c-ink); font-family:inherit; }
+.rscore:focus { outline:none; border-color:var(--c-brand); box-shadow:0 0 0 3px rgba(6,122,62,.15); }
+.rscore::-webkit-outer-spin-button, .rscore::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+.rmatch-actions { display:flex; gap:8px; margin-top:12px; }
+.rmatch-actions .btn-block { flex:1; }
