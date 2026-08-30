@@ -1,7 +1,9 @@
 import { getConfig, getPartidos, getEquipos, equiposById } from '../services/store.js';
-import { mount, esc, initials, fmtDateLong, fmtTime, parseDate, everySecond, teamLogo } from '../ui/helpers.js';
+import { mount, esc, fmtDateLong, fmtTime, parseDate, teamLogo } from '../ui/helpers.js';
 import { shell, loading, logoMarquee } from '../ui/layout.js';
 import { icon } from '../ui/icons.js';
+
+const serieLabel = (s) => s === 'senior' ? 'Senior' : (s === 'libre' ? 'Junior' : '');
 
 export async function showInicio() {
   mount(loading('Cargando LIV…'));
@@ -12,11 +14,21 @@ export async function showInicio() {
   const seenT = new Set(); const uniqTeams = [];
   equipos.forEach(e => { if (!seenT.has(e.nombre)) { seenT.add(e.nombre); uniqTeams.push(e); } });
 
+  // Últimos resultados (fecha jugada más reciente)
+  const finished = partidos.filter(p => p.estado === 'finalizado' && p.golesLocal != null);
+  const finGroups = {};
+  finished.forEach(p => { (finGroups[p.fecha] = finGroups[p.fecha] || []).push(p); });
+  const finDates = Object.keys(finGroups).sort((a, b) => parseDate(b) - parseDate(a));
+  const lastDate = finDates[0] || null;
+  const lastResults = lastDate ? finGroups[lastDate].slice(0, 8) : [];
+  const lastFechaNum = lastResults.length ? lastResults[0].fecha_num : null;
+
   // Próxima fecha programada
   const prog = partidos.filter(p => p.estado === 'programado' && parseDate(p.fecha))
     .sort((a, b) => parseDate(a.fecha) - parseDate(b.fecha));
   const nextDate = prog.length ? prog[0].fecha : null;
-  const nextMatches = nextDate ? prog.filter(p => p.fecha === nextDate).slice(0, 6) : [];
+  const nextMatches = nextDate ? prog.filter(p => p.fecha === nextDate) : [];
+  const nextFechaNum = nextMatches.length ? nextMatches[0].fecha_num : null;
 
   const valores = [
     { ico: 'handshake', t: 'Sana Competencia', d: 'Fomentamos el fair play y el espíritu deportivo: rivalidad estricta dentro de la cancha, respeto y camaradería al finalizar.' },
@@ -33,41 +45,52 @@ export async function showInicio() {
 
     <div class="hero-image has-bg" style="--hero-bg:url('/assets/hero.jpg')">
       <div class="corner-stripes"></div>
-      <span class="eyebrow">Liga La Cuarta · Temporada ${esc(config.temporada || '2026')}</span>
+      <span class="eyebrow">Liga La Cuarta · Temporada ${esc(config.temporada || '2026')} · Torneo en juego</span>
       <h1 class="display">EL ESTÁNDAR DE<br>LAS MEJORES LIGAS</h1>
-      <p>Transformamos el fútbol amateur de la Región de Coquimbo: organización profesional, sana competencia y un ambiente familiar en ${esc(config.sede || 'Complejo Deggiano')}.</p>
+      <p>El torneo ya está en marcha en ${esc(config.sede || 'Complejo Deggiano')}. Revisa los últimos marcadores, la tabla de posiciones y la programación de la próxima fecha.</p>
       <div class="hero-actions">
-        <a href="/admision" data-link class="btn btn-accent btn-lg">Inscribe tu equipo</a>
-        <a href="/liv" data-link class="btn btn-ghost-light btn-lg">Conoce la LIV</a>
+        <a href="/resultados" data-link class="btn btn-accent btn-lg">${icon('check', { size: 18 })} Últimos resultados</a>
+        <a href="/posiciones" data-link class="btn btn-ghost-light btn-lg">${icon('trophy', { size: 18 })} Tabla de posiciones</a>
       </div>
-      ${config.lanzamiento ? `<div class="countdown" id="cd"></div>` : ''}
+      <a href="/admision" data-link class="hero-senior">${icon('shield', { size: 16 })} Categoría <strong>Senior</strong>: quedan los últimos cupos · <u>inscribe tu equipo</u></a>
     </div>
 
-    <!-- Accesos rápidos (foco captación) -->
+    <!-- Accesos rápidos (foco torneo) -->
     <div class="grid grid-3 mt-2">
-      <a href="/admision" data-link class="card hover card-tinted-accent" style="text-decoration:none">
-        <div class="card-header"><h3>${icon('clipboard', { size: 22 })} Inscribe tu equipo</h3></div>
-        <p>Cupos limitados por serie (Junior y Senior). Asegura tu lugar antes del estreno.</p>
+      <a href="/resultados" data-link class="card hover card-tinted-accent" style="text-decoration:none">
+        <div class="card-header"><h3>${icon('check', { size: 22 })} Resultados</h3></div>
+        <p>Todos los marcadores de la jornada, fecha por fecha.</p>
       </a>
-      <a href="/reglamentos" data-link class="card hover" style="text-decoration:none">
-        <div class="card-header"><h3>${icon('book', { size: 22 })} Reglamento</h3></div>
-        <p class="muted">Categorías, formato, requisitos y descarga del reglamento oficial 2026.</p>
+      <a href="/posiciones" data-link class="card hover" style="text-decoration:none">
+        <div class="card-header"><h3>${icon('trophy', { size: 22 })} Tabla de posiciones</h3></div>
+        <p class="muted">Cómo va la tabla en Junior y Senior, fecha a fecha.</p>
       </a>
-      <a href="/liv" data-link class="card hover" style="text-decoration:none">
-        <div class="card-header"><h3>${icon('info', { size: 22 })} Conoce la liga</h3></div>
-        <p class="muted">Nuestra propuesta, la sede Complejo Deggiano y la experiencia LIV.</p>
+      <a href="/programacion" data-link class="card hover" style="text-decoration:none">
+        <div class="card-header"><h3>${icon('calendar', { size: 22 })} Programación</h3></div>
+        <p class="muted">Horarios y canchas de la próxima fecha del torneo.</p>
       </a>
     </div>
+
+    <!-- Últimos resultados -->
+    ${lastResults.length ? `
+    <div class="section">
+      <div class="spread">
+        <div><span class="eyebrow">Lo último</span><h2>Resultados${lastFechaNum ? ` · Fecha ${esc(lastFechaNum)}` : ''}</h2></div>
+        <a href="/resultados" data-link class="btn btn-ghost btn-sm">Ver todos</a>
+      </div>
+      <p class="muted mb-2">${esc(fmtDateLong(lastDate))}</p>
+      ${lastResults.map(p => resultRow(p, byId)).join('')}
+    </div>` : ''}
 
     <!-- Próxima fecha -->
     ${nextMatches.length ? `
     <div class="section">
       <div class="spread">
-        <div><span class="eyebrow">Lo que viene</span><h2>Próxima fecha</h2></div>
+        <div><span class="eyebrow">Lo que viene</span><h2>Próxima fecha${nextFechaNum ? ` · Fecha ${esc(nextFechaNum)}` : ''}</h2></div>
         <a href="/programacion" data-link class="btn btn-ghost btn-sm">Ver todo</a>
       </div>
       <p class="muted mb-2">${esc(fmtDateLong(nextDate))}</p>
-      ${nextMatches.map(p => matchRow(p, byId)).join('')}
+      ${nextMatches.slice(0, 6).map(p => matchRow(p, byId)).join('')}
     </div>` : ''}
 
     <!-- Valores -->
@@ -82,43 +105,32 @@ export async function showInicio() {
             <p class="${i === 1 ? '' : 'muted'}" style="${i === 1 ? 'color:rgba(255,255,255,.9)' : ''}">${v.d}</p>
           </div>`).join('')}
       </div>
-      <div class="center mt-3">
-        <a href="/liv" data-link class="btn btn-secondary">Conoce más de la LIV →</a>
-      </div>
     </div>
 
-    <!-- CTA inscripción -->
+    <!-- CTA reclutamiento SOLO Senior -->
     <div class="hero-flat">
       <div class="deco">${icon('ball', { size: 210, stroke: 1.2 })}</div>
-      <span class="eyebrow" style="color:var(--c-ink)">¿Tienes equipo?</span>
-      <h2>Corre por tu lugar cuanto antes</h2>
-      <p>Los cupos por serie son limitados (8 a 10 equipos). Conversemos: queremos que seas parte de esta experiencia.</p>
-      <a href="/admision" data-link class="btn btn-primary btn-lg mt-2">Quiero inscribirme</a>
+      <span class="eyebrow" style="color:var(--c-ink)">Categoría Senior · +32</span>
+      <h2>Quedan los últimos cupos Senior</h2>
+      <p>El torneo ya arrancó, pero todavía puedes sumar tu equipo a la serie Senior. Cupos muy limitados: conversemos y aseguramos tu lugar.</p>
+      <a href="/admision" data-link class="btn btn-primary btn-lg mt-2">Inscribe tu equipo Senior</a>
     </div>
   </div>`;
 
   mount(shell(inner, config));
-
-  // Countdown vivo
-  if (config.lanzamiento) startCountdown(config.lanzamiento);
 }
 
-function startCountdown(target) {
-  const el = document.getElementById('cd');
-  if (!el) return;
-  const t = parseDate(target);
-  if (!t) return;
-  everySecond(() => {
-    let diff = Math.max(0, t - new Date());
-    const d = Math.floor(diff / 86400000); diff -= d * 86400000;
-    const h = Math.floor(diff / 3600000); diff -= h * 3600000;
-    const m = Math.floor(diff / 60000); diff -= m * 60000;
-    const s = Math.floor(diff / 1000);
-    const cell = (n, l) => `<div class="cd-cell"><div class="cd-num">${String(n).padStart(2, '0')}</div><div class="cd-lbl">${l}</div></div>`;
-    el.innerHTML = (d + h + m + s > 0)
-      ? `<div style="width:100%;color:#fff;font-weight:700;margin-bottom:2px;display:flex;align-items:center;gap:7px;">${icon('rocket', { size: 18 })} Estreno de la temporada</div>${cell(d, 'días')}${cell(h, 'hrs')}${cell(m, 'min')}${cell(s, 'seg')}`
-      : `<div class="cd-cell" style="min-width:auto;padding:14px 22px;"><div class="cd-num" style="font-size:1.5rem;display:flex;align-items:center;gap:8px;">${icon('ball', { size: 26 })} ¡Temporada en juego!</div></div>`;
-  });
+function resultRow(p, byId) {
+  const L = byId[p.local]?.nombre || p.local;
+  const V = byId[p.visita]?.nombre || p.visita;
+  const gl = +p.golesLocal, gv = +p.golesVisita;
+  const sl = serieLabel(p.serie);
+  return `
+  <div class="match-card finished">
+    <div class="team home"><span class="name" style="${gl > gv ? 'font-weight:800' : ''}">${esc(L)}</span>${teamLogo(byId[p.local]?.logo, L, 34)}</div>
+    <div class="vs"><div class="score">${gl} - ${gv}</div><div class="meta">${sl ? esc(sl) : 'Final'}</div></div>
+    <div class="team">${teamLogo(byId[p.visita]?.logo, V, 34)}<span class="name" style="${gv > gl ? 'font-weight:800' : ''}">${esc(V)}</span></div>
+  </div>`;
 }
 
 function matchRow(p, byId) {

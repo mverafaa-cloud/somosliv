@@ -15,7 +15,8 @@ export const NAV = [
 ];
 
 // Ítems primarios del bottom nav (mobile). El resto va en el menú.
-const BOTTOM = ['/', '/equipos', '/admision', '/reglamentos'];
+// Modo torneo en marcha: foco en resultados/tabla/programación (no en admisión).
+const BOTTOM = ['/', '/resultados', '/posiciones', '/programacion'];
 
 export function renderHeader() {
   document.querySelector('header.app-header')?.remove();
