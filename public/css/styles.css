@@ -670,3 +670,10 @@ table.fixture-pub tr.is-clasico { background:var(--c-brand-soft); }
 .hero-senior strong{font-weight:800;}
 .hero-senior u{text-underline-offset:2px;}
 .hero-senior{align-self:flex-start;max-width:100%;}
+
+/* Hero slideshow (banner rotativo con crossfade) */
+.hero-slides{position:absolute;inset:0;z-index:0;}
+.hero-slide{position:absolute;inset:0;background-position:center;background-size:cover;background-repeat:no-repeat;opacity:0;transition:opacity 1.1s ease;}
+.hero-slide.is-active{opacity:1;}
+.hero-image .corner-stripes{z-index:1;}
+.hero-image .hero-content{position:relative;z-index:2;}

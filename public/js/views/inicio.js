@@ -1,5 +1,5 @@
 import { getConfig, getPartidos, getEquipos, equiposById } from '../services/store.js';
-import { mount, esc, fmtDateLong, fmtTime, parseDate, teamLogo } from '../ui/helpers.js';
+import { mount, esc, fmtDateLong, fmtTime, parseDate, teamLogo, everySecond } from '../ui/helpers.js';
 import { shell, loading, logoMarquee } from '../ui/layout.js';
 import { icon } from '../ui/icons.js';
 
@@ -36,6 +36,13 @@ export async function showInicio() {
     { ico: 'users', t: 'Ambiente Familiar', d: 'Un espacio seguro, limpio y entretenido para que tu familia disfrute acompañándote cada fin de semana.' }
   ];
 
+  // Hero rotativo (crossfade). La 1ª capa trae imagen; el resto se precargan al rotar.
+  const HERO_VEIL = 'linear-gradient(100deg, rgba(6,122,62,0.94) 0%, rgba(6,122,62,0.78) 42%, rgba(9,40,27,0.55) 100%)';
+  const HERO_IMGS = [1, 2, 3, 4, 5, 6].map(n => `/assets/hero/hero-${n}.jpg`);
+  const heroSlides = HERO_IMGS.map((src, i) => i === 0
+    ? `<div class="hero-slide is-active" style="background-image:${HERO_VEIL}, url('${src}')"></div>`
+    : `<div class="hero-slide" data-src="${src}"></div>`).join('');
+
   const inner = `
   <div class="container">
     ${uniqTeams.length ? `
@@ -43,16 +50,19 @@ export async function showInicio() {
       ${logoMarquee(uniqTeams)}
     </a>` : ''}
 
-    <div class="hero-image has-bg" style="--hero-bg:url('/assets/hero.jpg')">
+    <div class="hero-image has-bg">
+      <div class="hero-slides" id="hero-slides">${heroSlides}</div>
       <div class="corner-stripes"></div>
-      <span class="eyebrow">Liga La Cuarta · Temporada ${esc(config.temporada || '2026')} · Torneo en juego</span>
-      <h1 class="display">EL ESTÁNDAR DE<br>LAS MEJORES LIGAS</h1>
-      <p>El torneo ya está en marcha en ${esc(config.sede || 'Complejo Deggiano')}. Revisa los últimos marcadores, la tabla de posiciones y la programación de la próxima fecha.</p>
-      <div class="hero-actions">
-        <a href="/resultados" data-link class="btn btn-accent btn-lg">${icon('check', { size: 18 })} Últimos resultados</a>
-        <a href="/posiciones" data-link class="btn btn-ghost-light btn-lg">${icon('trophy', { size: 18 })} Tabla de posiciones</a>
+      <div class="hero-content">
+        <span class="eyebrow">Liga La Cuarta · Temporada ${esc(config.temporada || '2026')} · Torneo en juego</span>
+        <h1 class="display">EL ESTÁNDAR DE<br>LAS MEJORES LIGAS</h1>
+        <p>El torneo ya está en marcha en ${esc(config.sede || 'Complejo Deggiano')}. Revisa los últimos marcadores, la tabla de posiciones y la programación de la próxima fecha.</p>
+        <div class="hero-actions">
+          <a href="/resultados" data-link class="btn btn-accent btn-lg">${icon('check', { size: 18 })} Últimos resultados</a>
+          <a href="/posiciones" data-link class="btn btn-ghost-light btn-lg">${icon('trophy', { size: 18 })} Tabla de posiciones</a>
+        </div>
+        <a href="/admision" data-link class="hero-senior">${icon('shield', { size: 16 })} Categoría <strong>Senior</strong>: quedan los últimos cupos · <u>inscribe tu equipo</u></a>
       </div>
-      <a href="/admision" data-link class="hero-senior">${icon('shield', { size: 16 })} Categoría <strong>Senior</strong>: quedan los últimos cupos · <u>inscribe tu equipo</u></a>
     </div>
 
     <!-- Accesos rápidos (foco torneo) -->
@@ -118,6 +128,24 @@ export async function showInicio() {
   </div>`;
 
   mount(shell(inner, config));
+
+  // Slideshow del hero: crossfade cada 5s, precargando la próxima imagen.
+  const wrap = document.getElementById('hero-slides');
+  const slides = wrap ? [...wrap.querySelectorAll('.hero-slide')] : [];
+  if (slides.length > 1) {
+    let i = 0, tick = 0;
+    const show = (idx) => {
+      const el = slides[idx];
+      const activate = () => { slides.forEach(s => s.classList.remove('is-active')); el.classList.add('is-active'); i = idx; };
+      if (el.dataset.src && !el.style.backgroundImage) {
+        const img = new Image();
+        img.onload = () => { el.style.backgroundImage = `${HERO_VEIL}, url('${el.dataset.src}')`; activate(); };
+        img.onerror = activate;
+        img.src = el.dataset.src;
+      } else activate();
+    };
+    everySecond(() => { if (++tick % 5 === 0) show((i + 1) % slides.length); });
+  }
 }
 
 function resultRow(p, byId) {
