@@ -43,7 +43,7 @@ export const SEED = {
     { id: 'jr-huracan',         nombre: 'Huracán',             serie: 'libre',  logo: '/assets/equipos/huracan.png' },
     { id: 'jr-40-grados',       nombre: '40 Grados',           serie: 'libre',  logo: '/assets/equipos/40-grados.png' },
     { id: 'jr-capibara',        nombre: 'Capibara',            serie: 'libre',  logo: '/assets/equipos/capibara.png' },
-    { id: 'jr-bayern',          nombre: 'Bayern Llevenpilsen', serie: 'libre',  logo: '/assets/equipos/bayern.png' },
+    { id: 'jr-bayern',          nombre: 'Bayer Llevenpilsen', serie: 'libre',  logo: '/assets/equipos/bayern.png' },
     { id: 'jr-los-prados',      nombre: 'Los Prados',          serie: 'libre',  logo: '/assets/equipos/los-prados.png' },
     { id: 'jr-arquitectura',    nombre: 'Arquitectura',        serie: 'libre',  logo: '/assets/equipos/arquitectura.png' },
     // ---- Senior ----
@@ -60,6 +60,17 @@ export const SEED = {
 
   audiovisual: {
     videos: [],
-    galeria: []
+    galeria: [
+      '/assets/galeria/liv-f1-01.jpg', '/assets/galeria/liv-f1-02.jpg',
+      '/assets/galeria/liv-f1-03.jpg', '/assets/galeria/liv-f1-04.jpg',
+      '/assets/galeria/liv-f1-05.jpg', '/assets/galeria/liv-f1-06.jpg',
+      '/assets/galeria/liv-f1-07.jpg', '/assets/galeria/liv-f1-08.jpg',
+      '/assets/galeria/liv-f1-09.jpg', '/assets/galeria/liv-f1-10.jpg',
+      '/assets/galeria/liv-f1-11.jpg', '/assets/galeria/liv-f1-12.jpg',
+      '/assets/galeria/liv-f1-13.jpg', '/assets/galeria/liv-f1-14.jpg',
+      '/assets/galeria/liv-f1-15.jpg', '/assets/galeria/liv-f1-16.jpg',
+      '/assets/galeria/liv-f1-17.jpg', '/assets/galeria/liv-f1-18.jpg',
+      '/assets/galeria/liv-f1-19.jpg', '/assets/galeria/liv-f1-20.jpg'
+    ]
   }
 };

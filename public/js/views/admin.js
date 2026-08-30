@@ -439,6 +439,15 @@ function renderContenido(el) {
       <div class="stack mt-2">
         ${(av.videos || []).map((v, i) => `<div class="spread card-sm" style="border:1px solid var(--c-line);border-radius:12px"><span>${icon('video', { size: 16 })} ${esc(v.titulo || v.id)} <span class="muted">(${esc(v.id)})</span></span><button class="btn btn-danger btn-sm" data-delvid="${i}">✕</button></div>`).join('') || '<p class="muted">Sin videos.</p>'}
       </div>
+    </div>
+    <div class="card mt-3">
+      <h3 class="mb-2">Galería de fotos</h3>
+      <p class="muted mb-2" style="font-size:.9rem">Una URL por línea (usa la versión grande <code>.jpg</code>; las variantes AVIF/WebP se sirven solas). Las fotos van en <code>/assets/galeria/</code> y se muestran en <a href="/audiovisual" data-link>Audiovisual</a>. Hay <strong>${(av.galeria || []).length}</strong> cargadas.</p>
+      <textarea class="textarea" id="galtext" style="min-height:150px;font-family:monospace;font-size:.82rem">${esc((av.galeria || []).join('\n'))}</textarea>
+      <div class="spread mt-2">
+        <button class="btn btn-ghost btn-sm" id="galf1" type="button">Insertar Fecha 1 (20 fotos)</button>
+        <button class="btn btn-primary btn-sm" id="galsave" type="button">Guardar galería</button>
+      </div>
     </div>`;
   el.querySelector('#f-c').onsubmit = (ev) => {
     ev.preventDefault();
@@ -467,4 +476,10 @@ function renderContenido(el) {
     const videos = (av.videos || []).filter((_, i) => i !== +b.dataset.delvid);
     reload('v', () => saveAudiovisual({ videos, galeria: av.galeria || [] }));
   });
+  const F1_GAL = Array.from({ length: 20 }, (_, i) => `/assets/galeria/liv-f1-${String(i + 1).padStart(2, '0')}.jpg`);
+  el.querySelector('#galf1').onclick = () => { el.querySelector('#galtext').value = F1_GAL.join('\n'); };
+  el.querySelector('#galsave').onclick = () => {
+    const galeria = el.querySelector('#galtext').value.split('\n').map(s => s.trim()).filter(Boolean);
+    reload('v', () => saveAudiovisual({ videos: av.videos || [], galeria }));
+  };
 }
