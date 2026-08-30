@@ -287,7 +287,12 @@ export async function getAudiovisual() {
   if (mode === 'demo') return JSON.parse(JSON.stringify(SEED.audiovisual));
   const { doc, getDoc } = fb.fsMod;
   const snap = await getDoc(doc(fb.db, 'config', 'audiovisual'));
-  return snap.exists() ? snap.data() : { videos: [], galeria: [] };
+  const data = snap.exists() ? snap.data() : {};
+  // Fallback al seed cuando Firestore aún no tiene contenido cargado (por sección).
+  return {
+    videos:  (Array.isArray(data.videos)  && data.videos.length)  ? data.videos  : JSON.parse(JSON.stringify(SEED.audiovisual.videos  || [])),
+    galeria: (Array.isArray(data.galeria) && data.galeria.length) ? data.galeria : JSON.parse(JSON.stringify(SEED.audiovisual.galeria || []))
+  };
 }
 export async function saveAudiovisual(data) {
   if (sandboxOn()) { sbSet('audiovisual', [{ ...(sbGet('audiovisual')[0] || {}), ...data }]); return; }
