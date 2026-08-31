@@ -522,7 +522,8 @@ function renderContenido(el) {
   };
 
   // Auto-asignar clásicos: 1 por fecha (2 en F1), 2 por equipo, siempre entre los grabados.
-  const CLASICOS = ['f1-jr-arquitectura-jr-bayern', 'f1-jr-los-pibes-jr-capibara', 'f2-jr-arquitectura-jr-huracan', 'f3-jr-40-grados-jr-capibara', 'f4-jr-los-prados-jr-huracan', 'f5-jr-bunker-jr-mesa-cuadrada', 'f6-jr-los-prados-jr-bunker', 'f7-jr-camilo-enriquez-jr-mesa-cuadrada', 'f8-jr-los-pibes-jr-40-grados', 'f9-jr-camilo-enriquez-jr-bayern'];
+  // Fecha 1 (ya jugada): clásicos reales = Arquitectura-Bayern y Mesa Cuadrada-Los Prados. NO se tocan sus grabados.
+  const CLASICOS = ['f1-jr-arquitectura-jr-bayern', 'f1-jr-mesa-cuadrada-jr-los-prados', 'f2-jr-los-pibes-jr-camilo-enriquez', 'f3-jr-40-grados-jr-capibara', 'f4-jr-bunker-jr-arquitectura', 'f5-jr-bayern-jr-huracan', 'f6-jr-los-prados-jr-bunker', 'f7-jr-camilo-enriquez-jr-mesa-cuadrada', 'f8-jr-los-pibes-jr-40-grados', 'f9-jr-huracan-jr-capibara'];
   el.querySelector('#autoclas').onclick = async (ev) => {
     const btn = ev.currentTarget;
     const setC = new Set(CLASICOS);
