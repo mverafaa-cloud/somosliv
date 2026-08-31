@@ -919,6 +919,46 @@ function renderInscripciones(el) {
   const getM = (eq, i) => { const p = pagoMap[eq]; return p && p.montos ? (p.montos[i] ?? '') : ''; };
   const getP = (eq, i) => { const p = pagoMap[eq]; return !!(p && p.pagadas && p.pagadas[i]); };
 
+  const rowFn = e => `
+    <tr data-eq="${esc(e.id)}">
+      <td style="font-weight:600;line-height:1.25">${esc(e.nombre)}</td>
+      ${[0, 1, 2, 3].map(i => `
+        <td><input class="input cuota-m" data-i="${i}" type="number" min="0" step="1000" value="${esc(getM(e.id, i))}" placeholder="0"></td>
+        <td style="text-align:center"><input type="checkbox" class="cuota-p" data-i="${i}" ${getP(e.id, i) ? 'checked' : ''}></td>`).join('')}
+      <td class="num row-total" style="font-weight:700">$0</td>
+      <td class="num row-pag" style="font-weight:600;color:var(--c-brand)">$0</td>
+    </tr>`;
+  const tablaGrupo = (titulo, eqs) => !eqs.length ? '' : `
+    <h4 style="margin:16px 0 6px">${titulo} <span class="muted" style="font-weight:400;font-size:.85rem">· ${eqs.length} equipo${eqs.length === 1 ? '' : 's'}</span></h4>
+    <div class="table-wrap"><table class="tbl pagos-tbl">
+      <colgroup>
+        <col class="c-eq">
+        ${[0, 1, 2, 3].map(() => '<col class="c-m"><col class="c-chk">').join('')}
+        <col class="c-tot"><col class="c-tot">
+      </colgroup>
+      <thead>
+        <tr>
+          <th rowspan="2" style="vertical-align:bottom">Equipo</th>
+          ${CUOTAS_DEF.map(c => `<th colspan="2" style="text-align:center">${c.label}<div style="font-weight:400;font-size:.72rem;color:rgba(255,255,255,.82)">${c.venc}</div></th>`).join('')}
+          <th rowspan="2" class="num" style="vertical-align:bottom">Total</th>
+          <th rowspan="2" class="num" style="vertical-align:bottom">Pagado</th>
+        </tr>
+        <tr>${CUOTAS_DEF.map(() => `<th class="num" style="font-weight:600">Monto</th><th style="text-align:center;font-weight:600">✓</th>`).join('')}</tr>
+      </thead>
+      <tbody>${eqs.map(rowFn).join('')}</tbody>
+      <tfoot>
+        <tr style="border-top:2px solid var(--border,#ddd);font-weight:700">
+          <td>Total ${esc(titulo)}</td>
+          ${[0, 1, 2, 3].map(i => `<td class="num col-total" data-i="${i}">$0</td><td></td>`).join('')}
+          <td class="num grp-total">$0</td>
+          <td class="num grp-pag" style="color:var(--c-brand)">$0</td>
+        </tr>
+      </tfoot>
+    </table></div>`;
+
+  const junior = equipos.filter(e => (e.serie || 'libre') !== 'senior');
+  const senior = equipos.filter(e => e.serie === 'senior');
+
   const pagosCard = `
     <div class="card mb-3">
       <div class="spread mb-1" style="align-items:center;flex-wrap:wrap;gap:8px">
@@ -927,51 +967,20 @@ function renderInscripciones(el) {
       </div>
       <p class="muted mb-2" style="font-size:.86rem">Cada equipo tiene su propio trato: escribe el monto de cada cuota (en pesos) y marca ✓ cuando esté pagada. El total y lo pagado se calculan solos. Datos privados (solo admin).</p>
       <style>
-        #pagos-tbl{width:100%;table-layout:fixed;font-size:.82rem}
-        #pagos-tbl th,#pagos-tbl td{padding:7px 5px}
-        #pagos-tbl col.c-eq{width:15%}
-        #pagos-tbl col.c-m{width:12.5%}
-        #pagos-tbl col.c-chk{width:3.6%}
-        #pagos-tbl col.c-tot{width:9%}
-        #pagos-tbl .cuota-m{width:100%;min-width:0;box-sizing:border-box;padding:6px 6px;text-align:right}
-        #pagos-tbl .cuota-p{margin:0}
-        #pagos-tbl .num{white-space:nowrap}
+        .pagos-tbl{width:100%;table-layout:fixed;font-size:.82rem}
+        .pagos-tbl th,.pagos-tbl td{padding:7px 5px}
+        .pagos-tbl col.c-eq{width:15%}
+        .pagos-tbl col.c-m{width:12.5%}
+        .pagos-tbl col.c-chk{width:3.6%}
+        .pagos-tbl col.c-tot{width:9%}
+        .pagos-tbl .cuota-m{width:100%;min-width:0;box-sizing:border-box;padding:6px 6px;text-align:right}
+        .pagos-tbl .cuota-p{margin:0}
+        .pagos-tbl .num{white-space:nowrap}
       </style>
-      <div class="table-wrap"><table class="tbl" id="pagos-tbl">
-        <colgroup>
-          <col class="c-eq">
-          ${[0, 1, 2, 3].map(() => '<col class="c-m"><col class="c-chk">').join('')}
-          <col class="c-tot"><col class="c-tot">
-        </colgroup>
-        <thead>
-          <tr>
-            <th rowspan="2" style="vertical-align:bottom">Equipo</th>
-            ${CUOTAS_DEF.map(c => `<th colspan="2" style="text-align:center">${c.label}<div style="font-weight:400;font-size:.72rem;color:rgba(255,255,255,.82)">${c.venc}</div></th>`).join('')}
-            <th rowspan="2" class="num" style="vertical-align:bottom">Total</th>
-            <th rowspan="2" class="num" style="vertical-align:bottom">Pagado</th>
-          </tr>
-          <tr>${CUOTAS_DEF.map(() => `<th class="num" style="font-weight:600">Monto</th><th style="text-align:center;font-weight:600">✓</th>`).join('')}</tr>
-        </thead>
-        <tbody>
-          ${equipos.map(e => `
-            <tr data-eq="${esc(e.id)}">
-              <td style="font-weight:600;line-height:1.25">${esc(e.nombre)}<br><span class="pill ${e.serie === 'senior' ? 'pill-dark' : 'pill-grey'}" style="font-size:.66rem">${esc(serieName(e.serie))}</span></td>
-              ${[0, 1, 2, 3].map(i => `
-                <td><input class="input cuota-m" data-i="${i}" type="number" min="0" step="1000" value="${esc(getM(e.id, i))}" placeholder="0"></td>
-                <td style="text-align:center"><input type="checkbox" class="cuota-p" data-i="${i}" ${getP(e.id, i) ? 'checked' : ''}></td>`).join('')}
-              <td class="num row-total" style="font-weight:700">$0</td>
-              <td class="num row-pag" style="font-weight:600;color:var(--c-brand)">$0</td>
-            </tr>`).join('')}
-        </tbody>
-        <tfoot>
-          <tr style="border-top:2px solid var(--border,#ddd);font-weight:700">
-            <td>Totales liga</td>
-            ${[0, 1, 2, 3].map(i => `<td class="num col-total" data-i="${i}">$0</td><td></td>`).join('')}
-            <td class="num" id="grand-total">$0</td>
-            <td class="num" id="grand-pag" style="color:var(--c-brand)">$0</td>
-          </tr>
-        </tfoot>
-      </table></div>
+      <div id="pagos-wrap">
+        ${tablaGrupo('Junior', junior)}
+        ${tablaGrupo('Senior', senior)}
+      </div>
     </div>`;
 
   el.innerHTML = `
@@ -994,35 +1003,36 @@ function renderInscripciones(el) {
   el.querySelectorAll('[data-estado]').forEach(s => s.onchange = () => reload('i', () => updateInscripcion({ id: s.dataset.estado, estado: s.value })));
   el.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { if (confirm('¿Eliminar inscripción?')) reload('i', () => deleteInscripcion(b.dataset.del)); });
 
-  // ---- Cuotas: totales en vivo ----
-  const tbl = el.querySelector('#pagos-tbl');
+  // ---- Cuotas: totales en vivo (por grupo Junior/Senior) ----
+  const wrap = el.querySelector('#pagos-wrap');
   const recompute = () => {
-    const colTot = [0, 0, 0, 0]; let grand = 0, grandPag = 0;
-    tbl.querySelectorAll('tbody tr[data-eq]').forEach(tr => {
-      let tot = 0, pag = 0;
-      tr.querySelectorAll('.cuota-m').forEach(inp => {
-        const i = +inp.dataset.i; const v = +inp.value || 0;
-        tot += v; colTot[i] += v;
-        const chk = tr.querySelector(`.cuota-p[data-i="${i}"]`);
-        if (chk && chk.checked) pag += v;
+    if (!wrap) return;
+    wrap.querySelectorAll('.pagos-tbl').forEach(tbl => {
+      const colTot = [0, 0, 0, 0]; let grand = 0, grandPag = 0;
+      tbl.querySelectorAll('tbody tr[data-eq]').forEach(tr => {
+        let tot = 0, pag = 0;
+        tr.querySelectorAll('.cuota-m').forEach(inp => {
+          const i = +inp.dataset.i; const v = +inp.value || 0;
+          tot += v; colTot[i] += v;
+          const chk = tr.querySelector(`.cuota-p[data-i="${i}"]`);
+          if (chk && chk.checked) pag += v;
+        });
+        tr.querySelector('.row-total').textContent = '$' + clp(tot);
+        tr.querySelector('.row-pag').textContent = '$' + clp(pag);
+        grand += tot; grandPag += pag;
       });
-      tr.querySelector('.row-total').textContent = '$' + clp(tot);
-      tr.querySelector('.row-pag').textContent = '$' + clp(pag);
-      grand += tot; grandPag += pag;
+      tbl.querySelectorAll('.col-total').forEach(td => { td.textContent = '$' + clp(colTot[+td.dataset.i]); });
+      const gt = tbl.querySelector('.grp-total'); if (gt) gt.textContent = '$' + clp(grand);
+      const gp = tbl.querySelector('.grp-pag'); if (gp) gp.textContent = '$' + clp(grandPag);
     });
-    tbl.querySelectorAll('.col-total').forEach(td => { td.textContent = '$' + clp(colTot[+td.dataset.i]); });
-    el.querySelector('#grand-total').textContent = '$' + clp(grand);
-    el.querySelector('#grand-pag').textContent = '$' + clp(grandPag);
   };
-  tbl.addEventListener('input', recompute);
-  tbl.addEventListener('change', recompute);
-  recompute();
+  if (wrap) { wrap.addEventListener('input', recompute); wrap.addEventListener('change', recompute); recompute(); }
 
   // ---- Guardar cuotas (solo equipos que cambiaron) ----
   el.querySelector('#pagos-save').onclick = async () => {
     const btn = el.querySelector('#pagos-save');
     const ups = [];
-    tbl.querySelectorAll('tbody tr[data-eq]').forEach(tr => {
+    wrap.querySelectorAll('tbody tr[data-eq]').forEach(tr => {
       const eq = tr.dataset.eq;
       const montos = [null, null, null, null], pagadas = [false, false, false, false];
       tr.querySelectorAll('.cuota-m').forEach(inp => { montos[+inp.dataset.i] = inp.value === '' ? null : (+inp.value || 0); });
