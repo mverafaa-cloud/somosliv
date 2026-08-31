@@ -926,7 +926,23 @@ function renderInscripciones(el) {
         <button class="btn btn-primary btn-sm" id="pagos-save">Guardar cambios de cuotas</button>
       </div>
       <p class="muted mb-2" style="font-size:.86rem">Cada equipo tiene su propio trato: escribe el monto de cada cuota (en pesos) y marca ✓ cuando esté pagada. El total y lo pagado se calculan solos. Datos privados (solo admin).</p>
+      <style>
+        #pagos-tbl{width:100%;table-layout:fixed;font-size:.82rem}
+        #pagos-tbl th,#pagos-tbl td{padding:7px 5px}
+        #pagos-tbl col.c-eq{width:15%}
+        #pagos-tbl col.c-m{width:12.5%}
+        #pagos-tbl col.c-chk{width:3.6%}
+        #pagos-tbl col.c-tot{width:9%}
+        #pagos-tbl .cuota-m{width:100%;min-width:0;box-sizing:border-box;padding:6px 6px;text-align:right}
+        #pagos-tbl .cuota-p{margin:0}
+        #pagos-tbl .num{white-space:nowrap}
+      </style>
       <div class="table-wrap"><table class="tbl" id="pagos-tbl">
+        <colgroup>
+          <col class="c-eq">
+          ${[0, 1, 2, 3].map(() => '<col class="c-m"><col class="c-chk">').join('')}
+          <col class="c-tot"><col class="c-tot">
+        </colgroup>
         <thead>
           <tr>
             <th rowspan="2" style="vertical-align:bottom">Equipo</th>
@@ -939,9 +955,9 @@ function renderInscripciones(el) {
         <tbody>
           ${equipos.map(e => `
             <tr data-eq="${esc(e.id)}">
-              <td style="font-weight:600;white-space:nowrap">${esc(e.nombre)} <span class="pill ${e.serie === 'senior' ? 'pill-dark' : 'pill-grey'}" style="font-size:.7rem">${esc(serieName(e.serie))}</span></td>
+              <td style="font-weight:600;line-height:1.25">${esc(e.nombre)}<br><span class="pill ${e.serie === 'senior' ? 'pill-dark' : 'pill-grey'}" style="font-size:.66rem">${esc(serieName(e.serie))}</span></td>
               ${[0, 1, 2, 3].map(i => `
-                <td><input class="input cuota-m" data-i="${i}" type="number" min="0" step="1000" value="${esc(getM(e.id, i))}" placeholder="0" style="width:110px;text-align:right"></td>
+                <td><input class="input cuota-m" data-i="${i}" type="number" min="0" step="1000" value="${esc(getM(e.id, i))}" placeholder="0"></td>
                 <td style="text-align:center"><input type="checkbox" class="cuota-p" data-i="${i}" ${getP(e.id, i) ? 'checked' : ''}></td>`).join('')}
               <td class="num row-total" style="font-weight:700">$0</td>
               <td class="num row-pag" style="font-weight:600;color:var(--c-brand)">$0</td>
