@@ -460,6 +460,7 @@ function renderContenido(el) {
       <div class="form-group" style="max-width:220px"><label>Fecha</label><select class="input" id="grabfecha"></select></div>
       <div id="grabbody" class="mt-2"><p class="muted">Cargando fixture…</p></div>
       <div class="mt-2"><button class="btn btn-primary btn-sm" id="grabsave" type="button" disabled>Guardar grabaciones de esta fecha</button></div>
+      <div class="mt-3"><h4 class="mb-1" style="font-size:.95rem">Equilibrio por equipo</h4><div id="grabbalance"></div></div>
     </div>`;
   el.querySelector('#f-c').onsubmit = (ev) => {
     ev.preventDefault();
@@ -522,10 +523,36 @@ function renderContenido(el) {
     const sel = el.querySelector('#grabfecha');
     const body = el.querySelector('#grabbody');
     const saveBtn = el.querySelector('#grabsave');
+    const balanceDiv = el.querySelector('#grabbalance');
     if (!sel) return;
     const [partidos, equipos] = await Promise.all([getPartidos(), getEquipos()]);
     const NAME = equiposById(equipos);
     const nm = id => (NAME[id] && NAME[id].nombre) || id;
+    const libre = partidos.filter(p => p.serie === 'libre');
+
+    // Estado efectivo: usa lo marcado en la UI para la fecha en edición, y lo guardado para el resto.
+    function updateBalance() {
+      const ui = {};
+      body.querySelectorAll('[data-grab]').forEach(g => {
+        const id = g.dataset.grab;
+        const clas = !!(body.querySelector(`[data-clas="${id}"]`) || {}).checked;
+        ui[id] = { clas, grab: clas || g.checked };
+      });
+      const tally = {};
+      libre.forEach(p => {
+        const st = ui[p.id] || { grab: !!p.grabado, clas: !!p.clasico };
+        [p.local, p.visita].forEach(t => { tally[t] = tally[t] || { grab: 0, clas: 0 }; });
+        if (st.grab) { tally[p.local].grab++; tally[p.visita].grab++; }
+        if (st.clas) { tally[p.local].clas++; tally[p.visita].clas++; }
+      });
+      const ids = Object.keys(tally).sort((a, b) => nm(a).localeCompare(nm(b), 'es'));
+      const cell = (v, lo, hi) => `<td style="text-align:center;font-weight:800;padding:3px 6px;color:${(v < lo || v > hi) ? '#c0392b' : 'var(--c-brand-2)'}">${v}</td>`;
+      balanceDiv.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:.85rem">
+        <thead><tr style="border-bottom:1px solid var(--c-line)"><th style="text-align:left;padding:3px 6px">Equipo</th><th style="padding:3px 6px">Grabados</th><th style="padding:3px 6px">Clásicos</th></tr></thead>
+        <tbody>${ids.map(id => `<tr style="border-bottom:1px solid var(--c-line)"><td style="padding:3px 6px">${esc(nm(id))}</td>${cell(tally[id].grab, 5, 6)}${cell(tally[id].clas, 2, 2)}</tr>`).join('')}</tbody>
+      </table>
+      <p class="muted mt-1" style="font-size:.78rem">Objetivo: <strong>5–6 grabaciones</strong> y <strong>2 clásicos</strong> por equipo (en rojo si queda fuera de rango). Suma todas las fechas y cambia en vivo con lo que marcas arriba.</p>`;
+    }
     const prog = partidos.filter(p => p.serie === 'libre' && p.estado !== 'finalizado');
     const fechas = [...new Set(prog.map(p => p.fecha_num))].sort((a, b) => a - b);
     if (!fechas.length) { body.innerHTML = '<p class="muted">No hay fechas programadas para editar.</p>'; return; }
@@ -545,11 +572,12 @@ function renderContenido(el) {
             </span>
           </div>`).join('') + `</div>`;
       }).join('');
-      body.querySelectorAll('[data-clas]').forEach(cb => cb.onchange = () => {
-        const g = body.querySelector(`[data-grab="${cb.dataset.clas}"]`);
-        if (cb.checked) { g.checked = true; g.disabled = true; } else { g.disabled = false; }
-      });
+      body.querySelectorAll('input[type=checkbox]').forEach(cb => cb.addEventListener('change', () => {
+        if (cb.dataset.clas) { const g = body.querySelector(`[data-grab="${cb.dataset.clas}"]`); if (cb.checked) { g.checked = true; g.disabled = true; } else { g.disabled = false; } }
+        updateBalance();
+      }));
       saveBtn.disabled = false;
+      updateBalance();
     }
     sel.onchange = () => renderFecha(+sel.value);
     renderFecha(fechas[0]);
