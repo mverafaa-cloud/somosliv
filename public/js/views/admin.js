@@ -5,6 +5,7 @@ import {
   getPartidos, savePartido, deletePartido,
   getDisciplina, saveTarjeta, deleteTarjeta,
   getGoleadores, saveGoleador, deleteGoleador,
+  FALTAS_ROJA, faltaById, sancionTexto, suspendidosParaFecha, AMARILLAS_PARA_SUSPENSION,
   getInscripciones, updateInscripcion, deleteInscripcion,
   getJugadores, saveJugador, deleteJugador, importJugadores,
   getAudiovisual, saveAudiovisual,
@@ -740,41 +741,163 @@ function renderFixture(el) {
 }
 
 /* ---------- DISCIPLINA ---------- */
+let discFecha = 'all';
+let editT = null;
+
 function renderDisciplina(el) {
   const byId = equiposById(C.equipos);
-  const rows = C.disciplina.slice().sort((a, b) => (b.fecha || '').localeCompare(a.fecha));
-  const eqOpts = C.equipos.slice().sort((a, b) => a.nombre.localeCompare(b.nombre)).map(e => `<option value="${esc(e.id)}">${esc(e.nombre)}</option>`).join('');
+  const nmEq = id => byId[id]?.nombre || id || '—';
+  const cards = C.disciplina.slice();
+
+  // Fechas disponibles (de tarjetas + fixture)
+  const fechasSet = new Set();
+  cards.forEach(t => { if (t.fecha_num != null) fechasSet.add(+t.fecha_num); });
+  C.partidos.forEach(p => { if (p.fecha_num != null) fechasSet.add(+p.fecha_num); });
+  const fechas = [...fechasSet].sort((a, b) => a - b);
+
+  // Próxima fecha (para el panel de suspendidos)
+  const prog = C.partidos.filter(p => p.estado !== 'finalizado' && p.fecha_num != null).map(p => +p.fecha_num);
+  const jug = C.partidos.filter(p => p.estado === 'finalizado' && p.fecha_num != null).map(p => +p.fecha_num);
+  const proxFecha = prog.length ? Math.min(...prog) : (jug.length ? Math.max(...jug) + 1 : null);
+  const susp = proxFecha ? suspendidosParaFecha(cards, proxFecha) : [];
+
+  const list = cards
+    .filter(t => discFecha === 'all' || +t.fecha_num === +discFecha)
+    .sort((a, b) => (+a.fecha_num || 0) - (+b.fecha_num || 0) || (a.jugador || '').localeCompare(b.jugador || ''));
+
+  const tipoBadge = t => t.tipo === 'roja'
+    ? `<span class="pill pill-red"><span class="tarjeta tarjeta-roja"></span> ${t.claseRoja === 'doble' ? 'Roja (2ª amarilla)' : 'Roja'}</span>`
+    : `<span class="pill" style="background:var(--c-accent-soft,#fdf3d7);color:var(--c-accent-deep,#8a5a00)"><span class="tarjeta tarjeta-amarilla"></span> Amarilla</span>`;
+
+  const t = editT ? cards.find(x => x.id === editT) : null;
+
+  // ---- Panel editor (arriba) ----
+  let editorHTML = '';
+  if (t) {
+    if (t.tipo === 'amarilla') {
+      editorHTML = `
+        <div class="card mb-3" style="border-left:4px solid var(--c-accent,#eab308)">
+          <h3 class="mb-1">Editar amarilla — ${esc(t.jugador || '—')} <span class="muted" style="font-weight:400">· ${esc(nmEq(t.equipo))} · Fecha ${esc(t.fecha_num ?? '—')}</span></h3>
+          <p class="muted" style="font-size:.88rem">Las amarillas no tienen suspensión por sí solas. Al acumular <strong>${AMARILLAS_PARA_SUSPENSION}</strong> en el torneo se aplica <strong>1 fecha</strong> automática.</p>
+          <div class="form-group"><label>Motivo (opcional)</label><input class="input" id="t-motivo" value="${esc(t.motivo || '')}" placeholder="Ej: juego brusco"></div>
+          <div class="row"><button class="btn btn-primary" id="t-save">Guardar</button><button class="btn btn-ghost" id="t-cancel">Cancelar</button></div>
+        </div>`;
+    } else {
+      const clase = t.claseRoja || 'directa';
+      const faltaOpts = FALTAS_ROJA.map(f => `<option value="${f.id}" ${t.faltaId === f.id ? 'selected' : ''}>${esc(f.falta)} — ${sancionTexto(f)}</option>`).join('');
+      editorHTML = `
+        <div class="card mb-3" style="border-left:4px solid var(--c-red)">
+          <h3 class="mb-1">Editar roja — ${esc(t.jugador || '—')} <span class="muted" style="font-weight:400">· ${esc(nmEq(t.equipo))} · Fecha ${esc(t.fecha_num ?? '—')}</span></h3>
+          <div class="form-group"><label>Clase de roja</label>
+            <select class="select" id="t-clase">
+              <option value="directa" ${clase === 'directa' ? 'selected' : ''}>Roja directa</option>
+              <option value="doble" ${clase === 'doble' ? 'selected' : ''}>Doble amarilla (doble amonestación)</option>
+            </select>
+          </div>
+          <div id="t-doble-note" class="muted" style="font-size:.88rem;display:${clase === 'doble' ? 'block' : 'none'};margin-bottom:8px">La doble amonestación <strong>no tiene suspensión</strong> para la fecha siguiente.</div>
+          <div id="t-directa" style="display:${clase === 'directa' ? 'block' : 'none'}">
+            <div class="form-group"><label>Falta tipificada (reglamento de disciplina)</label>
+              <select class="select" id="t-falta"><option value="">— elige la falta —</option>${faltaOpts}</select>
+            </div>
+            <div class="form-group" id="t-fechas-wrap" style="display:none;max-width:220px"><label>Fechas de suspensión (comité)</label><input class="input" id="t-fechas" type="number" min="1" value="${esc(t.fechas ?? '')}"></div>
+            <div id="t-sancion-preview" class="mb-2"></div>
+          </div>
+          <div class="row"><button class="btn btn-primary" id="t-save">Guardar</button><button class="btn btn-ghost" id="t-cancel">Cancelar</button></div>
+        </div>`;
+    }
+  }
+
   el.innerHTML = `
-    <div class="card mb-3">
-      <h3 class="mb-2">Registrar tarjeta / sanción</h3>
-      <form id="f-d">
-        <div class="form-row-3">
-          <div class="form-group"><label>Serie</label><select class="select" name="serie">${serieOptions()}</select></div>
-          <div class="form-group"><label>Equipo</label><select class="select" name="equipo">${eqOpts}</select></div>
-          <div class="form-group"><label>Jugador</label><input class="input" name="jugador"></div>
-        </div>
-        <div class="form-row-3">
-          <div class="form-group"><label>Tipo</label><select class="select" name="tipo"><option value="amarilla">Amarilla</option><option value="roja">Roja</option></select></div>
-          <div class="form-group"><label>Fecha</label><input class="input" name="fecha" type="date"></div>
-          <div class="form-group"><label>Sanción (opcional)</label><input class="input" name="sancion" placeholder="Ej: 1 fecha"></div>
-        </div>
-        <div class="form-group"><label>Motivo</label><input class="input" name="motivo"></div>
-        <button class="btn btn-primary">Registrar</button>
-      </form>
+    ${proxFecha ? `
+    <div class="card mb-3" style="border-left:4px solid var(--c-red)">
+      <div class="spread" style="align-items:center"><h3 style="margin:0">${icon('shield', { size: 18 })} Suspendidos para la Fecha ${proxFecha}</h3><span class="muted" style="font-size:.85rem">Se calcula solo</span></div>
+      ${susp.length ? `<div class="table-wrap mt-2"><table class="tbl">
+        <thead><tr><th>Jugador</th><th>Equipo</th><th>Motivo</th><th>Se pierde</th></tr></thead>
+        <tbody>${susp.map(s => `<tr><td style="font-weight:700">${esc(s.nombre || '—')}</td><td class="muted">${esc(nmEq(s.equipo))}</td><td class="muted">${esc(s.motivo || '')}</td><td><span class="pill pill-red">${s.definitivo ? 'Expulsado' : (s.hasta > s.desde ? `Fechas ${s.desde}–${s.hasta}` : `Fecha ${s.desde}`)}</span></td></tr>`).join('')}</tbody>
+      </table></div>` : '<p class="muted mt-1" style="margin:0">Sin suspendidos para la próxima fecha ✔️</p>'}
+    </div>` : ''}
+
+    ${editorHTML}
+
+    <div class="spread mb-2" style="flex-wrap:wrap;gap:8px;align-items:center">
+      <h3 style="margin:0">Tarjetas registradas</h3>
+      <div class="chips filter-row" id="disc-fechas">
+        <span class="chips-label">Fecha</span>
+        <button class="chip ${discFecha === 'all' ? 'active' : ''}" data-f="all">Todas</button>
+        ${fechas.map(f => `<button class="chip ${+discFecha === f ? 'active' : ''}" data-f="${f}">Fecha ${f}</button>`).join('')}
+      </div>
     </div>
+    <p class="muted mb-2" style="font-size:.88rem">Las tarjetas se cargan en <strong>Goles y tarjetas</strong>. Aquí editas cada <strong>roja</strong> para tipificar la falta y fijar la sanción automáticamente.</p>
     <div class="table-wrap"><table class="tbl">
-      <thead><tr><th>Fecha</th><th>Tipo</th><th>Jugador</th><th>Equipo</th><th>Sanción</th><th></th></tr></thead>
-      <tbody>${rows.map(t => `<tr>
-        <td class="muted">${esc(fmtDate(t.fecha))}</td>
-        <td>${t.tipo === 'roja' ? '<span class="tarjeta tarjeta-roja"></span>' : '<span class="tarjeta tarjeta-amarilla"></span>'}</td>
+      <thead><tr><th>Fecha</th><th>Tipo</th><th>Jugador</th><th>Equipo</th><th>Falta / motivo</th><th>Sanción</th><th></th></tr></thead>
+      <tbody>${list.map(t => `<tr>
+        <td class="muted">${esc(t.fecha_num != null ? 'F' + t.fecha_num : fmtDate(t.fecha))}</td>
+        <td style="white-space:nowrap">${tipoBadge(t)}</td>
         <td style="font-weight:600">${esc(t.jugador || '—')}</td>
-        <td class="muted">${esc(byId[t.equipo]?.nombre || t.equipo)}</td>
-        <td>${esc(t.sancion || '—')}</td>
-        <td style="text-align:right"><button class="btn btn-danger btn-sm" data-del="${esc(t.id)}">✕</button></td>
-      </tr>`).join('') || '<tr><td colspan="6" class="muted center">Sin registros.</td></tr>'}</tbody>
+        <td class="muted">${esc(nmEq(t.equipo))}</td>
+        <td class="muted">${esc(t.falta || t.motivo || (t.tipo === 'roja' ? '— sin tipificar —' : ''))}</td>
+        <td>${t.sancion ? `<span class="pill pill-dark">${esc(t.sancion)}</span>` : (t.tipo === 'roja' ? '<span class="pill" style="background:#fde68a;color:#78350f">pendiente</span>' : '<span class="muted">—</span>')}</td>
+        <td style="text-align:right;white-space:nowrap"><button class="btn btn-secondary btn-sm" data-edit="${esc(t.id)}">✎</button> <button class="btn btn-danger btn-sm" data-del="${esc(t.id)}">✕</button></td>
+      </tr>`).join('') || `<tr><td colspan="7" class="muted center">${cards.length ? 'Sin tarjetas para esta fecha.' : 'Sin tarjetas. Cárgalas en «Goles y tarjetas».'}</td></tr>`}</tbody>
     </table></div>`;
-  el.querySelector('#f-d').onsubmit = (ev) => { ev.preventDefault(); const d = Object.fromEntries(new FormData(ev.target).entries()); reload('d', () => saveTarjeta(d)); };
-  el.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { if (confirm('¿Eliminar registro?')) reload('d', () => deleteTarjeta(b.dataset.del)); });
+
+  // Filtros de fecha
+  el.querySelectorAll('#disc-fechas .chip').forEach(c => c.onclick = () => { discFecha = c.dataset.f === 'all' ? 'all' : +c.dataset.f; renderTab(); });
+  // Editar / borrar
+  el.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => { editT = b.dataset.edit; renderTab(); window.scrollTo(0, 0); });
+  el.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { if (confirm('¿Eliminar esta tarjeta?')) { editT = null; reload('d', () => deleteTarjeta(b.dataset.del)); } });
+
+  // Wiring del editor
+  if (t) {
+    el.querySelector('#t-cancel').onclick = () => { editT = null; renderTab(); };
+    if (t.tipo === 'amarilla') {
+      el.querySelector('#t-save').onclick = () => {
+        const motivo = el.querySelector('#t-motivo').value.trim();
+        editT = null;
+        reload('d', () => saveTarjeta({ id: t.id, motivo }));
+      };
+    } else {
+      const claseSel = el.querySelector('#t-clase');
+      const directa = el.querySelector('#t-directa');
+      const dobleNote = el.querySelector('#t-doble-note');
+      const faltaSel = el.querySelector('#t-falta');
+      const fechasWrap = el.querySelector('#t-fechas-wrap');
+      const fechasInp = el.querySelector('#t-fechas');
+      const preview = el.querySelector('#t-sancion-preview');
+      const refreshFalta = () => {
+        const f = faltaById(faltaSel.value);
+        if (!f) { preview.innerHTML = ''; fechasWrap.style.display = 'none'; return; }
+        preview.innerHTML = `<span class="pill ${f.via === 'auto' ? 'pill-green' : 'pill-dark'}">${f.via === 'auto' ? 'Automática' : 'Comité'}</span> <strong>${esc(sancionTexto(f))}</strong>`;
+        if (f.definitivo) { fechasWrap.style.display = 'none'; }
+        else if (f.via === 'comite') { fechasWrap.style.display = 'block'; if (!fechasInp.value) fechasInp.value = f.min; fechasInp.min = f.min; if (f.max) fechasInp.max = f.max; }
+        else { fechasWrap.style.display = 'none'; } // auto: 1 fecha fija
+      };
+      const refreshClase = () => {
+        const dir = claseSel.value === 'directa';
+        directa.style.display = dir ? 'block' : 'none';
+        dobleNote.style.display = dir ? 'none' : 'block';
+      };
+      claseSel.onchange = refreshClase;
+      faltaSel.onchange = refreshFalta;
+      refreshClase(); refreshFalta();
+      el.querySelector('#t-save').onclick = () => {
+        let doc;
+        if (claseSel.value === 'doble') {
+          doc = { id: t.id, claseRoja: 'doble', faltaId: null, falta: 'Doble amonestación', via: null, definitivo: false, fechas: 0, sancion: 'Sin suspensión (doble amarilla)' };
+        } else {
+          const f = faltaById(faltaSel.value);
+          if (!f) { toast('Elige la falta tipificada.', 'error'); return; }
+          let fechas = 0, sancion = '';
+          if (f.definitivo) { fechas = null; sancion = 'Expulsión definitiva de la LIV'; }
+          else if (f.via === 'auto') { fechas = 1; sancion = sancionTexto(f); }
+          else { fechas = Math.max(f.min, +fechasInp.value || f.min); sancion = `${fechas} fecha${fechas > 1 ? 's' : ''} (comité · rango ${sancionTexto(f)})`; }
+          doc = { id: t.id, claseRoja: 'directa', faltaId: f.id, falta: f.falta, via: f.via, definitivo: !!f.definitivo, fechas, sancion };
+        }
+        editT = null;
+        reload('d', () => saveTarjeta(doc));
+      };
+    }
+  }
 }
 
 /* ---------- INSCRIPCIONES ---------- */

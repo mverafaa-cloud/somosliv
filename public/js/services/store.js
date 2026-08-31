@@ -181,6 +181,67 @@ export const deleteTarjeta = (id) => remove('disciplina', id);
 export const saveGoleador = (d) => upsert('goleadores', d);
 export const deleteGoleador = (id) => remove('goleadores', id);
 
+// ---------- DISCIPLINA: tipificación y cálculo de sanciones ----------
+// Catálogo de faltas de ROJA DIRECTA (Protocolo del Comité de Disciplina LIV 2026).
+// via 'auto' = sanción automática firme · 'comite' = rango, lo fija el comité.
+export const FALTAS_ROJA = [
+  { id: 'juego-brusco',     falta: 'Juego brusco grave (entrada temeraria, sin intención de agredir)', via: 'auto',   min: 1, max: 1 },
+  { id: 'malograr-gol',     falta: 'Malograr una ocasión manifiesta de gol (mano o falta como último recurso)', via: 'auto', min: 1, max: 1 },
+  { id: 'lenguaje',         falta: 'Lenguaje o gestos ofensivos (no dirigidos como amenaza)', via: 'auto', min: 1, max: 1 },
+  { id: 'antideportiva',    falta: 'Conducta antideportiva grave (protesta agresiva, provocación, retrasar el juego)', via: 'comite', min: 1, max: 2 },
+  { id: 'insultos',         falta: 'Insultos, amenazas o injurias al árbitro, organización o rival', via: 'comite', min: 2, max: 4 },
+  { id: 'escupir',          falta: 'Escupir a otra persona', via: 'comite', min: 3, max: 5 },
+  { id: 'intento-agresion', falta: 'Intento de agresión (amago o intento de golpe)', via: 'comite', min: 3, max: 6 },
+  { id: 'agresion',         falta: 'Agresión física a un jugador, compañero u otra persona presente', via: 'comite', min: 4, max: null },
+  { id: 'agresion-arbitro', falta: 'Agresión física al árbitro o a un organizador', via: 'comite', definitivo: true },
+  { id: 'rina',             falta: 'Riña, pelea o agresión colectiva', via: 'comite', definitivo: true }
+];
+export const AMARILLAS_PARA_SUSPENSION = 5; // 5 amarillas acumuladas = 1 fecha (umbral referencial del protocolo).
+export const faltaById = (id) => FALTAS_ROJA.find(f => f.id === id) || null;
+export function sancionTexto(f) {
+  if (!f) return '';
+  if (f.definitivo) return 'Expulsión definitiva de la LIV';
+  if (f.max == null) return `Mín. ${f.min} fechas, hasta expulsión`;
+  if (f.min === f.max) return `${f.min} fecha${f.min > 1 ? 's' : ''}`;
+  return `${f.min} a ${f.max} fechas`;
+}
+
+// Calcula todas las suspensiones vigentes a partir del registro de disciplina.
+// Rojas: usan el nº de fechas resuelto (auto = 1; comité = lo que fije el admin). Doble amarilla = sin suspensión.
+// Amarillas: cada AMARILLAS_PARA_SUSPENSION acumuladas gatillan 1 fecha (la inmediatamente siguiente).
+export function calcSuspensiones(disciplina) {
+  const out = [];
+  (disciplina || []).filter(d => d.tipo === 'roja').forEach(d => {
+    const F = +d.fecha_num; if (!F) return;
+    if (d.claseRoja === 'doble') return;              // doble amonestación: sin suspensión
+    if (d.definitivo) { out.push({ jugadorId: d.jugadorId, nombre: d.jugador, equipo: d.equipo, serie: d.serie, desde: F + 1, hasta: Infinity, motivo: d.falta || 'Expulsión definitiva', tipo: 'roja', definitivo: true }); return; }
+    const n = +d.fechas || 0;
+    if (n > 0) out.push({ jugadorId: d.jugadorId, nombre: d.jugador, equipo: d.equipo, serie: d.serie, desde: F + 1, hasta: F + n, motivo: d.falta || 'Roja directa', tipo: 'roja', fechas: n });
+  });
+  const byJ = {};
+  (disciplina || []).filter(d => d.tipo === 'amarilla' && d.jugadorId).forEach(d => { (byJ[d.jugadorId] = byJ[d.jugadorId] || []).push(d); });
+  Object.values(byJ).forEach(arr => {
+    arr.sort((a, b) => (+a.fecha_num || 0) - (+b.fecha_num || 0));
+    arr.forEach((d, i) => {
+      if ((i + 1) % AMARILLAS_PARA_SUSPENSION === 0) {
+        const F = +d.fecha_num || 0;
+        if (F) out.push({ jugadorId: d.jugadorId, nombre: d.jugador, equipo: d.equipo, serie: d.serie, desde: F + 1, hasta: F + 1, motivo: `Acumulación de ${AMARILLAS_PARA_SUSPENSION} amarillas`, tipo: 'amarilla', fechas: 1 });
+      }
+    });
+  });
+  return out;
+}
+export function suspendidosParaFecha(disciplina, fechaObjetivo) {
+  if (!fechaObjetivo) return [];
+  return calcSuspensiones(disciplina).filter(s => s.desde <= fechaObjetivo && fechaObjetivo <= s.hasta);
+}
+// Total de amarillas por jugador (para mostrar acumulación).
+export function amarillasPorJugador(disciplina) {
+  const m = {};
+  (disciplina || []).filter(d => d.tipo === 'amarilla' && d.jugadorId).forEach(d => { m[d.jugadorId] = (m[d.jugadorId] || 0) + 1; });
+  return m;
+}
+
 // ---------- INSCRIPCIONES (formulario público de Admisión) ----------
 export async function addInscripcion(data) {
   if (mode === 'demo') { console.log('[demo] inscripción', data); return 'demo'; }

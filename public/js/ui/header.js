@@ -8,6 +8,7 @@ export const NAV = [
   { href: '/programacion',  label: 'Programación', icon: 'calendar' },
   { href: '/resultados',    label: 'Resultados',   icon: 'check' },
   { href: '/posiciones',    label: 'Posiciones',   icon: 'trophy' },
+  { href: '/goleadores',    label: 'Goleadores',   icon: 'ball' },
   { href: '/disciplina',    label: 'Disciplina',   icon: 'cards' },
   { href: '/reglamentos',   label: 'Reglamentos',  icon: 'book' },
   { href: '/admision',      label: 'Admisión',     icon: 'clipboard' },
