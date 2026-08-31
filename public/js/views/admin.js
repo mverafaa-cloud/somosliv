@@ -930,7 +930,7 @@ function renderInscripciones(el) {
         <thead>
           <tr>
             <th rowspan="2" style="vertical-align:bottom">Equipo</th>
-            ${CUOTAS_DEF.map(c => `<th colspan="2" style="text-align:center">${c.label}<div class="muted" style="font-weight:400;font-size:.72rem">${c.venc}</div></th>`).join('')}
+            ${CUOTAS_DEF.map(c => `<th colspan="2" style="text-align:center">${c.label}<div style="font-weight:400;font-size:.72rem;color:rgba(255,255,255,.82)">${c.venc}</div></th>`).join('')}
             <th rowspan="2" class="num" style="vertical-align:bottom">Total</th>
             <th rowspan="2" class="num" style="vertical-align:bottom">Pagado</th>
           </tr>
