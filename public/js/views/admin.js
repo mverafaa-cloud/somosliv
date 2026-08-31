@@ -456,12 +456,12 @@ function renderContenido(el) {
     </div>
     <div class="card mt-3">
       <h3 class="mb-2">Grabaciones del fixture</h3>
-      <p class="muted mb-2" style="font-size:.9rem">Modelo: <strong>grabado = clásico</strong> (lo que se graba es el clásico de la fecha). Deben ser <strong>3 por fecha</strong>; los grabados van en <strong>cancha 1 y 2</strong>. No cambia horarios ni rivales.</p>
+      <p class="muted mb-2" style="font-size:.9rem"><strong>3 grabados por fecha</strong>; el <strong>clásico</strong> de cada fecha (2 en la Fecha 1) debe ser uno de los grabados. Objetivo: cada equipo <strong>2 clásicos</strong> y <strong>Capibara 4 grabados</strong> (el resto 5–6). Los grabados van en cancha 1 y 2. No cambia horarios ni rivales.</p>
       <div class="form-group" style="max-width:220px"><label>Fecha</label><select class="input" id="grabfecha"></select></div>
       <div id="grabbody" class="mt-2"><p class="muted">Cargando fixture…</p></div>
       <div class="mt-2" style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-primary btn-sm" id="grabsave" type="button" disabled>Guardar grabaciones de esta fecha</button>
-        <button class="btn btn-ghost btn-sm" id="igualarcc" type="button" title="Pone clásico = grabado en todo el fixture">Igualar clásicos ↔ grabados (todo)</button>
+        <button class="btn btn-ghost btn-sm" id="autoclas" type="button" title="Asigna 1 clásico por fecha (2 en la Fecha 1), 2 por equipo, entre los grabados">Auto-asignar clásicos (2 por equipo)</button>
       </div>
       <div class="mt-3"><h4 class="mb-1" style="font-size:.95rem">Equilibrio por equipo</h4><div id="grabbalance"></div></div>
     </div>`;
@@ -521,16 +521,18 @@ function renderContenido(el) {
     setTimeout(() => location.reload(), 700);
   };
 
-  // Igualar clásicos a grabados en todo el fixture (modelo grabado = clásico)
-  el.querySelector('#igualarcc').onclick = async (ev) => {
+  // Auto-asignar clásicos: 1 por fecha (2 en F1), 2 por equipo, siempre entre los grabados.
+  const CLASICOS = ['f1-jr-arquitectura-jr-bayern', 'f1-jr-los-pibes-jr-capibara', 'f2-jr-arquitectura-jr-huracan', 'f3-jr-40-grados-jr-capibara', 'f4-jr-los-prados-jr-huracan', 'f5-jr-bunker-jr-mesa-cuadrada', 'f6-jr-los-prados-jr-bunker', 'f7-jr-camilo-enriquez-jr-mesa-cuadrada', 'f8-jr-los-pibes-jr-40-grados', 'f9-jr-camilo-enriquez-jr-bayern'];
+  el.querySelector('#autoclas').onclick = async (ev) => {
     const btn = ev.currentTarget;
+    const setC = new Set(CLASICOS);
     const ps = (await getPartidos()).filter(p => p.serie === 'libre');
-    const ups = ps.filter(p => !!p.clasico !== !!p.grabado).map(p => ({ id: p.id, clasico: !!p.grabado }));
-    if (!ups.length) { toast('Clásicos y grabados ya están iguales ✓'); return; }
-    if (!confirm(`Se igualará el clásico al grabado en ${ups.length} partidos (modelo grabado = clásico). No cambia rivales ni horarios. ¿Continuar?`)) return;
+    const ups = ps.filter(p => !!p.clasico !== setC.has(p.id)).map(p => ({ id: p.id, clasico: setC.has(p.id) }));
+    if (!ups.length) { toast('Los clásicos ya están asignados ✓'); return; }
+    if (!confirm(`Se ajustará la marca de clásico en ${ups.length} partidos para dejar 1 por fecha (2 en la F1) y 2 por equipo. No toca grabados, rivales ni horarios. ¿Continuar?`)) return;
     btn.disabled = true; btn.textContent = 'Aplicando…';
     for (const u of ups) await savePartido(u);
-    toast(`Listo: ${ups.length} clásicos igualados ✓`);
+    toast('Listo: clásicos reasignados ✓');
     setTimeout(() => location.reload(), 700);
   };
 
@@ -549,7 +551,11 @@ function renderContenido(el) {
     // Estado efectivo: usa lo marcado en la UI para la fecha en edición, y lo guardado para el resto.
     function updateBalance() {
       const ui = {};
-      body.querySelectorAll('[data-grab]').forEach(g => { ui[g.dataset.grab] = { grab: g.checked, clas: g.checked }; });
+      body.querySelectorAll('[data-grab]').forEach(g => {
+        const id = g.dataset.grab;
+        const clas = !!(body.querySelector(`[data-clas="${id}"]`) || {}).checked;
+        ui[id] = { clas, grab: clas || g.checked };
+      });
       const tally = {};
       libre.forEach(p => {
         const st = ui[p.id] || { grab: !!p.grabado, clas: !!p.clasico };
@@ -562,9 +568,9 @@ function renderContenido(el) {
       const cell = (v, lo, hi) => `<td style="text-align:center;font-weight:800;padding:3px 6px;color:${(v < lo || v > hi) ? '#c0392b' : 'var(--c-brand-2)'}">${v}</td>`;
       balanceDiv.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:.85rem">
         <thead><tr style="border-bottom:1px solid var(--c-line)"><th style="text-align:left;padding:3px 6px">Equipo</th><th style="padding:3px 6px">Grabados</th><th style="padding:3px 6px">Clásicos</th></tr></thead>
-        <tbody>${ids.map(id => { const [lo, hi] = tgt(id); return `<tr style="border-bottom:1px solid var(--c-line)"><td style="padding:3px 6px">${esc(nm(id))}</td>${cell(tally[id].grab, lo, hi)}${cell(tally[id].clas, lo, hi)}</tr>`; }).join('')}</tbody>
+        <tbody>${ids.map(id => { const [lo, hi] = tgt(id); return `<tr style="border-bottom:1px solid var(--c-line)"><td style="padding:3px 6px">${esc(nm(id))}</td>${cell(tally[id].grab, lo, hi)}${cell(tally[id].clas, 2, 2)}</tr>`; }).join('')}</tbody>
       </table>
-      <p class="muted mt-1" style="font-size:.78rem">Objetivo (grabado = clásico): <strong>Capibara 4</strong>, el resto <strong>5–6</strong> por equipo (en rojo si queda fuera). Suma todas las fechas y cambia en vivo con lo que marcas arriba.</p>`;
+      <p class="muted mt-1" style="font-size:.78rem">Objetivo: grabados <strong>Capibara 4</strong> / resto <strong>5–6</strong>; clásicos <strong>2 por equipo</strong> (en rojo si queda fuera). Suma todas las fechas y cambia en vivo con lo que marcas.</p>`;
     }
     const prog = partidos.filter(p => p.serie === 'libre' && p.estado !== 'finalizado');
     const fechas = [...new Set(prog.map(p => p.fecha_num))].sort((a, b) => a - b);
@@ -579,11 +585,23 @@ function renderContenido(el) {
         return `<div class="mb-2"><div style="font-weight:700;font-size:.82rem;color:var(--c-muted);margin:8px 0 4px">${h}</div>` +
           slot.map(p => `<div class="spread card-sm" style="border:1px solid var(--c-line);border-radius:10px;margin-bottom:6px;padding:8px 12px">
             <span>${esc(nm(p.local))} <span class="muted">vs</span> ${esc(nm(p.visita))}</span>
-            <label style="display:flex;gap:6px;align-items:center;cursor:pointer;font-size:.85rem;white-space:nowrap"><input type="checkbox" data-grab="${esc(p.id)}" ${p.grabado ? 'checked' : ''}> Grabar <span class="muted">(= clásico)</span></label>
+            <span style="display:flex;gap:14px;align-items:center;font-size:.85rem;white-space:nowrap">
+              <label style="display:flex;gap:5px;align-items:center;cursor:pointer"><input type="checkbox" data-grab="${esc(p.id)}" ${p.grabado ? 'checked' : ''} ${p.clasico ? 'disabled' : ''}> Grabar</label>
+              <label style="display:flex;gap:5px;align-items:center;cursor:pointer"><input type="checkbox" data-clas="${esc(p.id)}" ${p.clasico ? 'checked' : ''}> Clásico</label>
+            </span>
           </div>`).join('') + `</div>`;
       }).join('');
-      const cnt = () => { const n = [...body.querySelectorAll('[data-grab]')].filter(x => x.checked).length; const c2 = body.querySelector('#grabcount'); if (c2) c2.innerHTML = `Grabados de la Fecha ${fn}: <strong style="color:${n === 3 ? 'var(--c-brand-2)' : '#c0392b'}">${n}/3</strong>`; };
-      body.querySelectorAll('[data-grab]').forEach(cb => cb.addEventListener('change', () => { updateBalance(); cnt(); }));
+      const needClas = fn === 1 ? 2 : 1;
+      const cnt = () => {
+        const g = [...body.querySelectorAll('[data-grab]')].filter(x => x.checked).length;
+        const c = [...body.querySelectorAll('[data-clas]')].filter(x => x.checked).length;
+        const c2 = body.querySelector('#grabcount');
+        if (c2) c2.innerHTML = `Grabados: <strong style="color:${g === 3 ? 'var(--c-brand-2)' : '#c0392b'}">${g}/3</strong> &nbsp;·&nbsp; Clásicos: <strong style="color:${c === needClas ? 'var(--c-brand-2)' : '#c0392b'}">${c}/${needClas}</strong>`;
+      };
+      body.querySelectorAll('input[type=checkbox]').forEach(cb => cb.addEventListener('change', () => {
+        if (cb.dataset.clas) { const g = body.querySelector(`[data-grab="${cb.dataset.clas}"]`); if (cb.checked) { g.checked = true; g.disabled = true; } else { g.disabled = false; } }
+        updateBalance(); cnt();
+      }));
       saveBtn.disabled = false;
       cnt();
       updateBalance();
@@ -595,8 +613,9 @@ function renderContenido(el) {
       const fn = +sel.value;
       const ms = prog.filter(p => p.fecha_num === fn);
       const desired = ms.map(p => {
-        const on = !!(body.querySelector(`[data-grab="${p.id}"]`) || {}).checked;
-        return { p, clas: on, grab: on };
+        const clas = !!(body.querySelector(`[data-clas="${p.id}"]`) || {}).checked;
+        const grab = clas || !!(body.querySelector(`[data-grab="${p.id}"]`) || {}).checked;
+        return { p, clas, grab };
       });
       // Cambios de grabado/clásico
       const merged = {};
