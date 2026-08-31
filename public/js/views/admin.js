@@ -395,7 +395,7 @@ function renderFixture(el) {
                 const seld = String(p.cancha) === String(c);
                 return `<option value="${c}" ${seld ? 'selected' : ''} ${taken && !seld ? 'disabled' : ''}>Cancha ${c}${taken && !seld ? ' (ocupada)' : ''}</option>`;
               }).join('');
-              return `<tr class="${p.clasico ? 'is-clasico' : ''}" data-row="${esc(p.id)}" data-hora="${esc(p.hora || '')}" data-cancha0="${esc(p.cancha ?? '')}" data-premio0="${esc(p.premio ?? '')}">
+              return `<tr class="${p.clasico ? 'is-clasico' : ''}" data-row="${esc(p.id)}" data-hora="${esc(p.hora || '')}" data-allowed="${allowed.join(',')}" data-cancha0="${esc(p.cancha ?? '')}" data-premio0="${esc(p.premio ?? '')}">
                 <td style="white-space:nowrap;font-weight:600">${esc(p.hora || '—')}</td>
                 <td><select class="select fx-cancha" style="min-width:130px">${opts}</select></td>
                 <td><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">${logo(p.local)} <span style="font-weight:600">${nm(p.local)}</span> <span class="muted">vs</span> ${logo(p.visita)} <span style="font-weight:600">${nm(p.visita)}</span>${p.clasico ? `<span class="pill pill-brand">${icon('flame', { size: 12 })} Clásico</span>` : ''}</div></td>
@@ -412,6 +412,30 @@ function renderFixture(el) {
   `;
 
   el.querySelectorAll('#fx-serie-sel .chip').forEach(c => c.onclick = () => { FXSERIE = c.dataset.serie; renderTab(); });
+
+  // Desplegables de cancha reactivos: al cambiar uno, recalcula qué canchas quedan libres
+  // en cada horario para permitir intercambios (swaps) sin bloqueos.
+  const fxRefresh = (card) => {
+    const rows = [...card.querySelectorAll('tr[data-row]')].map(tr => ({
+      tr, hora: tr.dataset.hora, val: String(tr.querySelector('.fx-cancha').value),
+      allowed: (tr.dataset.allowed || '').split(',').filter(Boolean)
+    }));
+    rows.forEach(row => {
+      const occ = rows.filter(o => o.tr !== row.tr && o.hora === row.hora).map(o => o.val);
+      const sel = row.tr.querySelector('.fx-cancha');
+      const chosen = String(sel.value);
+      const show = [...new Set([...row.allowed, chosen])].filter(v => v && v !== 'null' && v !== 'undefined').sort();
+      sel.innerHTML = show.map(c => {
+        const taken = occ.includes(String(c));
+        const seld = chosen === String(c);
+        return `<option value="${c}" ${seld ? 'selected' : ''} ${taken && !seld ? 'disabled' : ''}>Cancha ${c}${taken && !seld ? ' (ocupada)' : ''}</option>`;
+      }).join('');
+    });
+  };
+  el.querySelectorAll('[data-fxfecha]').forEach(card => {
+    fxRefresh(card);
+    card.querySelectorAll('.fx-cancha').forEach(s => s.addEventListener('change', () => fxRefresh(card)));
+  });
 
   el.querySelectorAll('[data-savefx]').forEach(btn => btn.onclick = async () => {
     const card = btn.closest('[data-fxfecha]');
