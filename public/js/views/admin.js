@@ -448,6 +448,11 @@ function renderContenido(el) {
         <button class="btn btn-ghost btn-sm" id="galf1" type="button">Insertar Fecha 1 (20 fotos)</button>
         <button class="btn btn-primary btn-sm" id="galsave" type="button">Guardar galería</button>
       </div>
+    </div>
+    <div class="card mt-3">
+      <h3 class="mb-2">Canchas del fixture</h3>
+      <p class="muted mb-2" style="font-size:.9rem">Reasigna el <strong>número de cancha</strong> de todos los partidos según la regla: los <strong>grabados</strong> van siempre en <strong>cancha 1 y 2</strong>, y los no grabados en 3 y 4. No cambia horarios, rivales, ni la condición de grabado/clásico, ni los resultados.</p>
+      <button class="btn btn-primary btn-sm" id="fixcanchas" type="button">Reasignar canchas (grabados → C1 y C2)</button>
     </div>`;
   el.querySelector('#f-c').onsubmit = (ev) => {
     ev.preventDefault();
@@ -481,5 +486,27 @@ function renderContenido(el) {
   el.querySelector('#galsave').onclick = () => {
     const galeria = el.querySelector('#galtext').value.split('\n').map(s => s.trim()).filter(Boolean);
     reload('v', () => saveAudiovisual({ videos: av.videos || [], galeria }));
+  };
+  el.querySelector('#fixcanchas').onclick = async (ev) => {
+    const btn = ev.currentTarget;
+    const partidos = await getPartidos();
+    // Agrupa por serie + fecha + horario; grabados -> canchas 1,2 ; no grabados -> 3,4.
+    const groups = {};
+    partidos.forEach(p => { const k = `${p.serie}|${p.fecha_num}|${p.hora}`; (groups[k] = groups[k] || []).push(p); });
+    const ups = [];
+    Object.values(groups).forEach(arr => {
+      if (arr.some(p => p.estado === 'finalizado')) return; // no tocar fechas ya jugadas
+      const grabs = arr.filter(p => p.grabado).sort((a, b) => (+a.cancha || 0) - (+b.cancha || 0));
+      const nogr = arr.filter(p => !p.grabado).sort((a, b) => (+a.cancha || 0) - (+b.cancha || 0));
+      grabs.forEach((p, i) => { const nc = i + 1; if (+p.cancha !== nc) ups.push({ id: p.id, cancha: nc }); });
+      nogr.forEach((p, i) => { const nc = 3 + i; if (+p.cancha !== nc) ups.push({ id: p.id, cancha: nc }); });
+    });
+    if (!ups.length) { toast('Las canchas ya cumplen la regla ✓'); return; }
+    if (!confirm(`Se reasignarán ${ups.length} partidos de cancha (grabados → 1 y 2). No se toca nada más. ¿Continuar?`)) return;
+    btn.disabled = true; btn.textContent = `Aplicando… (0/${ups.length})`;
+    let n = 0;
+    for (const u of ups) { await savePartido(u); btn.textContent = `Aplicando… (${++n}/${ups.length})`; }
+    toast(`Listo: ${ups.length} canchas reasignadas ✓`);
+    setTimeout(() => location.reload(), 700);
   };
 }
