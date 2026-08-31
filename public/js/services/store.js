@@ -176,6 +176,11 @@ export const getDisciplina = () => readAll('disciplina', 'disciplina');
 export const saveTarjeta = (d) => upsert('disciplina', d);
 export const deleteTarjeta = (id) => remove('disciplina', id);
 
+// ---------- GOLEADORES (un doc por gol de jugador en un partido) ----------
+// getGoleadores está más abajo (con soporte de modo demo). Aquí solo escritura.
+export const saveGoleador = (d) => upsert('goleadores', d);
+export const deleteGoleador = (id) => remove('goleadores', id);
+
 // ---------- INSCRIPCIONES (formulario público de Admisión) ----------
 export async function addInscripcion(data) {
   if (mode === 'demo') { console.log('[demo] inscripción', data); return 'demo'; }

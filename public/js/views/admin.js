@@ -4,6 +4,7 @@ import {
   getEquipos, saveEquipo, deleteEquipo, importEquipos,
   getPartidos, savePartido, deletePartido,
   getDisciplina, saveTarjeta, deleteTarjeta,
+  getGoleadores, saveGoleador, deleteGoleador,
   getInscripciones, updateInscripcion, deleteInscripcion,
   getJugadores, saveJugador, deleteJugador, importJugadores,
   getAudiovisual, saveAudiovisual,
@@ -27,12 +28,12 @@ export async function showAdmin() {
 }
 
 async function loadAll() {
-  const [config, equipos, partidos, disciplina, inscripciones, av, jugadores] = await Promise.all([
+  const [config, equipos, partidos, disciplina, inscripciones, av, jugadores, goleadores] = await Promise.all([
     getConfig(), getEquipos(), getPartidos(), getDisciplina(),
     getInscripciones().catch(() => []), getAudiovisual().catch(() => ({ videos: [], galeria: [] })),
-    getJugadores().catch(() => [])
+    getJugadores().catch(() => []), getGoleadores().catch(() => [])
   ]);
-  C = { config, equipos, partidos, disciplina, inscripciones, av, jugadores };
+  C = { config, equipos, partidos, disciplina, inscripciones, av, jugadores, goleadores };
 }
 
 /* ---------------- LOGIN ---------------- */
@@ -82,6 +83,7 @@ export function renderLogin(redirect) {
 /* ---------------- PANEL ---------------- */
 const ALL_TABS = [
   { id: 'resultados', label: `${icon('check', { size: 16 })} Resultados`, roles: ['admin', 'planillero'] },
+  { id: 'anotaciones', label: `${icon('ball', { size: 16 })} Goles y tarjetas`, roles: ['admin', 'planillero'] },
   { id: 'disciplina', label: `${icon('cards', { size: 16 })} Disciplina`, roles: ['admin', 'planillero'] },
   { id: 'fixture', label: `${icon('calendar', { size: 16 })} Fixture`, roles: ['admin'] },
   { id: 'partidos', label: `${icon('calendar', { size: 16 })} Partidos`, roles: ['admin'] },
@@ -166,6 +168,7 @@ function renderPanel() {
 function renderTab() {
   const el = document.getElementById('tab-content');
   if (TAB === 'resultados') return renderResultados(el);
+  if (TAB === 'anotaciones') return renderAnotaciones(el);
   if (TAB === 'equipos') return renderEquipos(el);
   if (TAB === 'fixture') return renderFixture(el);
   if (TAB === 'jugadores') return renderJugadores(el);
@@ -337,6 +340,144 @@ function renderPartidos(el) {
   el.querySelector('#cancel-edit') && (el.querySelector('#cancel-edit').onclick = () => { editP = null; renderTab(); });
   el.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => { editP = C.partidos.find(x => x.id === b.dataset.edit); renderTab(); window.scrollTo(0, 0); });
   el.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { if (confirm('¿Eliminar partido?')) reload('p', () => deletePartido(b.dataset.del)); });
+}
+
+/* ---------- ANOTACIONES (goles y tarjetas por partido) ---------- */
+let anotFecha = null;
+let anotMatch = null;
+
+function renderAnotaciones(el) {
+  const byId = equiposById(C.equipos);
+  const jmap = {}; (C.jugadores || []).forEach(j => { jmap[j.id] = j; });
+  const nm = id => byId[id]?.nombre || id;
+
+  const partidos = C.partidos.slice().filter(p => p.fecha_num != null && !p.amistoso);
+  const fechas = [...new Set(partidos.map(p => p.fecha_num))].sort((a, b) => a - b);
+  if (!fechas.length) { el.innerHTML = `<div class="alert alert-warn">No hay fixture publicado todavía.</div>`; return; }
+  if (anotFecha == null || !fechas.includes(anotFecha)) anotFecha = fechas[0];
+
+  const matches = partidos.filter(p => p.fecha_num === anotFecha)
+    .sort((a, b) => (a.hora || '').localeCompare(b.hora || '') || ((+a.cancha || 0) - (+b.cancha || 0)));
+  if (!anotMatch || !matches.some(m => m.id === anotMatch)) anotMatch = matches.length ? matches[0].id : null;
+  const p = matches.find(m => m.id === anotMatch);
+
+  // Rosters de los dos equipos (base de jugadores)
+  const rosterL = p ? (C.jugadores || []).filter(j => j.equipo === p.local).sort((a, b) => a.nombre.localeCompare(b.nombre)) : [];
+  const rosterV = p ? (C.jugadores || []).filter(j => j.equipo === p.visita).sort((a, b) => a.nombre.localeCompare(b.nombre)) : [];
+  const playerOpts = (selId) => {
+    const grp = (label, arr) => arr.length ? `<optgroup label="${esc(label)}">${arr.map(j => `<option value="${esc(j.id)}" ${selId === j.id ? 'selected' : ''}>${esc(j.nombre)}</option>`).join('')}</optgroup>` : '';
+    return `<option value="">— jugador —</option>` + (p ? grp(nm(p.local), rosterL) + grp(nm(p.visita), rosterV) : '');
+  };
+  const golRow = (jid = '', g = '') => `<div class="anot-row" style="display:flex;gap:8px;margin-bottom:6px;align-items:center">
+    <select class="select gol-j" style="flex:1;min-width:160px">${playerOpts(jid)}</select>
+    <input class="input gol-n" type="number" min="1" value="${esc(g || '')}" placeholder="Goles" style="width:90px">
+    <button type="button" class="btn btn-danger btn-sm anot-del" title="Quitar">✕</button>
+  </div>`;
+  const cardRow = (jid = '', tipo = 'amarilla') => `<div class="anot-row" style="display:flex;gap:8px;margin-bottom:6px;align-items:center">
+    <select class="select card-j" style="flex:1;min-width:160px">${playerOpts(jid)}</select>
+    <select class="select card-t" style="width:130px"><option value="amarilla" ${tipo === 'amarilla' ? 'selected' : ''}>🟨 Amarilla</option><option value="roja" ${tipo === 'roja' ? 'selected' : ''}>🟥 Roja</option></select>
+    <button type="button" class="btn btn-danger btn-sm anot-del" title="Quitar">✕</button>
+  </div>`;
+
+  const curGoles = p ? (C.goleadores || []).filter(g => g.partidoId === p.id) : [];
+  const curCards = p ? (C.disciplina || []).filter(d => d.partidoId === p.id) : [];
+  const totGoles = curGoles.reduce((s, g) => s + (+g.goles || 0), 0);
+  const sinRoster = p && !rosterL.length && !rosterV.length;
+
+  el.innerHTML = `
+    ${isDemo() ? '<div class="alert alert-warn">Modo demo: los cambios no se guardan.</div>' : '<p class="muted mb-2">Elige la fecha y el partido, carga los goleadores y las tarjetas, y presiona <strong>Guardar</strong>. Alimenta la tabla de goleadores y la disciplina.</p>'}
+    <div class="chips filter-row mb-2" id="anot-fechas">
+      <span class="chips-label">Fecha</span>
+      ${fechas.map(f => `<button class="chip ${anotFecha === f ? 'active' : ''}" data-f="${f}">Fecha ${f}</button>`).join('')}
+    </div>
+    <div class="form-group mb-2" style="max-width:520px">
+      <label>Partido</label>
+      <select class="select" id="anot-match">
+        ${matches.map(m => {
+          const res = m.golesLocal != null ? ` (${m.golesLocal}-${m.golesVisita})` : '';
+          return `<option value="${esc(m.id)}" ${anotMatch === m.id ? 'selected' : ''}>${esc(nm(m.local))} vs ${esc(nm(m.visita))}${res}</option>`;
+        }).join('')}
+      </select>
+    </div>
+    ${!p ? '<div class="alert alert-warn">No hay partidos en esta fecha.</div>' : `
+    <div class="card">
+      <div class="spread mb-2" style="align-items:center;flex-wrap:wrap;gap:8px">
+        <h3 style="margin:0">${esc(nm(p.local))} <span class="muted">vs</span> ${esc(nm(p.visita))}</h3>
+        <span class="pill ${p.estado === 'finalizado' ? 'pill-green' : 'pill-grey'}">${p.golesLocal != null ? `${p.golesLocal} - ${p.golesVisita}` : 'sin marcador'}</span>
+      </div>
+      ${sinRoster ? `<div class="alert alert-warn" style="font-size:.88rem">No hay jugadores importados para estos equipos, así que no puedo ofrecer la lista. Importa jugadores en la pestaña <strong>Jugadores</strong> o usa la pestaña <strong>Disciplina</strong> para tarjetas con nombre libre.</div>` : ''}
+
+      <div class="mb-3">
+        <div class="spread" style="align-items:center"><h4 style="margin:0 0 8px">${icon('ball', { size: 16 })} Goleadores</h4>
+          <span class="muted" style="font-size:.82rem">Marcador del partido: ${p.golesLocal != null ? esc(+p.golesLocal + +p.golesVisita) : '—'} goles</span></div>
+        <div id="gol-list">${curGoles.length ? curGoles.map(g => golRow(g.jugadorId, g.goles)).join('') : golRow()}</div>
+        <button type="button" class="btn btn-ghost btn-sm" id="gol-add">+ Agregar goleador</button>
+      </div>
+
+      <div class="mb-3">
+        <h4 style="margin:0 0 8px">${icon('cards', { size: 16 })} Tarjetas</h4>
+        <div id="card-list">${curCards.length ? curCards.map(d => cardRow(d.jugadorId, d.tipo)).join('') : cardRow()}</div>
+        <button type="button" class="btn btn-ghost btn-sm" id="card-add">+ Agregar tarjeta</button>
+      </div>
+
+      <div class="row"><button class="btn btn-primary" id="anot-save">Guardar goles y tarjetas</button></div>
+    </div>`}`;
+
+  // Selección de fecha / partido
+  el.querySelectorAll('#anot-fechas .chip').forEach(c => c.onclick = () => { anotFecha = +c.dataset.f; anotMatch = null; renderTab(); });
+  const msel = el.querySelector('#anot-match');
+  if (msel) msel.onchange = () => { anotMatch = msel.value; renderTab(); };
+  if (!p) return;
+
+  // Agregar/quitar filas
+  el.querySelector('#gol-add').onclick = () => el.querySelector('#gol-list').insertAdjacentHTML('beforeend', golRow());
+  el.querySelector('#card-add').onclick = () => el.querySelector('#card-list').insertAdjacentHTML('beforeend', cardRow());
+  const delDeleg = (ev) => { const b = ev.target.closest('.anot-del'); if (b) b.closest('.anot-row').remove(); };
+  el.querySelector('#gol-list').onclick = delDeleg;
+  el.querySelector('#card-list').onclick = delDeleg;
+
+  // Guardar (diff contra lo existente del partido)
+  el.querySelector('#anot-save').onclick = async () => {
+    const btn = el.querySelector('#anot-save');
+    // Goles deseados: jugadorId -> goles (suma si se repite)
+    const desiredG = {};
+    el.querySelectorAll('#gol-list .anot-row').forEach(r => {
+      const jid = r.querySelector('.gol-j').value;
+      const g = +r.querySelector('.gol-n').value;
+      if (jid && g > 0) desiredG[jid] = (desiredG[jid] || 0) + g;
+    });
+    // Tarjetas deseadas: `${jid}__${tipo}`
+    const desiredC = {};
+    el.querySelectorAll('#card-list .anot-row').forEach(r => {
+      const jid = r.querySelector('.card-j').value;
+      const tipo = r.querySelector('.card-t').value;
+      if (jid) desiredC[`${jid}__${tipo}`] = { jid, tipo };
+    });
+
+    const ops = [];
+    // Goles: upserts
+    Object.entries(desiredG).forEach(([jid, g]) => {
+      const j = jmap[jid];
+      ops.push(saveGoleador({ id: `${p.id}__${jid}`, partidoId: p.id, jugadorId: jid, nombre: j?.nombre || '', equipo: j?.equipo || '', serie: p.serie || 'libre', fecha: p.fecha || '', fecha_num: p.fecha_num, goles: g }));
+    });
+    // Goles: borra los que ya no están
+    curGoles.forEach(g => { if (!(g.jugadorId in desiredG)) ops.push(deleteGoleador(g.id)); });
+    // Tarjetas: upserts
+    Object.values(desiredC).forEach(({ jid, tipo }) => {
+      const j = jmap[jid];
+      ops.push(saveTarjeta({ id: `${p.id}__${jid}__${tipo}`, partidoId: p.id, jugadorId: jid, jugador: j?.nombre || '', equipo: j?.equipo || '', serie: p.serie || 'libre', fecha: p.fecha || '', fecha_num: p.fecha_num, tipo }));
+    });
+    // Tarjetas: borra las que ya no están (solo las de este partido con id determinista)
+    curCards.forEach(d => { const key = `${d.jugadorId}__${d.tipo}`; if (d.jugadorId && !(key in desiredC)) ops.push(deleteTarjeta(d.id)); });
+
+    if (!ops.length) { toast('No hay nada que guardar.'); return; }
+    btn.disabled = true; btn.textContent = 'Guardando…';
+    try {
+      for (const op of ops) await op;
+      toast('Goles y tarjetas guardados ✓', 'success');
+      await loadAll(); renderTab();
+    } catch (err) { toast(err.message || 'Error al guardar', 'error'); btn.disabled = false; btn.textContent = 'Guardar goles y tarjetas'; }
+  };
 }
 
 /* ---------- JUGADORES (base de datos del plantel: nombre + edad) ---------- */
