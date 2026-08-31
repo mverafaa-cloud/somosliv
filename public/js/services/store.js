@@ -187,6 +187,30 @@ export const getInscripciones = () => readAll('inscripciones', '__none__');
 export const updateInscripcion = (d) => upsert('inscripciones', d);
 export const deleteInscripcion = (id) => remove('inscripciones', id);
 
+// ---------- JUGADORES (base de datos del plantel: nombre + edad, sin datos sensibles) ----------
+export const getJugadores = () => readAll('jugadores', '__none__');
+export const saveJugador = (d) => upsert('jugadores', d);
+export const deleteJugador = (id) => remove('jugadores', id);
+// Carga masiva por lotes (writeBatch). Usa ids estables, así re-importar actualiza (no duplica).
+export async function importJugadores(lista) {
+  if (sandboxOn()) {
+    const map = Object.fromEntries(sbGet('jugadores').map(x => [x.id, x]));
+    lista.forEach(j => { map[j.id] = { ...map[j.id], ...j }; });
+    sbSet('jugadores', Object.values(map));
+    return lista.length;
+  }
+  requireFb();
+  const { doc, writeBatch } = fb.fsMod;
+  let n = 0;
+  for (let i = 0; i < lista.length; i += 400) {
+    const batch = writeBatch(fb.db);
+    lista.slice(i, i + 400).forEach(j => { const { id, ...rest } = j; batch.set(doc(fb.db, 'jugadores', id), rest, { merge: true }); });
+    await batch.commit();
+    n += Math.min(400, lista.length - i);
+  }
+  return n;
+}
+
 // ---------- FIXTURE PUBLICADO ----------
 // En modo Firebase: se arma desde la colección 'partidos' (lo que cargan/editan
 // admin y planilleros en vivo). En modo demo: archivo estático /data/fixture.json.

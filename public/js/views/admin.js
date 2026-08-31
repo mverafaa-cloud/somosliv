@@ -5,6 +5,7 @@ import {
   getPartidos, savePartido, deletePartido,
   getDisciplina, saveTarjeta, deleteTarjeta,
   getInscripciones, updateInscripcion, deleteInscripcion,
+  getJugadores, saveJugador, deleteJugador, importJugadores,
   getAudiovisual, saveAudiovisual,
   sandboxOn, setSandbox, resetSandbox,
   equiposById, camarinesPorCancha
@@ -26,11 +27,12 @@ export async function showAdmin() {
 }
 
 async function loadAll() {
-  const [config, equipos, partidos, disciplina, inscripciones, av] = await Promise.all([
+  const [config, equipos, partidos, disciplina, inscripciones, av, jugadores] = await Promise.all([
     getConfig(), getEquipos(), getPartidos(), getDisciplina(),
-    getInscripciones().catch(() => []), getAudiovisual().catch(() => ({ videos: [], galeria: [] }))
+    getInscripciones().catch(() => []), getAudiovisual().catch(() => ({ videos: [], galeria: [] })),
+    getJugadores().catch(() => [])
   ]);
-  C = { config, equipos, partidos, disciplina, inscripciones, av };
+  C = { config, equipos, partidos, disciplina, inscripciones, av, jugadores };
 }
 
 /* ---------------- LOGIN ---------------- */
@@ -84,6 +86,7 @@ const ALL_TABS = [
   { id: 'fixture', label: `${icon('calendar', { size: 16 })} Fixture`, roles: ['admin'] },
   { id: 'partidos', label: `${icon('calendar', { size: 16 })} Partidos`, roles: ['admin'] },
   { id: 'equipos', label: `${icon('users', { size: 16 })} Equipos`, roles: ['admin'] },
+  { id: 'jugadores', label: `${icon('users', { size: 16 })} Jugadores`, roles: ['admin'] },
   { id: 'inscripciones', label: `${icon('clipboard', { size: 16 })} Inscripciones`, roles: ['admin'] },
   { id: 'contenido', label: `${icon('settings', { size: 16 })} Contenido`, roles: ['admin'] }
 ];
@@ -165,6 +168,7 @@ function renderTab() {
   if (TAB === 'resultados') return renderResultados(el);
   if (TAB === 'equipos') return renderEquipos(el);
   if (TAB === 'fixture') return renderFixture(el);
+  if (TAB === 'jugadores') return renderJugadores(el);
   if (TAB === 'partidos') return renderPartidos(el);
   if (TAB === 'disciplina') return renderDisciplina(el);
   if (TAB === 'inscripciones') return renderInscripciones(el);
@@ -333,6 +337,109 @@ function renderPartidos(el) {
   el.querySelector('#cancel-edit') && (el.querySelector('#cancel-edit').onclick = () => { editP = null; renderTab(); });
   el.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => { editP = C.partidos.find(x => x.id === b.dataset.edit); renderTab(); window.scrollTo(0, 0); });
   el.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { if (confirm('¿Eliminar partido?')) reload('p', () => deletePartido(b.dataset.del)); });
+}
+
+/* ---------- JUGADORES (base de datos del plantel: nombre + edad) ---------- */
+let editJug = null;
+let jugEq = 'all';
+let jugQ = '';
+
+function renderJugadores(el) {
+  const byId = equiposById(C.equipos);
+  const equiposJr = C.equipos.slice()
+    .filter(e => (e.serie || 'libre') === 'libre')
+    .sort((a, b) => a.nombre.localeCompare(b.nombre));
+  const eqOpts = (sel) => equiposJr.map(e => `<option value="${esc(e.id)}" ${sel === e.id ? 'selected' : ''}>${esc(e.nombre)}</option>`).join('');
+  const jugs = (C.jugadores || []).slice();
+  const nEq = {}; jugs.forEach(j => { nEq[j.equipo] = (nEq[j.equipo] || 0) + 1; });
+
+  const q = jugQ.trim().toLowerCase();
+  const list = jugs
+    .filter(j => jugEq === 'all' || j.equipo === jugEq)
+    .filter(j => !q || (j.nombre || '').toLowerCase().includes(q))
+    .sort((a, b) => (byId[a.equipo]?.nombre || a.equipo).localeCompare(byId[b.equipo]?.nombre || b.equipo) || (a.nombre || '').localeCompare(b.nombre || ''));
+
+  const jp = editJug || {};
+  el.innerHTML = `
+    <div class="card mb-3" style="background:var(--c-brand-soft);border-radius:12px">
+      <h3 class="mb-1">${icon('users', { size: 18 })} Base de jugadores</h3>
+      <p class="muted" style="font-size:.9rem;margin:0 0 10px">La plataforma guarda <strong>nombre completo y edad</strong> de cada jugador (sin RUT ni fecha de nacimiento — esos quedan solo en tus planillas). Sirve de base para goles, tarjetas, goleadores y el XI ideal.</p>
+      <div class="row" style="gap:10px;flex-wrap:wrap;align-items:center">
+        <input type="file" id="jugfile" accept=".json,application/json" class="input" style="max-width:320px">
+        <button class="btn btn-primary btn-sm" id="jugimport" type="button">Importar / actualizar desde archivo</button>
+      </div>
+      <p class="muted" style="font-size:.82rem;margin:8px 0 0">Elige el archivo <code>jugadores.json</code> (te lo dejé en tu carpeta Planillas). Re-importar actualiza sin duplicar.</p>
+    </div>
+
+    <div class="card mb-3">
+      <h3 class="mb-2">${editJug ? 'Editar jugador' : 'Agregar jugador'}</h3>
+      <form id="f-jug">
+        <div class="form-row-3" style="align-items:end">
+          <div class="form-group"><label>Equipo</label><select class="select" name="equipo" required>${eqOpts(jp.equipo)}</select></div>
+          <div class="form-group"><label>Nombre completo</label><input class="input" name="nombre" value="${esc(jp.nombre ?? '')}" required></div>
+          <div class="form-group"><label>Edad</label><input class="input" name="edad" type="number" min="10" max="90" value="${esc(jp.edad ?? '')}" placeholder="—"></div>
+        </div>
+        <div class="row">
+          <button class="btn btn-primary">${editJug ? 'Guardar cambios' : 'Agregar jugador'}</button>
+          ${editJug ? '<button type="button" class="btn btn-ghost" id="jug-cancel">Cancelar</button>' : ''}
+        </div>
+      </form>
+    </div>
+
+    <div class="spread mb-2" style="flex-wrap:wrap;gap:10px;align-items:center">
+      <div class="chips filter-row" id="jug-eq">
+        <span class="chips-label">Equipo</span>
+        <button class="chip ${jugEq === 'all' ? 'active' : ''}" data-eq="all">Todos (${jugs.length})</button>
+        ${equiposJr.map(e => `<button class="chip ${jugEq === e.id ? 'active' : ''}" data-eq="${esc(e.id)}">${esc(e.nombre)} (${nEq[e.id] || 0})</button>`).join('')}
+      </div>
+      <input class="input" id="jug-q" placeholder="Buscar por nombre…" value="${esc(jugQ)}" style="max-width:220px">
+    </div>
+
+    <div class="table-wrap"><table class="tbl">
+      <thead><tr><th style="width:40px">#</th><th>Nombre</th><th>Equipo</th><th class="num">Edad</th><th></th></tr></thead>
+      <tbody>${list.map((j, i) => `<tr>
+        <td class="muted">${i + 1}</td>
+        <td style="font-weight:600">${esc(j.nombre)}</td>
+        <td>${esc(byId[j.equipo]?.nombre || j.equipo)}</td>
+        <td class="num">${j.edad ?? '—'}</td>
+        <td style="text-align:right;white-space:nowrap"><button class="btn btn-secondary btn-sm" data-edit="${esc(j.id)}">✎</button> <button class="btn btn-danger btn-sm" data-del="${esc(j.id)}">✕</button></td>
+      </tr>`).join('') || `<tr><td colspan="5" class="muted center">${jugs.length ? 'Sin jugadores para el filtro.' : 'Aún no hay jugadores. Importa el archivo jugadores.json arriba.'}</td></tr>`}</tbody>
+    </table></div>
+    ${list.length ? `<p class="muted mt-2" style="font-size:.85rem">Mostrando ${list.length} de ${jugs.length} jugadores.</p>` : ''}`;
+
+  // Importación masiva
+  el.querySelector('#jugimport').onclick = async () => {
+    const f = el.querySelector('#jugfile').files?.[0];
+    if (!f) { toast('Primero elige el archivo jugadores.json', 'error'); return; }
+    let arr;
+    try { arr = JSON.parse(await f.text()); } catch (_) { toast('El archivo no es un JSON válido', 'error'); return; }
+    if (!Array.isArray(arr) || !arr.length) { toast('El JSON no tiene jugadores', 'error'); return; }
+    const clean = arr.filter(j => j && j.id && j.nombre && j.equipo)
+      .map(j => ({ id: String(j.id), equipo: String(j.equipo), nombre: String(j.nombre), edad: (j.edad == null || j.edad === '') ? null : +j.edad }));
+    if (!clean.length) { toast('El JSON no tiene el formato esperado (id, equipo, nombre)', 'error'); return; }
+    if (!confirm(`Se importarán/actualizarán ${clean.length} jugadores en la base. No se borra nada existente. ¿Continuar?`)) return;
+    const btn = el.querySelector('#jugimport'); btn.disabled = true; btn.textContent = 'Importando…';
+    try { const n = await importJugadores(clean); toast(`Listo: ${n} jugadores en la base ✓`, 'success'); await loadAll(); renderTab(); }
+    catch (err) { toast(err.message || 'Error al importar', 'error'); btn.disabled = false; btn.textContent = 'Importar / actualizar desde archivo'; }
+  };
+
+  // Alta / edición manual
+  el.querySelector('#f-jug').onsubmit = (ev) => {
+    ev.preventDefault();
+    const d = Object.fromEntries(new FormData(ev.target).entries());
+    d.edad = d.edad === '' ? null : +d.edad;
+    if (editJug) d.id = editJug.id;
+    else d.id = `${d.equipo}-m${Date.now().toString(36)}`; // id manual único
+    reload('jug', () => saveJugador(d)).then(() => { editJug = null; });
+  };
+  el.querySelector('#jug-cancel') && (el.querySelector('#jug-cancel').onclick = () => { editJug = null; renderTab(); });
+  el.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => { editJug = (C.jugadores || []).find(x => x.id === b.dataset.edit); renderTab(); window.scrollTo(0, 0); });
+  el.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { if (confirm('¿Eliminar este jugador de la base?')) reload('jug', () => deleteJugador(b.dataset.del)); });
+
+  // Filtros
+  el.querySelectorAll('#jug-eq .chip').forEach(c => c.onclick = () => { jugEq = c.dataset.eq; renderTab(); });
+  const qi = el.querySelector('#jug-q');
+  if (qi) qi.oninput = (e) => { jugQ = e.target.value; const pos = e.target.selectionStart; renderTab(); const n = document.getElementById('jug-q'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (_) {} } };
 }
 
 /* ---------- FIXTURE (vista Programación editable: cancha + premio) ---------- */
