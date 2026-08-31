@@ -7,7 +7,7 @@ import {
   getInscripciones, updateInscripcion, deleteInscripcion,
   getAudiovisual, saveAudiovisual,
   sandboxOn, setSandbox, resetSandbox,
-  equiposById
+  equiposById, camarinesPorCancha
 } from '../services/store.js';
 import { mount, esc, fmtDate } from '../ui/helpers.js';
 import { shell, loading } from '../ui/layout.js';
@@ -382,7 +382,7 @@ function renderFixture(el) {
           ${nGrab ? `<span class="muted" style="font-size:.85rem">${icon('video', { size: 14 })} ${nGrab} grabados · cámaras cancha ${cams.join(' y ')}</span>` : ''}
         </div>
         <div class="table-wrap"><table class="tbl fixture-pub">
-          <thead><tr><th>Hora</th><th>Cancha</th><th>Partido</th><th>Cam. L/V</th><th>Grab.</th><th>Premio</th></tr></thead>
+          <thead><tr><th>Hora</th><th>Cancha</th><th>Partido</th><th>Camarín. L/V</th><th>Grab.</th><th>Premio</th></tr></thead>
           <tbody>
             ${rows.map(p => {
               // Única regla dura: grabado/clásico → cancha 1 o 2. No grabado → cualquier cancha libre.
@@ -399,7 +399,7 @@ function renderFixture(el) {
                 <td style="white-space:nowrap;font-weight:600">${esc(p.hora || '—')}</td>
                 <td><select class="select fx-cancha" style="min-width:130px">${opts}</select></td>
                 <td><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">${logo(p.local)} <span style="font-weight:600">${nm(p.local)}</span> <span class="muted">vs</span> ${logo(p.visita)} <span style="font-weight:600">${nm(p.visita)}</span>${p.clasico ? `<span class="pill pill-brand">${icon('flame', { size: 12 })} Clásico</span>` : ''}</div></td>
-                <td class="muted" style="white-space:nowrap">${p.camarinLocal ?? '—'} / ${p.camarinVisita ?? '—'}</td>
+                <td class="muted fx-cam" style="white-space:nowrap">${(cam => `${cam[0] ?? '—'} / ${cam[1] ?? '—'}`)(camarinesPorCancha(p.cancha))}</td>
                 <td>${p.grabado ? icon('video', { size: 16, cls: 'ico-grab' }) : '<span class="muted">—</span>'}</td>
                 <td><input class="input fx-premio" style="min-width:160px" value="${esc(p.premio ?? '')}" placeholder="Marca del premio"></td>
               </tr>`;
@@ -430,6 +430,9 @@ function renderFixture(el) {
         const seld = chosen === String(c);
         return `<option value="${c}" ${seld ? 'selected' : ''} ${taken && !seld ? 'disabled' : ''}>Cancha ${c}${taken && !seld ? ' (ocupada)' : ''}</option>`;
       }).join('');
+      // Camarines siguen a la cancha: C1→1,2 · C3→3,4 · C2→5,6 · C4→7,8
+      const camCell = row.tr.querySelector('.fx-cam');
+      if (camCell) { const cam = camarinesPorCancha(chosen); camCell.textContent = `${cam[0] ?? '—'} / ${cam[1] ?? '—'}`; }
     });
   };
   el.querySelectorAll('[data-fxfecha]').forEach(card => {
@@ -466,7 +469,12 @@ function renderFixture(el) {
       const chg = {};
       const c = tr.querySelector('.fx-cancha').value;
       const pr = tr.querySelector('.fx-premio').value.trim();
-      if (String(c) !== String(tr.dataset.cancha0)) chg.cancha = +c;
+      if (String(c) !== String(tr.dataset.cancha0)) {
+        chg.cancha = +c;
+        // Los camarines se guardan según la cancha (C1→1,2 · C3→3,4 · C2→5,6 · C4→7,8)
+        const cam = camarinesPorCancha(c);
+        chg.camarinLocal = cam[0]; chg.camarinVisita = cam[1];
+      }
       if (pr !== (tr.dataset.premio0 || '')) chg.premio = pr;
       if (Object.keys(chg).length) { chg.id = tr.dataset.row; ups.push(chg); }
     });

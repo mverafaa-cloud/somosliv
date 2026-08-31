@@ -190,17 +190,26 @@ export const deleteInscripcion = (id) => remove('inscripciones', id);
 // ---------- FIXTURE PUBLICADO ----------
 // En modo Firebase: se arma desde la colección 'partidos' (lo que cargan/editan
 // admin y planilleros en vivo). En modo demo: archivo estático /data/fixture.json.
+// Camarines fijos por cancha: C1→1,2 · C3→3,4 · C2→5,6 · C4→7,8. [local, visita]
+export const CAMARINES_POR_CANCHA = { 1: [1, 2], 3: [3, 4], 2: [5, 6], 4: [7, 8] };
+export function camarinesPorCancha(cancha) {
+  return CAMARINES_POR_CANCHA[+cancha] || [null, null];
+}
+
 function assembleFixture(partidos, equipos) {
   const byId = {}; equipos.forEach(e => byId[e.id] = e);
-  const mapP = p => ({
-    localId: p.local, visitaId: p.visita,
-    local: byId[p.local]?.nombre || p.local, visita: byId[p.visita]?.nombre || p.visita,
-    logoLocal: byId[p.local]?.logo || null, logoVisita: byId[p.visita]?.logo || null,
-    horario: p.hora, cancha: p.cancha, camarinLocal: p.camarinLocal, camarinVisita: p.camarinVisita,
-    grabado: !!p.grabado, clasico: !!p.clasico, premio: p.premio,
-    estado: p.estado, golesLocal: p.golesLocal, golesVisita: p.golesVisita,
-    fecha: p.fecha, amistoso: !!p.amistoso
-  });
+  const mapP = p => {
+    const cam = camarinesPorCancha(p.cancha);
+    return {
+      localId: p.local, visitaId: p.visita,
+      local: byId[p.local]?.nombre || p.local, visita: byId[p.visita]?.nombre || p.visita,
+      logoLocal: byId[p.local]?.logo || null, logoVisita: byId[p.visita]?.logo || null,
+      horario: p.hora, cancha: p.cancha, camarinLocal: cam[0], camarinVisita: cam[1],
+      grabado: !!p.grabado, clasico: !!p.clasico, premio: p.premio,
+      estado: p.estado, golesLocal: p.golesLocal, golesVisita: p.golesVisita,
+      fecha: p.fecha, amistoso: !!p.amistoso
+    };
+  };
   // Una serie por cada 'serie' presente en partidos (libre = Junior, senior = Senior, ...)
   const serieIds = [...new Set(partidos.map(p => p.serie || 'libre'))];
   const series = serieIds.map(sid => {

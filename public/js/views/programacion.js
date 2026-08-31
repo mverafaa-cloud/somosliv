@@ -127,7 +127,7 @@ function renderPublicFixture(config, fx) {
     <div class="chips filter-row mb-2" id="fx-fechas"></div>
     <div id="fx-body"></div>
     <div class="card-sm mt-2" style="background:var(--c-brand-soft);border-radius:12px;padding:10px 14px;font-size:.88rem">
-      <strong>Cómo leer el fixture:</strong> ${icon('flame', { size: 12 })} clásico de la jornada · ${icon('video', { size: 13, cls: 'ico-grab' })} partido grabado · <strong>Cam. L/V</strong> = número de camarín del equipo local / visita · <strong>Premio</strong> = marca que presenta el premio al mejor jugador.
+      <strong>Cómo leer el fixture:</strong> ${icon('flame', { size: 12 })} clásico de la jornada · ${icon('video', { size: 13, cls: 'ico-grab' })} partido grabado · <strong>Camarín. L/V</strong> = número de camarín del equipo local / visita · <strong>Premio</strong> = marca que presenta el premio al mejor jugador.
     </div>
   </div>`;
   mount(shell(inner, config));
@@ -202,7 +202,7 @@ function fechaBlock(rd, config = {}) {
         ${nGrab ? `<span class="muted fx-fecha-sub">${icon('video', { size: 14 })} ${nGrab} grabados · cámaras cancha ${cams.join(' y ')}</span>` : ''}
       </div>
       <div class="table-wrap fx-desktop"><table class="tbl fixture-pub">
-        <thead><tr><th>Hora</th><th>Cancha</th><th>Partido</th><th>Cam. L/V</th><th>Grab.</th><th>Premio</th></tr></thead>
+        <thead><tr><th>Hora</th><th>Cancha</th><th>Partido</th><th>Camarín. L/V</th><th>Grab.</th><th>Premio</th></tr></thead>
         <tbody>
           ${parts.map(p => `
             <tr class="${p.clasico ? 'is-clasico' : ''}">
@@ -238,7 +238,7 @@ function matchTile(p, ausp) {
       <div class="fx-tm">${teamLogo(p.logoVisita, p.visita, 26)}<span class="fx-nm">${esc(p.visita)}</span></div>
     </div>
     <div class="fx-tile-meta">
-      <span title="Camarín local / visita">${icon('users', { size: 12 })} Cam. ${p.camarinLocal ?? '—'} / ${p.camarinVisita ?? '—'}</span>
+      <span title="Camarín local / visita">${icon('users', { size: 12 })} Camarín ${p.camarinLocal ?? '—'} / ${p.camarinVisita ?? '—'}</span>
       ${premio ? `<span class="fx-premio">${esc(premio)}</span>` : ''}
     </div>
   </div>`;
