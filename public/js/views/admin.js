@@ -368,7 +368,7 @@ function renderFixture(el) {
   }
 
   el.innerHTML = `
-    <p class="muted mb-2">Misma vista que la <a href="/programacion" data-link>Programación</a>, editable. Cambia la <strong>cancha</strong> y escribe el <strong>premio</strong> (marca que presenta el premio al mejor jugador) de cada partido. El desplegable de cancha solo ofrece opciones que respetan la regla: <strong>grabados y clásicos → cancha 1 o 2</strong>, <strong>no grabados → cancha 3 o 4</strong>, y nunca dos partidos en la misma cancha y horario. Guarda por fecha. No modifica horarios, rivales, grabados ni clásicos.</p>
+    <p class="muted mb-2">Misma vista que la <a href="/programacion" data-link>Programación</a>, editable. Cambia la <strong>cancha</strong> y escribe el <strong>premio</strong> (marca que presenta el premio al mejor jugador) de cada partido. El desplegable de cancha respeta la única regla dura: <strong>grabados y clásicos van sí o sí en cancha 1 o 2</strong>. Los no grabados pueden ir en cualquier cancha que esté libre en ese horario (incluida la 1 o 2 si no la usa un grabado), y nunca dos partidos en la misma cancha y horario. Guarda por fecha. No modifica horarios, rivales, grabados ni clásicos.</p>
     ${serieChipRow}
     ${fechas.map(n => {
       const rows = sortRows(groups[n]);
@@ -385,8 +385,8 @@ function renderFixture(el) {
           <thead><tr><th>Hora</th><th>Cancha</th><th>Partido</th><th>Cam. L/V</th><th>Grab.</th><th>Premio</th></tr></thead>
           <tbody>
             ${rows.map(p => {
-              // Regla: grabado/clásico → solo canchas 1 y 2 · no grabado → solo 3 y 4.
-              const allowed = (p.grabado || p.clasico) ? [1, 2] : [3, 4];
+              // Única regla dura: grabado/clásico → cancha 1 o 2. No grabado → cualquier cancha libre.
+              const allowed = (p.grabado || p.clasico) ? [1, 2] : [1, 2, 3, 4];
               const occupied = rows.filter(o => o.id !== p.id && (o.hora || '') === (p.hora || '')).map(o => String(o.cancha));
               const show = [...new Set([...allowed.map(String), String(p.cancha)])]
                 .filter(v => v && v !== 'null' && v !== 'undefined').sort();
@@ -426,14 +426,14 @@ function renderFixture(el) {
       seen[key] = true;
     }
     if (dup) { toast(`Dos partidos quedaron en la Cancha ${dup} a la misma hora. Corrige antes de guardar.`, 'error'); return; }
-    // Validar regla: grabado/clásico en canchas 1-2 · no grabado en 3-4
+    // Única regla dura: grabado/clásico debe ir en cancha 1 o 2.
     let bad = null;
     for (const tr of trs) {
       const p = C.partidos.find(x => x.id === tr.dataset.row);
       const c = +tr.querySelector('.fx-cancha').value;
-      const debeArriba = !!(p && (p.grabado || p.clasico));
-      if (debeArriba && !(c === 1 || c === 2)) { bad = 'Los grabados/clásicos deben ir en cancha 1 o 2.'; break; }
-      if (!debeArriba && !(c === 3 || c === 4)) { bad = 'Los partidos no grabados deben ir en cancha 3 o 4.'; break; }
+      if (p && (p.grabado || p.clasico) && !(c === 1 || c === 2)) {
+        bad = 'Los grabados/clásicos deben ir en cancha 1 o 2.'; break;
+      }
     }
     if (bad) { toast(bad, 'error'); return; }
     // Diff cancha + premio
