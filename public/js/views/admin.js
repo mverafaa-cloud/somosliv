@@ -453,6 +453,13 @@ function renderContenido(el) {
       <h3 class="mb-2">Canchas del fixture</h3>
       <p class="muted mb-2" style="font-size:.9rem">Reasigna el <strong>número de cancha</strong> de todos los partidos según la regla: los <strong>grabados</strong> van siempre en <strong>cancha 1 y 2</strong>, y los no grabados en 3 y 4. No cambia horarios, rivales, ni la condición de grabado/clásico, ni los resultados.</p>
       <button class="btn btn-primary btn-sm" id="fixcanchas" type="button">Reasignar canchas (grabados → C1 y C2)</button>
+    </div>
+    <div class="card mt-3">
+      <h3 class="mb-2">Grabaciones del fixture</h3>
+      <p class="muted mb-2" style="font-size:.9rem">Elige qué partidos se graban en cada fecha. Reglas automáticas: los <strong>clásicos se graban siempre</strong> y los grabados quedan en <strong>cancha 1 y 2</strong> (los demás en 3 y 4). No cambia horarios ni rivales.</p>
+      <div class="form-group" style="max-width:220px"><label>Fecha</label><select class="input" id="grabfecha"></select></div>
+      <div id="grabbody" class="mt-2"><p class="muted">Cargando fixture…</p></div>
+      <div class="mt-2"><button class="btn btn-primary btn-sm" id="grabsave" type="button" disabled>Guardar grabaciones de esta fecha</button></div>
     </div>`;
   el.querySelector('#f-c').onsubmit = (ev) => {
     ev.preventDefault();
@@ -509,4 +516,76 @@ function renderContenido(el) {
     toast(`Listo: ${ups.length} canchas reasignadas ✓`);
     setTimeout(() => location.reload(), 700);
   };
+
+  // ---- Editor de grabaciones por fecha ----
+  (async () => {
+    const sel = el.querySelector('#grabfecha');
+    const body = el.querySelector('#grabbody');
+    const saveBtn = el.querySelector('#grabsave');
+    if (!sel) return;
+    const [partidos, equipos] = await Promise.all([getPartidos(), getEquipos()]);
+    const NAME = equiposById(equipos);
+    const nm = id => (NAME[id] && NAME[id].nombre) || id;
+    const prog = partidos.filter(p => p.serie === 'libre' && p.estado !== 'finalizado');
+    const fechas = [...new Set(prog.map(p => p.fecha_num))].sort((a, b) => a - b);
+    if (!fechas.length) { body.innerHTML = '<p class="muted">No hay fechas programadas para editar.</p>'; return; }
+    sel.innerHTML = fechas.map(n => `<option value="${n}">Fecha ${n}</option>`).join('');
+
+    function renderFecha(fn) {
+      const ms = prog.filter(p => p.fecha_num === fn);
+      body.innerHTML = ['10:40', '12:20'].map(h => {
+        const slot = ms.filter(p => p.hora === h).sort((a, b) => (+a.cancha || 0) - (+b.cancha || 0));
+        if (!slot.length) return '';
+        return `<div class="mb-2"><div style="font-weight:700;font-size:.82rem;color:var(--c-muted);margin:8px 0 4px">${h}</div>` +
+          slot.map(p => `<div class="spread card-sm" style="border:1px solid var(--c-line);border-radius:10px;margin-bottom:6px;padding:8px 12px">
+            <span>${esc(nm(p.local))} <span class="muted">vs</span> ${esc(nm(p.visita))}</span>
+            <span style="display:flex;gap:16px;align-items:center;font-size:.85rem;white-space:nowrap">
+              <label style="display:flex;gap:5px;align-items:center;cursor:pointer"><input type="checkbox" data-clas="${esc(p.id)}" ${p.clasico ? 'checked' : ''}> Clásico</label>
+              <label style="display:flex;gap:5px;align-items:center;cursor:pointer"><input type="checkbox" data-grab="${esc(p.id)}" ${p.grabado ? 'checked' : ''} ${p.clasico ? 'disabled' : ''}> Grabar</label>
+            </span>
+          </div>`).join('') + `</div>`;
+      }).join('');
+      body.querySelectorAll('[data-clas]').forEach(cb => cb.onchange = () => {
+        const g = body.querySelector(`[data-grab="${cb.dataset.clas}"]`);
+        if (cb.checked) { g.checked = true; g.disabled = true; } else { g.disabled = false; }
+      });
+      saveBtn.disabled = false;
+    }
+    sel.onchange = () => renderFecha(+sel.value);
+    renderFecha(fechas[0]);
+
+    saveBtn.onclick = async () => {
+      const fn = +sel.value;
+      const ms = prog.filter(p => p.fecha_num === fn);
+      const desired = ms.map(p => {
+        const clas = !!(body.querySelector(`[data-clas="${p.id}"]`) || {}).checked;
+        const grab = clas || !!(body.querySelector(`[data-grab="${p.id}"]`) || {}).checked;
+        return { p, clas, grab };
+      });
+      // Cambios de grabado/clásico
+      const merged = {};
+      desired.forEach(({ p, clas, grab }) => {
+        const chg = {};
+        if (!!p.clasico !== clas) chg.clasico = clas;
+        if (!!p.grabado !== grab) chg.grabado = grab;
+        if (Object.keys(chg).length) merged[p.id] = { id: p.id, ...(merged[p.id] || {}), ...chg };
+      });
+      // Reasignar canchas: grabados -> 1,2 ; no grabados -> 3,4 (por horario)
+      const byh = {};
+      desired.forEach(d => { (byh[d.p.hora] = byh[d.p.hora] || []).push(d); });
+      Object.values(byh).forEach(arr => {
+        const gr = arr.filter(d => d.grab).sort((a, b) => (+a.p.cancha || 0) - (+b.p.cancha || 0));
+        const no = arr.filter(d => !d.grab).sort((a, b) => (+a.p.cancha || 0) - (+b.p.cancha || 0));
+        gr.forEach((d, i) => { const nc = i + 1; if (+d.p.cancha !== nc) merged[d.p.id] = { id: d.p.id, ...(merged[d.p.id] || {}), cancha: nc }; });
+        no.forEach((d, i) => { const nc = 3 + i; if (+d.p.cancha !== nc) merged[d.p.id] = { id: d.p.id, ...(merged[d.p.id] || {}), cancha: nc }; });
+      });
+      const list = Object.values(merged);
+      if (!list.length) { toast('Sin cambios en esta fecha.'); return; }
+      if (!confirm(`Fecha ${fn}: se aplicarán ${list.length} cambios (grabado/clásico y cancha). No se tocan rivales ni horarios. ¿Continuar?`)) return;
+      saveBtn.disabled = true; saveBtn.textContent = 'Aplicando…';
+      for (const u of list) await savePartido(u);
+      toast(`Fecha ${fn}: cambios aplicados ✓`);
+      setTimeout(() => location.reload(), 700);
+    };
+  })();
 }
