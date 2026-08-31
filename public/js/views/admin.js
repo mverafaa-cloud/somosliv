@@ -81,6 +81,7 @@ export function renderLogin(redirect) {
 const ALL_TABS = [
   { id: 'resultados', label: `${icon('check', { size: 16 })} Resultados`, roles: ['admin', 'planillero'] },
   { id: 'disciplina', label: `${icon('cards', { size: 16 })} Disciplina`, roles: ['admin', 'planillero'] },
+  { id: 'fixture', label: `${icon('calendar', { size: 16 })} Fixture`, roles: ['admin'] },
   { id: 'partidos', label: `${icon('calendar', { size: 16 })} Partidos`, roles: ['admin'] },
   { id: 'equipos', label: `${icon('users', { size: 16 })} Equipos`, roles: ['admin'] },
   { id: 'inscripciones', label: `${icon('clipboard', { size: 16 })} Inscripciones`, roles: ['admin'] },
@@ -163,6 +164,7 @@ function renderTab() {
   const el = document.getElementById('tab-content');
   if (TAB === 'resultados') return renderResultados(el);
   if (TAB === 'equipos') return renderEquipos(el);
+  if (TAB === 'fixture') return renderFixture(el);
   if (TAB === 'partidos') return renderPartidos(el);
   if (TAB === 'disciplina') return renderDisciplina(el);
   if (TAB === 'inscripciones') return renderInscripciones(el);
@@ -331,6 +333,130 @@ function renderPartidos(el) {
   el.querySelector('#cancel-edit') && (el.querySelector('#cancel-edit').onclick = () => { editP = null; renderTab(); });
   el.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => { editP = C.partidos.find(x => x.id === b.dataset.edit); renderTab(); window.scrollTo(0, 0); });
   el.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { if (confirm('¿Eliminar partido?')) reload('p', () => deletePartido(b.dataset.del)); });
+}
+
+/* ---------- FIXTURE (vista Programación editable: cancha + premio) ---------- */
+let FXSERIE = null;
+const FX_HORDEN = ['10:40', '12:20'];
+const FX_CANCHAS = [1, 2, 3, 4];
+
+function renderFixture(el) {
+  const byId = equiposById(C.equipos);
+  const series = [...new Set(C.partidos.map(p => p.serie || 'libre'))];
+  if (!FXSERIE || !series.includes(FXSERIE)) FXSERIE = series.includes('libre') ? 'libre' : series[0];
+  const serieName = id => (C.config.series || []).find(s => s.id === id)?.nombre || id;
+  const nm = id => esc(byId[id]?.nombre || id);
+  const logo = id => { const l = byId[id]?.logo; return l ? `<img src="${esc(l)}" alt="" style="width:22px;height:22px;border-radius:50%;object-fit:cover;vertical-align:middle">` : ''; };
+
+  const list = C.partidos.filter(p => (p.serie || 'libre') === FXSERIE && !p.amistoso && p.fecha_num != null);
+  const groups = {};
+  list.forEach(p => { (groups[p.fecha_num] = groups[p.fecha_num] || []).push(p); });
+  const fechas = Object.keys(groups).map(Number).sort((a, b) => a - b);
+  const sortRows = arr => arr.slice().sort((a, b) =>
+    (FX_HORDEN.indexOf(a.hora) - FX_HORDEN.indexOf(b.hora)) || ((+a.cancha || 0) - (+b.cancha || 0)));
+
+  const serieChipRow = series.length > 1 ? `
+    <div class="chips filter-row mb-2" id="fx-serie-sel">
+      <span class="chips-label">Serie</span>
+      ${series.map(s => `<button class="chip ${FXSERIE === s ? 'active' : ''}" data-serie="${esc(s)}">${esc(serieName(s))}</button>`).join('')}
+    </div>` : '';
+
+  if (!fechas.length) {
+    el.innerHTML = `${serieChipRow}<div class="alert alert-warn">No hay fixture publicado para esta serie.</div>`;
+    el.querySelectorAll('#fx-serie-sel .chip').forEach(c => c.onclick = () => { FXSERIE = c.dataset.serie; renderTab(); });
+    return;
+  }
+
+  el.innerHTML = `
+    <p class="muted mb-2">Misma vista que la <a href="/programacion" data-link>Programación</a>, editable. Cambia la <strong>cancha</strong> y escribe el <strong>premio</strong> (marca que presenta el premio al mejor jugador) de cada partido. El desplegable de cancha solo ofrece opciones que respetan la regla: <strong>grabados y clásicos → cancha 1 o 2</strong>, <strong>no grabados → cancha 3 o 4</strong>, y nunca dos partidos en la misma cancha y horario. Guarda por fecha. No modifica horarios, rivales, grabados ni clásicos.</p>
+    ${serieChipRow}
+    ${fechas.map(n => {
+      const rows = sortRows(groups[n]);
+      const cams = [...new Set(rows.filter(p => p.grabado).map(p => p.cancha))].sort((a, b) => a - b);
+      const nGrab = rows.filter(p => p.grabado).length;
+      const jugada = rows.some(p => p.estado === 'finalizado');
+      return `
+      <div class="card mb-2" data-fxfecha="${n}">
+        <div class="spread mb-2" style="align-items:center">
+          <h3 style="margin:0">Fecha ${n}${jugada ? ' <span class="pill pill-green" style="font-weight:600">jugada</span>' : ''}</h3>
+          ${nGrab ? `<span class="muted" style="font-size:.85rem">${icon('video', { size: 14 })} ${nGrab} grabados · cámaras cancha ${cams.join(' y ')}</span>` : ''}
+        </div>
+        <div class="table-wrap"><table class="tbl fixture-pub">
+          <thead><tr><th>Hora</th><th>Cancha</th><th>Partido</th><th>Cam. L/V</th><th>Grab.</th><th>Premio</th></tr></thead>
+          <tbody>
+            ${rows.map(p => {
+              // Regla: grabado/clásico → solo canchas 1 y 2 · no grabado → solo 3 y 4.
+              const allowed = (p.grabado || p.clasico) ? [1, 2] : [3, 4];
+              const occupied = rows.filter(o => o.id !== p.id && (o.hora || '') === (p.hora || '')).map(o => String(o.cancha));
+              const show = [...new Set([...allowed.map(String), String(p.cancha)])]
+                .filter(v => v && v !== 'null' && v !== 'undefined').sort();
+              const opts = show.map(c => {
+                const taken = occupied.includes(String(c));
+                const seld = String(p.cancha) === String(c);
+                return `<option value="${c}" ${seld ? 'selected' : ''} ${taken && !seld ? 'disabled' : ''}>Cancha ${c}${taken && !seld ? ' (ocupada)' : ''}</option>`;
+              }).join('');
+              return `<tr class="${p.clasico ? 'is-clasico' : ''}" data-row="${esc(p.id)}" data-hora="${esc(p.hora || '')}" data-cancha0="${esc(p.cancha ?? '')}" data-premio0="${esc(p.premio ?? '')}">
+                <td style="white-space:nowrap;font-weight:600">${esc(p.hora || '—')}</td>
+                <td><select class="select fx-cancha" style="min-width:130px">${opts}</select></td>
+                <td><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">${logo(p.local)} <span style="font-weight:600">${nm(p.local)}</span> <span class="muted">vs</span> ${logo(p.visita)} <span style="font-weight:600">${nm(p.visita)}</span>${p.clasico ? `<span class="pill pill-brand">${icon('flame', { size: 12 })} Clásico</span>` : ''}</div></td>
+                <td class="muted" style="white-space:nowrap">${p.camarinLocal ?? '—'} / ${p.camarinVisita ?? '—'}</td>
+                <td>${p.grabado ? icon('video', { size: 16, cls: 'ico-grab' }) : '<span class="muted">—</span>'}</td>
+                <td><input class="input fx-premio" style="min-width:160px" value="${esc(p.premio ?? '')}" placeholder="Marca del premio"></td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table></div>
+        <div class="row mt-2"><button class="btn btn-primary btn-sm" data-savefx="${n}">Guardar cambios de la Fecha ${n}</button></div>
+      </div>`;
+    }).join('')}
+  `;
+
+  el.querySelectorAll('#fx-serie-sel .chip').forEach(c => c.onclick = () => { FXSERIE = c.dataset.serie; renderTab(); });
+
+  el.querySelectorAll('[data-savefx]').forEach(btn => btn.onclick = async () => {
+    const card = btn.closest('[data-fxfecha]');
+    const fn = card.dataset.fxfecha;
+    const trs = [...card.querySelectorAll('tr[data-row]')];
+    // Validar: una cancha por partido en cada horario
+    const seen = {};
+    let dup = null;
+    for (const tr of trs) {
+      const key = tr.dataset.hora + '|' + tr.querySelector('.fx-cancha').value;
+      if (seen[key]) { dup = tr.querySelector('.fx-cancha').value; break; }
+      seen[key] = true;
+    }
+    if (dup) { toast(`Dos partidos quedaron en la Cancha ${dup} a la misma hora. Corrige antes de guardar.`, 'error'); return; }
+    // Validar regla: grabado/clásico en canchas 1-2 · no grabado en 3-4
+    let bad = null;
+    for (const tr of trs) {
+      const p = C.partidos.find(x => x.id === tr.dataset.row);
+      const c = +tr.querySelector('.fx-cancha').value;
+      const debeArriba = !!(p && (p.grabado || p.clasico));
+      if (debeArriba && !(c === 1 || c === 2)) { bad = 'Los grabados/clásicos deben ir en cancha 1 o 2.'; break; }
+      if (!debeArriba && !(c === 3 || c === 4)) { bad = 'Los partidos no grabados deben ir en cancha 3 o 4.'; break; }
+    }
+    if (bad) { toast(bad, 'error'); return; }
+    // Diff cancha + premio
+    const ups = [];
+    trs.forEach(tr => {
+      const chg = {};
+      const c = tr.querySelector('.fx-cancha').value;
+      const pr = tr.querySelector('.fx-premio').value.trim();
+      if (String(c) !== String(tr.dataset.cancha0)) chg.cancha = +c;
+      if (pr !== (tr.dataset.premio0 || '')) chg.premio = pr;
+      if (Object.keys(chg).length) { chg.id = tr.dataset.row; ups.push(chg); }
+    });
+    if (!ups.length) { toast('No hay cambios en esta fecha.'); return; }
+    btn.disabled = true; btn.textContent = 'Guardando…';
+    try {
+      for (const u of ups) await savePartido(u);
+      toast(`Guardado: ${ups.length} partido(s) de la Fecha ${fn} ✓`, 'success');
+      await loadAll(); renderTab();
+    } catch (err) {
+      toast(err.message || 'Error al guardar', 'error');
+      btn.disabled = false; btn.textContent = `Guardar cambios de la Fecha ${fn}`;
+    }
+  });
 }
 
 /* ---------- DISCIPLINA ---------- */
