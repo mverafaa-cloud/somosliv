@@ -168,12 +168,13 @@ export async function showDisciplina() {
     <h1>Disciplina</h1>
     <p class="subtitle mb-3">Cómo se sancionan las expulsiones en LIV. Lo simple se aplica por tabla; lo grave lo resuelve el comité. Cero violencia.</p>
 
+    <div id="disc-susp"></div>
+
     ${comiteBlock(config)}
 
     <span class="eyebrow">Registro de la temporada</span>
     <h2 class="mb-2">Tarjetas y sanciones</h2>
     ${serieChips(series)}
-    <div id="disc-susp"></div>
     <div id="disc-body"></div>
   </div>`;
 
