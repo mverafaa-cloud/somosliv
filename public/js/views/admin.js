@@ -7,6 +7,7 @@ import {
   getGoleadores, saveGoleador, deleteGoleador,
   FALTAS_ROJA, faltaById, sancionTexto, suspendidosParaFecha, AMARILLAS_PARA_SUSPENSION,
   getInscripciones, updateInscripcion, deleteInscripcion,
+  getPagos, savePagos,
   getJugadores, saveJugador, deleteJugador, importJugadores,
   getAudiovisual, saveAudiovisual,
   sandboxOn, setSandbox, resetSandbox,
@@ -34,7 +35,8 @@ async function loadAll() {
     getInscripciones().catch(() => []), getAudiovisual().catch(() => ({ videos: [], galeria: [] })),
     getJugadores().catch(() => []), getGoleadores().catch(() => [])
   ]);
-  C = { config, equipos, partidos, disciplina, inscripciones, av, jugadores, goleadores };
+  const pagos = await getPagos().catch(() => []);
+  C = { config, equipos, partidos, disciplina, inscripciones, av, jugadores, goleadores, pagos };
 }
 
 /* ---------------- LOGIN ---------------- */
@@ -901,9 +903,63 @@ function renderDisciplina(el) {
 }
 
 /* ---------- INSCRIPCIONES ---------- */
+const CUOTAS_DEF = [
+  { label: '1ª cuota', venc: 'Antes del inicio del torneo (29 ago)' },
+  { label: '2ª cuota', venc: 'Antes del 18 de septiembre' },
+  { label: '3ª cuota', venc: 'Antes del 1er sábado de octubre (3 oct)' },
+  { label: '4ª cuota', venc: 'Antes del 1er sábado de noviembre (7 nov)' }
+];
+const clp = n => (+n || 0).toLocaleString('es-CL');
+
 function renderInscripciones(el) {
   const rows = (C.inscripciones || []).slice().sort((a, b) => (b.creada || 0) - (a.creada || 0));
+  const serieName = id => (C.config.series || []).find(s => s.id === id)?.nombre || (id === 'senior' ? 'Senior' : 'Junior');
+  const equipos = C.equipos.slice().sort((a, b) => (a.serie || '').localeCompare(b.serie || '') || a.nombre.localeCompare(b.nombre));
+  const pagoMap = {}; (C.pagos || []).forEach(p => { pagoMap[p.id] = p; });
+  const getM = (eq, i) => { const p = pagoMap[eq]; return p && p.montos ? (p.montos[i] ?? '') : ''; };
+  const getP = (eq, i) => { const p = pagoMap[eq]; return !!(p && p.pagadas && p.pagadas[i]); };
+
+  const pagosCard = `
+    <div class="card mb-3">
+      <div class="spread mb-1" style="align-items:center;flex-wrap:wrap;gap:8px">
+        <h3 style="margin:0">${icon('clipboard', { size: 18 })} Cuotas por equipo</h3>
+        <button class="btn btn-primary btn-sm" id="pagos-save">Guardar cambios de cuotas</button>
+      </div>
+      <p class="muted mb-2" style="font-size:.86rem">Cada equipo tiene su propio trato: escribe el monto de cada cuota (en pesos) y marca ✓ cuando esté pagada. El total y lo pagado se calculan solos. Datos privados (solo admin).</p>
+      <div class="table-wrap"><table class="tbl" id="pagos-tbl">
+        <thead>
+          <tr>
+            <th rowspan="2" style="vertical-align:bottom">Equipo</th>
+            ${CUOTAS_DEF.map(c => `<th colspan="2" style="text-align:center">${c.label}<div class="muted" style="font-weight:400;font-size:.72rem">${c.venc}</div></th>`).join('')}
+            <th rowspan="2" class="num" style="vertical-align:bottom">Total</th>
+            <th rowspan="2" class="num" style="vertical-align:bottom">Pagado</th>
+          </tr>
+          <tr>${CUOTAS_DEF.map(() => `<th class="num" style="font-weight:600">Monto</th><th style="text-align:center;font-weight:600">✓</th>`).join('')}</tr>
+        </thead>
+        <tbody>
+          ${equipos.map(e => `
+            <tr data-eq="${esc(e.id)}">
+              <td style="font-weight:600;white-space:nowrap">${esc(e.nombre)} <span class="pill ${e.serie === 'senior' ? 'pill-dark' : 'pill-grey'}" style="font-size:.7rem">${esc(serieName(e.serie))}</span></td>
+              ${[0, 1, 2, 3].map(i => `
+                <td><input class="input cuota-m" data-i="${i}" type="number" min="0" step="1000" value="${esc(getM(e.id, i))}" placeholder="0" style="width:110px;text-align:right"></td>
+                <td style="text-align:center"><input type="checkbox" class="cuota-p" data-i="${i}" ${getP(e.id, i) ? 'checked' : ''}></td>`).join('')}
+              <td class="num row-total" style="font-weight:700">$0</td>
+              <td class="num row-pag" style="font-weight:600;color:var(--c-brand)">$0</td>
+            </tr>`).join('')}
+        </tbody>
+        <tfoot>
+          <tr style="border-top:2px solid var(--border,#ddd);font-weight:700">
+            <td>Totales liga</td>
+            ${[0, 1, 2, 3].map(i => `<td class="num col-total" data-i="${i}">$0</td><td></td>`).join('')}
+            <td class="num" id="grand-total">$0</td>
+            <td class="num" id="grand-pag" style="color:var(--c-brand)">$0</td>
+          </tr>
+        </tfoot>
+      </table></div>
+    </div>`;
+
   el.innerHTML = `
+    ${pagosCard}
     <h3 class="mb-2">Inscripciones recibidas (${rows.length})</h3>
     ${isDemo() ? '<div class="alert alert-warn">⚙️ En modo demo no hay inscripciones reales. Con Firebase, los envíos del formulario de Admisión aparecen acá.</div>' : ''}
     <div class="table-wrap"><table class="tbl">
@@ -921,6 +977,50 @@ function renderInscripciones(el) {
     </table></div>`;
   el.querySelectorAll('[data-estado]').forEach(s => s.onchange = () => reload('i', () => updateInscripcion({ id: s.dataset.estado, estado: s.value })));
   el.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { if (confirm('¿Eliminar inscripción?')) reload('i', () => deleteInscripcion(b.dataset.del)); });
+
+  // ---- Cuotas: totales en vivo ----
+  const tbl = el.querySelector('#pagos-tbl');
+  const recompute = () => {
+    const colTot = [0, 0, 0, 0]; let grand = 0, grandPag = 0;
+    tbl.querySelectorAll('tbody tr[data-eq]').forEach(tr => {
+      let tot = 0, pag = 0;
+      tr.querySelectorAll('.cuota-m').forEach(inp => {
+        const i = +inp.dataset.i; const v = +inp.value || 0;
+        tot += v; colTot[i] += v;
+        const chk = tr.querySelector(`.cuota-p[data-i="${i}"]`);
+        if (chk && chk.checked) pag += v;
+      });
+      tr.querySelector('.row-total').textContent = '$' + clp(tot);
+      tr.querySelector('.row-pag').textContent = '$' + clp(pag);
+      grand += tot; grandPag += pag;
+    });
+    tbl.querySelectorAll('.col-total').forEach(td => { td.textContent = '$' + clp(colTot[+td.dataset.i]); });
+    el.querySelector('#grand-total').textContent = '$' + clp(grand);
+    el.querySelector('#grand-pag').textContent = '$' + clp(grandPag);
+  };
+  tbl.addEventListener('input', recompute);
+  tbl.addEventListener('change', recompute);
+  recompute();
+
+  // ---- Guardar cuotas (solo equipos que cambiaron) ----
+  el.querySelector('#pagos-save').onclick = async () => {
+    const btn = el.querySelector('#pagos-save');
+    const ups = [];
+    tbl.querySelectorAll('tbody tr[data-eq]').forEach(tr => {
+      const eq = tr.dataset.eq;
+      const montos = [null, null, null, null], pagadas = [false, false, false, false];
+      tr.querySelectorAll('.cuota-m').forEach(inp => { montos[+inp.dataset.i] = inp.value === '' ? null : (+inp.value || 0); });
+      tr.querySelectorAll('.cuota-p').forEach(chk => { pagadas[+chk.dataset.i] = chk.checked; });
+      const prev = pagoMap[eq] || {}; const pM = prev.montos || [], pP = prev.pagadas || [];
+      const changed = JSON.stringify(montos) !== JSON.stringify([0, 1, 2, 3].map(i => pM[i] ?? null))
+        || JSON.stringify(pagadas) !== JSON.stringify([0, 1, 2, 3].map(i => !!pP[i]));
+      if (changed) ups.push({ id: eq, montos, pagadas });
+    });
+    if (!ups.length) { toast('No hay cambios en las cuotas.'); return; }
+    btn.disabled = true; btn.textContent = 'Guardando…';
+    try { for (const u of ups) await savePagos(u); toast(`Cuotas guardadas: ${ups.length} equipo(s) ✓`, 'success'); await loadAll(); renderTab(); }
+    catch (err) { toast(err.message || 'Error al guardar', 'error'); btn.disabled = false; btn.textContent = 'Guardar cambios de cuotas'; }
+  };
 }
 
 /* ---------- CONTENIDO ---------- */

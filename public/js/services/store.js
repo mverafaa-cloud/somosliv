@@ -253,6 +253,10 @@ export const getInscripciones = () => readAll('inscripciones', '__none__');
 export const updateInscripcion = (d) => upsert('inscripciones', d);
 export const deleteInscripcion = (id) => remove('inscripciones', id);
 
+// ---------- PAGOS / CUOTAS (privado, solo admin: monto y estado de las 4 cuotas por equipo) ----------
+export const getPagos = () => readAll('pagos', '__none__');
+export const savePagos = (d) => upsert('pagos', d);
+
 // ---------- JUGADORES (base de datos del plantel: nombre + edad, sin datos sensibles) ----------
 export const getJugadores = () => readAll('jugadores', '__none__');
 export const saveJugador = (d) => upsert('jugadores', d);
