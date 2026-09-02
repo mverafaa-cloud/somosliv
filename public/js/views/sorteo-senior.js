@@ -45,6 +45,18 @@ function buildBlock(fechas) {
   return block;
 }
 
+// Canchas LIBRES a las 10:40 por fecha = las que el Junior NO ocupa a esa hora.
+function buildFree1040(fechas) {
+  const jrCourtsByDate = {};
+  JR.filter(p => p.hora === '10:40' && p.fecha).forEach(p => { (jrCourtsByDate[p.fecha] = jrCourtsByDate[p.fecha] || new Set()).add(+p.cancha); });
+  const free = {};
+  fechas.forEach((d, i) => {
+    const usadas = jrCourtsByDate[d] || new Set();
+    free[i] = [1, 2, 3, 4].filter(c => !usadas.has(c));
+  });
+  return free;
+}
+
 function buildParams() {
   const teams = seniorTeams();
   const n = teams.length;
@@ -55,6 +67,7 @@ function buildParams() {
     marcas: ['Auspiciador 1', 'Auspiciador 2', 'Auspiciador 3', 'Auspiciador 4'],
     rivalries: S.rivalries || [],
     block1040: buildBlock(fechas),
+    free1040: buildFree1040(fechas),
     equipo8Id: (equipo8() || {}).id || null
   };
 }

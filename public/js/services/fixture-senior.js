@@ -116,7 +116,17 @@ function buildOne(params, seed) {
     });
     grabs.forEach((m, i) => { m.cancha = bestPerm[i]; });
     nueve.filter(m => !m.grabado).forEach(m => { m.cancha = 3; });
-    matches.filter(m => m.horario === '10:40').forEach(m => { m.cancha = 4; });
+    // El partido de las 10:40 va a una cancha LIBRE a esa hora (el Junior ocupa 2 canchas
+    // a las 10:40, distintas por fecha). Se prefiere 3/4 y se balancea por equipo.
+    const ten = matches.find(m => m.horario === '10:40');
+    if (ten) {
+      const libres = (params.free1040 && params.free1040[ri]) ? params.free1040[ri] : [3, 4, 1, 2];
+      const order = [3, 4, 2, 1].filter(c => libres.includes(c));
+      const opts2 = order.length ? order : [4];
+      let bc = opts2[0], bs = Infinity;
+      opts2.forEach(c => { const s = T[ten.local].cancha[c] + T[ten.visita].cancha[c] + rand() * 0.1; if (s < bs) { bs = s; bc = c; } });
+      ten.cancha = bc;
+    }
     matches.forEach(m => { T[m.local].cancha[m.cancha]++; T[m.visita].cancha[m.cancha]++; });
 
     // 5) Marca del premio (equitativo por equipo)
@@ -154,7 +164,8 @@ function scoreDraw(draw, params) {
   draw.rounds.forEach((rd, ri) => {
     const block = new Set(block1040[ri] || []);
     const m10 = rd.matches.find(m => m.horario === '10:40');
-    if (m10 && (block.has(m10.local) || block.has(m10.visita))) s += 800; // cruce Junior/Senior
+    if (m10 && (block.has(m10.local) || block.has(m10.visita))) s += 800; // cruce de equipo Junior/Senior
+    if (m10) { const libres = (params.free1040 && params.free1040[ri]) ? params.free1040[ri] : [1, 2, 3, 4]; if (!libres.includes(m10.cancha)) s += 700; } // cancha 10:40 ocupada por el Junior
     if (rd.matches.filter(m => m.clasico).length !== 1) s += 500;
     if (rd.matches.filter(m => m.grabado).length !== GRAB_POR_FECHA) s += 500;
     if (rd.matches.filter(m => m.horario === '10:40').length !== N_10) s += 500;
