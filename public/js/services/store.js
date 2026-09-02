@@ -339,17 +339,19 @@ export async function getFixture() {
 }
 
 // Publica el fixture del sorteo a Firestore (colección 'partidos').
-// Reemplaza el calendario pero PRESERVA los marcadores ya cargados (mismo id).
+// SOLO reemplaza el calendario de ESA serie (deja intactas las demás series) y
+// PRESERVA los marcadores ya cargados (mismo id).
 export async function publishFixture(fixture) {
+  const serieId = fixture.serieId || 'libre';
   if (sandboxOn()) {
     const prevArr = sbGet('partidos');
     const existing = {}; prevArr.forEach(p => existing[p.id] = p);
-    const arr = [];
+    const arr = prevArr.filter(p => (p.serie || 'libre') !== serieId); // conserva otras series
     (fixture.fechas || []).forEach(f => (f.partidos || []).forEach(p => {
       const id = `f${f.n}-${p.localId}-${p.visitaId}`.replace(/[^a-zA-Z0-9_-]/g, '');
       const prev = existing[id];
       arr.push({
-        id, serie: fixture.serieId || 'libre', fecha_num: f.n, fecha: f.fecha || '', hora: p.horario || '',
+        id, serie: serieId, fecha_num: f.n, fecha: f.fecha || '', hora: p.horario || '',
         local: p.localId, visita: p.visitaId, cancha: p.cancha,
         camarinLocal: p.camarinLocal ?? null, camarinVisita: p.camarinVisita ?? null,
         grabado: !!p.grabado, clasico: !!p.clasico, premio: p.premio || '',
@@ -358,20 +360,21 @@ export async function publishFixture(fixture) {
       });
     }));
     sbSet('partidos', arr);
-    return arr.length;
+    return (fixture.fechas || []).reduce((a, f) => a + (f.partidos || []).length, 0);
   }
   requireFb();
   const { collection, doc, getDocs, writeBatch } = fb.fsMod;
   const snap = await getDocs(collection(fb.db, 'partidos'));
   const existing = {}; snap.docs.forEach(d => existing[d.id] = d.data());
   const batch = writeBatch(fb.db);
-  snap.docs.forEach(d => batch.delete(doc(fb.db, 'partidos', d.id)));
+  // borra SOLO los partidos de esta serie
+  snap.docs.forEach(d => { if ((d.data().serie || 'libre') === serieId) batch.delete(doc(fb.db, 'partidos', d.id)); });
   let count = 0;
   (fixture.fechas || []).forEach(f => (f.partidos || []).forEach(p => {
     const id = `f${f.n}-${p.localId}-${p.visitaId}`.replace(/[^a-zA-Z0-9_-]/g, '');
     const prev = existing[id];
     batch.set(doc(fb.db, 'partidos', id), {
-      serie: fixture.serieId || 'libre', fecha_num: f.n, fecha: f.fecha || '', hora: p.horario || '',
+      serie: serieId, fecha_num: f.n, fecha: f.fecha || '', hora: p.horario || '',
       local: p.localId, visita: p.visitaId, cancha: p.cancha,
       camarinLocal: p.camarinLocal ?? null, camarinVisita: p.camarinVisita ?? null,
       grabado: !!p.grabado, clasico: !!p.clasico, premio: p.premio || '',

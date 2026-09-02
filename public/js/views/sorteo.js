@@ -83,6 +83,7 @@ function render() {
     <div class="spread mb-2">
       <div><span class="eyebrow">Panel · Organización</span><h1 style="margin:0">${icon('shuffle', { size: 26 })} Sorteo Fixture — Junior</h1></div>
       <div class="row">
+        <a href="/sorteo-senior" data-link class="btn btn-ghost btn-sm">Senior</a>
         <a href="/admin" data-link class="btn btn-ghost btn-sm">${icon('settings', { size: 15 })} Admin</a>
         <button class="btn btn-ghost btn-sm" id="s-logout">Cerrar sesión</button>
       </div>

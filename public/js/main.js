@@ -19,6 +19,7 @@ import { showAdmision } from './views/admision.js';
 import { showAudiovisual } from './views/audiovisual.js';
 import { showAdmin } from './views/admin.js';
 import { showSorteo } from './views/sorteo.js';
+import { showSorteoSenior } from './views/sorteo-senior.js';
 
 const app = document.getElementById('app');
 
@@ -42,7 +43,8 @@ async function boot() {
     '/admision':     () => showAdmision(),
     '/audiovisual':  () => showAudiovisual(),
     '/admin':        () => showAdmin(),
-    '/sorteo':       () => showSorteo()
+    '/sorteo':       () => showSorteo(),
+    '/sorteo-senior':() => showSorteoSenior()
   });
 
   window.__router = router;
