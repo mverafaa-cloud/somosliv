@@ -12,7 +12,7 @@ let cfg = {}, EQS = [], JR = [];
 
 // Equipos senior que deben existir (además de los 6 ya cargados).
 const REQUIRED = [
-  { id: 'sr-ariel-honores', nombre: 'Ariel Honores', serie: 'senior' },
+  { id: 'sr-ariel-honores', nombre: 'Ariel Honores', serie: 'senior', logo: '/assets/equipos/ariel-honores.png' },
   { id: 'sr-equipo-8', nombre: 'Equipo 8', serie: 'senior' }
 ];
 
@@ -62,6 +62,7 @@ function buildParams() {
 function render() {
   const teams = seniorTeams();
   const falt = faltantes();
+  const arielSinLogo = EQS.some(e => e.id === 'sr-ariel-honores' && !e.logo);
   const nR = teams.length % 2 === 0 ? teams.length - 1 : teams.length;
 
   const inner = `
@@ -76,12 +77,12 @@ function render() {
     </div>
     <p class="subtitle mb-3">Genera el fixture de la serie Senior: 4 partidos por jornada (3 a las 9:00 y 1 a las 10:40), 2 grabados por fecha en cancha 1 y 2, 1 clásico grabado, sin choques de horario con el Junior. La Fecha 1 deja al Equipo 8 sin grabar ni de clásico.</p>
 
-    ${falt.length ? `
+    ${(falt.length || arielSinLogo) ? `
     <div class="card mb-3" style="border-left:4px solid #f59e0b">
-      <h3 style="margin:0 0 6px">${icon('users', { size: 18 })} Faltan equipos senior</h3>
-      <p class="muted" style="margin:0 0 8px">Para sortear se necesitan 8 equipos. Faltan: <strong>${falt.map(f => esc(f.nombre)).join(', ')}</strong>.</p>
-      <button class="btn btn-primary btn-sm" id="crear-eq">Crear equipos faltantes</button>
-      <p class="muted" style="font-size:.82rem;margin:8px 0 0">Luego podrás <strong>renombrar el Equipo 8</strong> en <a href="/admin" data-link>Admin → Equipos</a> cuando lo consigas.</p>
+      <h3 style="margin:0 0 6px">${icon('users', { size: 18 })} Equipos senior</h3>
+      <p class="muted" style="margin:0 0 8px">${falt.length ? `Para sortear se necesitan 8 equipos. Faltan: <strong>${falt.map(f => esc(f.nombre)).join(', ')}</strong>.` : 'Falta asignar el escudo de Ariel Honores.'}</p>
+      <button class="btn btn-primary btn-sm" id="crear-eq">Crear / actualizar equipos senior</button>
+      <p class="muted" style="font-size:.82rem;margin:8px 0 0">Agrega <strong>Ariel Honores</strong> (con su escudo) y <strong>Equipo 8</strong>. Luego podrás <strong>renombrar el Equipo 8</strong> en <a href="/admin" data-link>Admin → Equipos</a> cuando lo consigas.</p>
     </div>` : ''}
 
     <div class="card mb-3">
@@ -260,13 +261,17 @@ function bind() {
   document.getElementById('s-logout').onclick = async () => { await logout(); if (window.renderHeader) window.renderHeader(); window.__router.go('/', false); };
   const ce = document.getElementById('crear-eq');
   if (ce) ce.onclick = async () => {
-    ce.disabled = true; ce.textContent = 'Creando…';
+    ce.disabled = true; ce.textContent = 'Guardando…';
     try {
-      for (const r of faltantes()) await saveEquipo({ ...r });
+      for (const r of REQUIRED) {
+        const exists = EQS.some(e => e.id === r.id);
+        if (r.id === 'sr-equipo-8') { if (!exists) await saveEquipo({ ...r }); } // no pisar rename del Equipo 8
+        else await saveEquipo({ ...r }); // Ariel Honores: upsert con escudo (merge)
+      }
       const equipos = await getEquipos();
       EQS = equipos.filter(e => e.serie === 'senior').map(e => ({ id: e.id, nombre: e.nombre, logo: e.logo }));
-      toast('Equipos senior creados ✓', 'success'); render();
-    } catch (err) { toast(err.message || 'No se pudieron crear', 'error'); ce.disabled = false; ce.textContent = 'Crear equipos faltantes'; }
+      toast('Equipos senior actualizados ✓', 'success'); render();
+    } catch (err) { toast(err.message || 'No se pudieron guardar', 'error'); ce.disabled = false; ce.textContent = 'Crear / actualizar equipos senior'; }
   };
   const bg = document.getElementById('btn-gen'); if (bg) bg.onclick = () => generar(false);
   const br = document.getElementById('btn-regen'); if (br) br.onclick = () => generar(true);
