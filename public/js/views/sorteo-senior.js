@@ -1,4 +1,4 @@
-import { isAdmin, logout, getConfig, getEquipos, getPartidos, saveEquipo, publishFixture, isDemo, sandboxOn } from '../services/store.js';
+import { isAdmin, logout, getConfig, getEquipos, getPartidos, saveEquipo, deleteEquipo, publishFixture, isDemo, sandboxOn } from '../services/store.js';
 import { mount, esc, teamInline } from '../ui/helpers.js';
 import { shell, loading } from '../ui/layout.js';
 import { icon } from '../ui/icons.js';
@@ -10,11 +10,15 @@ const HOR = ['9:00', '10:40'];
 let S = null;   // { inicio, excluir, rivalries, result, seedUsed }
 let cfg = {}, EQS = [], JR = [];
 
-// Equipos senior que deben existir (además de los 6 ya cargados).
+// Equipos senior que deben existir. AFC sale y entra Gunners (toma su lugar).
 const REQUIRED = [
   { id: 'sr-ariel-honores', nombre: 'Ariel Honores', serie: 'senior', logo: '/assets/equipos/ariel-honores.png' },
+  { id: 'sr-gunners', nombre: 'Gunners', serie: 'senior', logo: '/assets/equipos/gunners.png' },
   { id: 'sr-equipo-8', nombre: 'Equipo 8', serie: 'senior' }
 ];
+const RETIRAR = ['sr-afc']; // equipos que ya no van en el senior
+// Fecha 1 fija por pedido: Históricos vs Equipo 8 y Los Pibes vs Ariel Honores.
+const FORCED_F1 = [['sr-historicos', 'sr-equipo-8'], ['sr-los-pibes', 'sr-ariel-honores']];
 
 export async function showSorteoSenior() {
   if (!isAdmin()) return renderLogin('/sorteo-senior');
@@ -27,9 +31,10 @@ export async function showSorteoSenior() {
   render();
 }
 
-function seniorTeams() { return EQS.slice(); }
+function seniorTeams() { return EQS.filter(t => !RETIRAR.includes(t.id)); } // excluye AFC
 function equipo8() { return EQS.find(t => t.id === 'sr-equipo-8' || /equipo\s*8/i.test(t.nombre)); }
 function faltantes() { return REQUIRED.filter(r => !EQS.some(e => e.id === r.id)); }
+function porRetirar() { return RETIRAR.filter(id => EQS.some(e => e.id === id)); }
 
 // Bloqueo de 10:40 por cruce con el Junior (mismo equipo, misma fecha por calendario).
 function buildBlock(fechas) {
@@ -68,6 +73,7 @@ function buildParams() {
     rivalries: S.rivalries || [],
     block1040: buildBlock(fechas),
     free1040: buildFree1040(fechas),
+    forcedFirst: FORCED_F1,
     equipo8Id: (equipo8() || {}).id || null
   };
 }
@@ -75,6 +81,7 @@ function buildParams() {
 function render() {
   const teams = seniorTeams();
   const falt = faltantes();
+  const retirar = porRetirar();
   const arielSinLogo = EQS.some(e => e.id === 'sr-ariel-honores' && !e.logo);
   const nR = teams.length % 2 === 0 ? teams.length - 1 : teams.length;
 
@@ -90,12 +97,16 @@ function render() {
     </div>
     <p class="subtitle mb-3">Genera el fixture de la serie Senior: 4 partidos por jornada (3 a las 9:00 y 1 a las 10:40), 2 grabados por fecha en cancha 1 y 2, 1 clásico grabado, sin choques de horario con el Junior. La Fecha 1 deja al Equipo 8 sin grabar ni de clásico.</p>
 
-    ${(falt.length || arielSinLogo) ? `
+    ${(falt.length || arielSinLogo || retirar.length) ? `
     <div class="card mb-3" style="border-left:4px solid #f59e0b">
       <h3 style="margin:0 0 6px">${icon('users', { size: 18 })} Equipos senior</h3>
-      <p class="muted" style="margin:0 0 8px">${falt.length ? `Para sortear se necesitan 8 equipos. Faltan: <strong>${falt.map(f => esc(f.nombre)).join(', ')}</strong>.` : 'Falta asignar el escudo de Ariel Honores.'}</p>
-      <button class="btn btn-primary btn-sm" id="crear-eq">Crear / actualizar equipos senior</button>
-      <p class="muted" style="font-size:.82rem;margin:8px 0 0">Agrega <strong>Ariel Honores</strong> (con su escudo) y <strong>Equipo 8</strong>. Luego podrás <strong>renombrar el Equipo 8</strong> en <a href="/admin" data-link>Admin → Equipos</a> cuando lo consigas.</p>
+      <p class="muted" style="margin:0 0 8px">
+        ${retirar.length ? `Se retirará <strong>AFC</strong> y entra <strong>Gunners</strong> en su lugar. ` : ''}
+        ${falt.length ? `Faltan por crear: <strong>${falt.map(f => esc(f.nombre)).join(', ')}</strong>. ` : ''}
+        ${(!retirar.length && !falt.length && arielSinLogo) ? 'Falta asignar el escudo de Ariel Honores.' : ''}
+      </p>
+      <button class="btn btn-primary btn-sm" id="crear-eq">Aplicar cambios de equipos (Gunners entra, AFC sale)</button>
+      <p class="muted" style="font-size:.82rem;margin:8px 0 0">Crea Gunners (con escudo) y Ariel Honores, retira AFC, y deja el Equipo 8. Luego <strong>renombras el Equipo 8</strong> en <a href="/admin" data-link>Admin → Equipos</a> cuando lo consigas.</p>
     </div>` : ''}
 
     <div class="card mb-3">
@@ -279,12 +290,13 @@ function bind() {
       for (const r of REQUIRED) {
         const exists = EQS.some(e => e.id === r.id);
         if (r.id === 'sr-equipo-8') { if (!exists) await saveEquipo({ ...r }); } // no pisar rename del Equipo 8
-        else await saveEquipo({ ...r }); // Ariel Honores: upsert con escudo (merge)
+        else await saveEquipo({ ...r }); // Gunners / Ariel Honores: upsert con escudo (merge)
       }
+      for (const id of RETIRAR) { if (EQS.some(e => e.id === id)) await deleteEquipo(id); } // retira AFC
       const equipos = await getEquipos();
       EQS = equipos.filter(e => e.serie === 'senior').map(e => ({ id: e.id, nombre: e.nombre, logo: e.logo }));
-      toast('Equipos senior actualizados ✓', 'success'); render();
-    } catch (err) { toast(err.message || 'No se pudieron guardar', 'error'); ce.disabled = false; ce.textContent = 'Crear / actualizar equipos senior'; }
+      toast('Equipos senior actualizados (Gunners entra, AFC sale) ✓', 'success'); render();
+    } catch (err) { toast(err.message || 'No se pudieron guardar', 'error'); ce.disabled = false; ce.textContent = 'Aplicar cambios de equipos (Gunners entra, AFC sale)'; }
   };
   const bg = document.getElementById('btn-gen'); if (bg) bg.onclick = () => generar(false);
   const br = document.getElementById('btn-regen'); if (br) br.onclick = () => generar(true);

@@ -114,6 +114,7 @@ function renderPanel() {
         <span class="pill ${sb ? 'pill-amber' : (isDemo() ? 'pill-red' : 'pill-green')}">${sb ? 'MODO PRUEBA' : (isDemo() ? 'DEMO (sin Firebase)' : 'Conectado')}</span>
         ${admin ? `<a href="/sorteo" data-link class="btn btn-ghost btn-sm">${icon('shuffle', { size: 15 })} Sorteo Jr</a>` : ''}
         ${admin ? `<a href="/sorteo-senior" data-link class="btn btn-ghost btn-sm">${icon('shuffle', { size: 15 })} Sorteo Sr</a>` : ''}
+        ${admin ? `<a href="/actas" data-link class="btn btn-ghost btn-sm">${icon('file', { size: 15 })} Actas</a>` : ''}
         <button class="btn btn-ghost btn-sm" id="btn-logout">Cerrar sesión</button>
       </div>
     </div>

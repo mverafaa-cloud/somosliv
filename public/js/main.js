@@ -20,6 +20,7 @@ import { showAudiovisual } from './views/audiovisual.js';
 import { showAdmin } from './views/admin.js';
 import { showSorteo } from './views/sorteo.js';
 import { showSorteoSenior } from './views/sorteo-senior.js';
+import { showActas } from './views/actas.js';
 
 const app = document.getElementById('app');
 
@@ -44,7 +45,8 @@ async function boot() {
     '/audiovisual':  () => showAudiovisual(),
     '/admin':        () => showAdmin(),
     '/sorteo':       () => showSorteo(),
-    '/sorteo-senior':() => showSorteoSenior()
+    '/sorteo-senior':() => showSorteoSenior(),
+    '/actas':        () => showActas()
   });
 
   window.__router = router;

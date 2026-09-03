@@ -27,8 +27,7 @@ function shuffle(arr, rand) {
   for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
   return a;
 }
-function roundRobin(ids, rand) {
-  const arr = shuffle(ids, rand);
+function circleFrom(arr) {
   const n = arr.length;
   const rounds = [];
   const rot = arr.slice();
@@ -43,6 +42,24 @@ function roundRobin(ids, rand) {
     rot.splice(1, 0, rot.pop());
   }
   return rounds;
+}
+function roundRobin(ids, rand) { return circleFrom(shuffle(ids, rand)); }
+// Round-robin cuyo PRIMER round contiene los pares forzados (el resto se baraja).
+function roundRobinForced(ids, rand, forcedFirst) {
+  const n = ids.length;
+  const arr = new Array(n).fill(null);
+  const used = new Set();
+  (forcedFirst || []).forEach((pair, k) => {
+    if (k >= n / 2) return;
+    const [a, b] = pair;
+    if (ids.includes(a) && ids.includes(b) && !used.has(a) && !used.has(b)) {
+      arr[k] = a; arr[n - 1 - k] = b; used.add(a); used.add(b);
+    }
+  });
+  const rest = shuffle(ids.filter(x => !used.has(x)), rand);
+  let ri = 0;
+  for (let i = 0; i < n; i++) { if (arr[i] === null) arr[i] = rest[ri++]; }
+  return circleFrom(arr);
 }
 
 export const CAMARINES = { 1: [1, 2], 3: [3, 4], 2: [5, 6], 4: [7, 8] };
@@ -61,7 +78,9 @@ function buildOne(params, seed) {
   const block1040 = params.block1040 || {};
   const ids = teams.map(t => t.id);
   const rand = rng(seed);
-  const pairsByRound = roundRobin(ids, rand);
+  const pairsByRound = (params.forcedFirst && params.forcedFirst.length)
+    ? roundRobinForced(ids, rand, params.forcedFirst)
+    : roundRobin(ids, rand);
   const nR = Math.min(pairsByRound.length, fechas.length || pairsByRound.length);
   const T = emptyTally(ids, marcas);
   const rivSet = new Set((rivalries || []).map(p => [p[0], p[1]].sort().join('|')));
