@@ -1,4 +1,4 @@
-import { isAdmin, logout, getConfig, getEquipos, getPartidos, saveEquipo, deleteEquipo, publishFixture, isDemo, sandboxOn } from '../services/store.js';
+import { isAdmin, logout, getConfig, getEquipos, getPartidos, saveEquipo, deleteEquipo, savePartido, publishFixture, isDemo, sandboxOn } from '../services/store.js';
 import { mount, esc, teamInline } from '../ui/helpers.js';
 import { shell, loading } from '../ui/layout.js';
 import { icon } from '../ui/icons.js';
@@ -8,7 +8,7 @@ import { generarFixtureSenior, sabadosDesde, CAMARINES } from '../services/fixtu
 
 const HOR = ['9:00', '10:40'];
 let S = null;   // { inicio, excluir, rivalries, result, seedUsed }
-let cfg = {}, EQS = [], JR = [];
+let cfg = {}, EQS = [], JR = [], SRP = [];
 
 // Equipos senior que deben existir. AFC sale y entra Gunners (toma su lugar).
 const REQUIRED = [
@@ -27,6 +27,7 @@ export async function showSorteoSenior() {
   cfg = config;
   EQS = equipos.filter(e => e.serie === 'senior').map(e => ({ id: e.id, nombre: e.nombre, logo: e.logo }));
   JR = partidos.filter(p => (p.serie || 'libre') === 'libre');
+  SRP = partidos.filter(p => (p.serie || 'libre') === 'senior');
   if (!S) S = { inicio: '2026-09-05', excluir: ['2026-09-19', '2026-10-10'], rivalries: [], result: null };
   render();
 }
@@ -96,6 +97,12 @@ function render() {
       </div>
     </div>
     <p class="subtitle mb-3">Genera el fixture de la serie Senior: 4 partidos por jornada (3 a las 9:00 y 1 a las 10:40), 2 grabados por fecha en cancha 1 y 2, 1 clásico grabado, sin choques de horario con el Junior. La Fecha 1 deja al Equipo 8 sin grabar ni de clásico.</p>
+
+    <div class="card mb-3" style="border-left:4px solid var(--c-brand)">
+      <h3 style="margin:0 0 6px">${icon('check', { size: 18 })} Corrección puntual (sin regenerar)</h3>
+      <p class="muted" style="margin:0 0 8px">Mantiene el fixture publicado y solo: reemplaza <strong>AFC → Gunners</strong> en todo el torneo, e intercambia <strong>Los Pibes ↔ Históricos</strong> en la <strong>Fecha 1</strong> (deja Históricos vs Equipo 8 y Los Pibes vs Ariel Honores; el resto de la F1 igual). No toca horarios, canchas, grabados ni clásicos.</p>
+      <button class="btn btn-primary btn-sm" id="patch-fx">Aplicar corrección al fixture publicado</button>
+    </div>
 
     ${(falt.length || arielSinLogo || retirar.length) ? `
     <div class="card mb-3" style="border-left:4px solid #f59e0b">
@@ -297,6 +304,27 @@ function bind() {
       EQS = equipos.filter(e => e.serie === 'senior').map(e => ({ id: e.id, nombre: e.nombre, logo: e.logo }));
       toast('Equipos senior actualizados (Gunners entra, AFC sale) ✓', 'success'); render();
     } catch (err) { toast(err.message || 'No se pudieron guardar', 'error'); ce.disabled = false; ce.textContent = 'Aplicar cambios de equipos (Gunners entra, AFC sale)'; }
+  };
+  const pf = document.getElementById('patch-fx');
+  if (pf) pf.onclick = async () => {
+    if (!SRP.length) { toast('No hay fixture senior publicado para corregir', 'error'); return; }
+    const SWAP = { 'sr-los-pibes': 'sr-historicos', 'sr-historicos': 'sr-los-pibes' };
+    const ups = [];
+    SRP.forEach(p => {
+      let local = p.local, visita = p.visita;
+      if (local === 'sr-afc') local = 'sr-gunners';        // AFC → Gunners (todo el torneo)
+      if (visita === 'sr-afc') visita = 'sr-gunners';
+      if (+p.fecha_num === 1) { local = SWAP[local] || local; visita = SWAP[visita] || visita; } // swap solo F1
+      if (local !== p.local || visita !== p.visita) ups.push({ id: p.id, local, visita });
+    });
+    if (!ups.length) { toast('El fixture ya está corregido ✓'); return; }
+    if (!confirm(`Se ajustarán ${ups.length} partidos (AFC→Gunners y swap de la Fecha 1). No cambia horarios, canchas, grabados ni clásicos. ¿Continuar?`)) return;
+    pf.disabled = true; pf.textContent = 'Aplicando…';
+    try {
+      for (const u of ups) await savePartido(u);
+      toast(`Corrección aplicada: ${ups.length} partidos ✓`, 'success');
+      setTimeout(() => location.reload(), 800);
+    } catch (err) { toast(err.message || 'Error al aplicar', 'error'); pf.disabled = false; pf.textContent = 'Aplicar corrección al fixture publicado'; }
   };
   const bg = document.getElementById('btn-gen'); if (bg) bg.onclick = () => generar(false);
   const br = document.getElementById('btn-regen'); if (br) br.onclick = () => generar(true);
