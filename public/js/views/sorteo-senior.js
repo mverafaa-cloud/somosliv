@@ -1,4 +1,4 @@
-import { isAdmin, logout, getConfig, getEquipos, getPartidos, saveEquipo, deleteEquipo, savePartido, publishFixture, isDemo, sandboxOn } from '../services/store.js';
+import { isAdmin, logout, getConfig, getEquipos, getPartidos, saveEquipo, deleteEquipo, savePartido, publishFixture, borrarFixtureSerie, isDemo, sandboxOn } from '../services/store.js';
 import { mount, esc, teamInline } from '../ui/helpers.js';
 import { shell, loading } from '../ui/layout.js';
 import { icon } from '../ui/icons.js';
@@ -18,7 +18,14 @@ const REQUIRED = [
 ];
 const RETIRAR = ['sr-afc']; // equipos que ya no van en el senior
 // Fecha 1 fija por pedido: Históricos vs Equipo 8 y Los Pibes vs Ariel Honores.
-const FORCED_F1 = [['sr-historicos', 'sr-equipo-8'], ['sr-los-pibes', 'sr-ariel-honores']];
+// Fecha 1 forzada (los 4 partidos) y el partido de las 10:40.
+const FORCED_F1 = [
+  ['sr-camilo-enriquez', 'sr-arquitectura'],
+  ['sr-los-pibes', 'sr-arsenal'],
+  ['sr-ariel-honores', 'sr-gunners'],
+  ['sr-historicos', 'sr-equipo-8']
+];
+const FORCE_1040_F1 = ['sr-ariel-honores', 'sr-gunners'];
 
 export async function showSorteoSenior() {
   if (!isAdmin()) return renderLogin('/sorteo-senior');
@@ -75,6 +82,7 @@ function buildParams() {
     block1040: buildBlock(fechas),
     free1040: buildFree1040(fechas),
     forcedFirst: FORCED_F1,
+    force1040F1: FORCE_1040_F1,
     equipo8Id: (equipo8() || {}).id || null
   };
 }
@@ -102,6 +110,7 @@ function render() {
       <h3 style="margin:0 0 6px">${icon('check', { size: 18 })} Corrección puntual (sin regenerar)</h3>
       <p class="muted" style="margin:0 0 8px">Mantiene el fixture publicado y solo: reemplaza <strong>AFC → Gunners</strong> en todo el torneo, e intercambia <strong>Los Pibes ↔ Históricos</strong> en la <strong>Fecha 1</strong> (deja Históricos vs Equipo 8 y Los Pibes vs Ariel Honores; el resto de la F1 igual). No toca horarios, canchas, grabados ni clásicos.</p>
       <button class="btn btn-primary btn-sm" id="patch-fx">Aplicar corrección al fixture publicado</button>
+      <button class="btn btn-danger btn-sm" id="baja-fx" style="margin-left:8px">Bajar fixture senior (quitar de la web)</button>
     </div>
 
     ${(falt.length || arielSinLogo || retirar.length) ? `
@@ -325,6 +334,16 @@ function bind() {
       toast(`Corrección aplicada: ${ups.length} partidos ✓`, 'success');
       setTimeout(() => location.reload(), 800);
     } catch (err) { toast(err.message || 'Error al aplicar', 'error'); pf.disabled = false; pf.textContent = 'Aplicar corrección al fixture publicado'; }
+  };
+  const bf = document.getElementById('baja-fx');
+  if (bf) bf.onclick = async () => {
+    if (!confirm('¿Bajar TODO el fixture senior de la web? Se elimina de la Programación (el Junior no se toca). Podrás volver a generarlo/publicarlo después.')) return;
+    bf.disabled = true; bf.textContent = 'Bajando…';
+    try {
+      const n = await borrarFixtureSerie('senior');
+      toast(`Fixture senior dado de baja (${n || 0} partidos) ✓`, 'success');
+      setTimeout(() => location.reload(), 800);
+    } catch (err) { toast(err.message || 'No se pudo bajar', 'error'); bf.disabled = false; bf.textContent = 'Bajar fixture senior (quitar de la web)'; }
   };
   const bg = document.getElementById('btn-gen'); if (bg) bg.onclick = () => generar(false);
   const br = document.getElementById('btn-regen'); if (br) br.onclick = () => generar(true);

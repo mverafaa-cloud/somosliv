@@ -94,12 +94,18 @@ function buildOne(params, seed) {
     const matches = pairsByRound[ri].map(([local, visita]) => ({ local, visita, cancha: null, horario: null, grabado: false, clasico: false, marca: null }));
     matches.forEach(m => { T[m.local].local++; T[m.visita].visita++; });
 
-    // 1) Elegir el partido de las 10:40 (sin equipos bloqueados por cruce con Junior),
-    //    balanceando cuántas veces cada equipo jugó a esa hora.
-    const cand10 = matches.filter(m => !block.has(m.local) && !block.has(m.visita));
-    const pool10 = (cand10.length ? cand10 : matches).slice()
-      .sort((a, b) => (T[a.local].hor['10:40'] + T[a.visita].hor['10:40']) - (T[b.local].hor['10:40'] + T[b.visita].hor['10:40']) + (rand() - 0.5));
-    const m10 = pool10[0];
+    // 1) Elegir el partido de las 10:40. En F1 se puede forzar un partido específico.
+    let m10 = null;
+    if (esF1 && params.force1040F1) {
+      const fk = [...params.force1040F1].sort().join('|');
+      m10 = matches.find(m => key(m) === fk) || null;
+    }
+    if (!m10) {
+      const cand10 = matches.filter(m => !block.has(m.local) && !block.has(m.visita));
+      const pool10 = (cand10.length ? cand10 : matches).slice()
+        .sort((a, b) => (T[a.local].hor['10:40'] + T[a.visita].hor['10:40']) - (T[b.local].hor['10:40'] + T[b.visita].hor['10:40']) + (rand() - 0.5));
+      m10 = pool10[0];
+    }
     matches.forEach(m => { m.horario = (m === m10) ? '10:40' : '9:00'; });
     matches.forEach(m => { T[m.local].hor[m.horario]++; T[m.visita].hor[m.horario]++; });
     const nueve = matches.filter(m => m.horario === '9:00'); // 3 partidos

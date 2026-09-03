@@ -387,6 +387,22 @@ export async function publishFixture(fixture) {
   return count;
 }
 
+// Baja (elimina) todos los partidos de una serie. Deja intactas las demás series.
+export async function borrarFixtureSerie(serieId) {
+  if (sandboxOn()) {
+    const arr = sbGet('partidos').filter(p => (p.serie || 'libre') !== serieId);
+    sbSet('partidos', arr); return;
+  }
+  requireFb();
+  const { collection, doc, getDocs, writeBatch } = fb.fsMod;
+  const snap = await getDocs(collection(fb.db, 'partidos'));
+  const batch = writeBatch(fb.db);
+  let n = 0;
+  snap.docs.forEach(d => { if ((d.data().serie || 'libre') === serieId) { batch.delete(doc(fb.db, 'partidos', d.id)); n++; } });
+  await batch.commit();
+  return n;
+}
+
 // ---------- AUDIOVISUAL ----------
 export async function getAudiovisual() {
   if (sandboxOn()) return sbGet('audiovisual')[0] || JSON.parse(JSON.stringify(SEED.audiovisual));
