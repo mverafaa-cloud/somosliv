@@ -13,7 +13,7 @@ export async function showReglamentos() {
     { v: '10 min', l: 'Tolerancia', h: 'menos de 9 = riesgo de W.O. + multa $80.000' },
     { v: '≥ 1 fecha', l: 'Roja directa', h: 'suspensión mínima' },
     { v: '≥ 4 fechas', l: 'Agresión física', h: 'hasta expulsión' },
-    { v: '48 h', l: 'Reclamos', h: 'plazo por escrito' }
+    { v: '48 h', l: 'Reclamos', h: 'hábiles · al correo LIV' }
   ];
 
   const secciones = [
@@ -24,10 +24,20 @@ export async function showReglamentos() {
       </ul>` },
     { t: 'Participación y planilla de buena fe', b: `<ul>
         <li>Planilla de buena fe de <strong>16 a 35 jugadores</strong> antes del inicio de la fase regular.</li>
-        <li>Todo jugador debe portar <strong>cédula o pasaporte vigente</strong>; la Liga puede exigirlo en cualquier momento, incluso durante un partido.</li>
+        <li><strong>Documentos válidos para jugar:</strong> cédula de identidad, comprobante de cédula en trámite, pasaporte o licencia de conducir (vigentes). No se aceptan credenciales de trabajo o estudio, tarjetas bancarias ni fotocopias. La Liga puede exigir el documento en cualquier momento, incluso durante el partido.</li>
+        <li><strong>Si a un jugador se le queda el carnet:</strong> puede jugar mostrando una <strong>foto de su carnet</strong> únicamente si <strong>ambos delegados están de acuerdo</strong> y se deja constancia escrita y firmada en la planilla. Sin documento válido ni esa autorización firmada, no juega.</li>
         <li>Cambios de planilla solo hasta la <strong>fecha 3</strong>, aprobados por el Directorio.</li>
         <li>Cada equipo designa un <strong>delegado oficial</strong> como único interlocutor ante la Liga.</li>
         <li><strong>Categorías:</strong> Junior — libre, 18 años o más; excepcionalmente pueden jugar los de <strong>17 años con autorización notarial de sus padres</strong>. Senior — nacidos en 1994 o antes (+32), con un máximo de 2 jugadores nacidos en 1995/1996.</li>
+      </ul>` },
+    { t: 'Uniforme y equipamiento', b: `<ul>
+        <li>Todos los jugadores de un mismo equipo en cancha deben estar uniformados con la <strong>misma camiseta, el mismo short y el mismo color de medias</strong>.</li>
+        <li>El uso de <strong>canilleras es obligatorio</strong>. Sin este equipamiento, el jugador no puede ingresar a la cancha.</li>
+      </ul>` },
+    { t: 'Sustituciones y reingresos', b: `<ul>
+        <li>Los <strong>cambios son ilimitados</strong> durante el partido.</li>
+        <li><strong>Reingresos permitidos:</strong> en la categoría <strong>Junior, 1 reingreso</strong> por jugador; en la categoría <strong>Senior, 2 reingresos</strong> por jugador. Un reingreso es cuando un jugador que salió vuelve a entrar.</li>
+        <li>Toda sustitución se avisa a la mesa; el planillero registra las <strong>entradas y salidas</strong> para controlar los reingresos.</li>
       </ul>` },
     { t: 'Formato de competencia', b: `<ul>
         <li><strong>10 equipos</strong>, fase regular de todos contra todos según el fixture oficial.</li>
@@ -81,7 +91,8 @@ export async function showReglamentos() {
       </ul>` },
     { t: 'Identidad y control de jugadores', b: `<ul>
         <li>Prohibida la suplantación de identidad (<em>"jugador fantasma"</em>): 0-3 en contra, suspensión del suplantado y del suplantador por el <strong>resto de la temporada</strong> y multa.</li>
-        <li>Solo pueden jugar los inscritos en la planilla vigente. Al <strong>firmar la planilla</strong>, cada jugador debe <strong>exhibir su cédula de identidad</strong>; los planilleros la verifican en ese momento.</li>
+        <li>Solo pueden jugar los inscritos en la planilla vigente. Al <strong>firmar la planilla</strong>, cada jugador debe <strong>exhibir su documento de identidad</strong>; los planilleros lo verifican en ese momento.</li>
+        <li><strong>Firma de la planilla:</strong> el delegado entrega <strong>todos los carnets al comienzo del partido</strong>. Todos los presentes pueden firmar; los <strong>titulares deben firmar en el entretiempo</strong> y el resto de los jugadores puede firmar una vez <strong>iniciado el segundo tiempo</strong>.</li>
         <li>La Liga puede controlar la identidad <strong>antes, durante o después</strong> del partido. Negarse a exhibir el documento: partido perdido 0-3.</li>
       </ul>` },
     { t: 'Instalaciones y consumo', b: `<ul>
@@ -100,7 +111,7 @@ export async function showReglamentos() {
         <li>Se ocupa <strong>todo el material audiovisual disponible</strong> para impartir justicia y esclarecer los hechos.</li>
       </ul>` },
     { t: 'Reclamos y apelaciones', b: `<ul>
-        <li>Todo reclamo se presenta <strong>por escrito (correo)</strong> por el delegado oficial, dentro de <strong>48 horas</strong> del partido o hecho.</li>
+        <li>Los reclamos a <strong>sanciones, tarjetas o expulsiones</strong> se presentan <strong>por escrito al correo <a href="mailto:liv.torneos@gmail.com">liv.torneos@gmail.com</a></strong>, por el delegado oficial, dentro de un plazo de <strong>48 horas hábiles</strong> del partido o hecho —es decir, <strong>hasta las 23:59 del día martes</strong>.</li>
         <li>No se cursan reclamos verbales, anónimos o fuera de plazo. El Comité resuelve en <strong>5 días hábiles</strong>.</li>
         <li><strong>Siempre se puede apelar</strong> una sanción presentando <strong>material audiovisual</strong> que pruebe lo contrario a lo sancionado; el <strong>Comité de Disciplina decide</strong> en base a la evidencia presentada.</li>
       </ul>` },
