@@ -1,4 +1,4 @@
-import { getConfig, getDisciplina, getEquipos, getPartidos, equiposById, suspendidosParaFecha } from '../services/store.js';
+import { getConfig, getDisciplina, getEquipos, getPartidos, equiposById, calcSuspensiones } from '../services/store.js';
 import { mount, esc, fmtDate, parseDate, teamInline } from '../ui/helpers.js';
 import { shell, loading } from '../ui/layout.js';
 import { icon } from '../ui/icons.js';
@@ -101,25 +101,44 @@ export async function showDisciplina() {
   const byId = equiposById(equipos);
   const series = config.series || [];
 
-  // Próxima fecha: la primera programada; si no hay, la siguiente a la última jugada.
-  const prog = partidos.filter(p => p.estado !== 'finalizado' && p.fecha_num != null).map(p => +p.fecha_num);
-  const jug = partidos.filter(p => p.estado === 'finalizado' && p.fecha_num != null).map(p => +p.fecha_num);
-  const proxFecha = prog.length ? Math.min(...prog) : (jug.length ? Math.max(...jug) + 1 : null);
+  // Próxima fecha POR SERIE. Junior y Senior numeran distinto (la fecha 2 de Junior
+  // coincide en el calendario con la fecha 1 de Senior), así que no se pueden mezclar:
+  // se calcula la próxima fecha de cada serie por separado.
+  const serieIds = [...new Set(partidos.map(p => p.serie || 'libre'))];
+  const proxPorSerie = {};
+  serieIds.forEach(sid => {
+    const ps = partidos.filter(p => (p.serie || 'libre') === sid && p.fecha_num != null);
+    const prog = ps.filter(p => p.estado !== 'finalizado').map(p => +p.fecha_num);
+    const jug = ps.filter(p => p.estado === 'finalizado').map(p => +p.fecha_num);
+    proxPorSerie[sid] = prog.length ? Math.min(...prog) : (jug.length ? Math.max(...jug) + 1 : null);
+  });
+  const serieNombre = (sid) => (series.find(s => s.id === sid) || {}).nombre || (sid === 'libre' ? 'Junior' : (sid === 'senior' ? 'Senior' : sid));
 
   function renderSusp() {
     const el = document.getElementById('disc-susp');
     if (!el) return;
-    if (!proxFecha) { el.innerHTML = ''; return; }
-    const susp = suspendidosParaFecha(tarjetas, proxFecha).filter(s => _serie === 'all' || s.serie === _serie);
+    const todas = calcSuspensiones(tarjetas);
+    const sids = (_serie === 'all' ? serieIds : [_serie]).filter(sid => proxPorSerie[sid] != null);
+    const susp = [];
+    sids.forEach(sid => {
+      const pf = proxPorSerie[sid];
+      todas.filter(s => (s.serie || 'libre') === sid && s.desde <= pf && pf <= s.hasta)
+        .forEach(s => susp.push({ ...s, serieId: sid }));
+    });
+    const titulo = (_serie !== 'all' && proxPorSerie[_serie] != null)
+      ? `Suspendidos para la Fecha ${proxPorSerie[_serie]}`
+      : 'Suspendidos para la próxima fecha';
+    const multiSerie = serieIds.length > 1 && _serie === 'all';
     el.innerHTML = `
       <div class="card mb-3" style="border-left:4px solid var(--c-red)">
-        <div class="card-header"><h3 style="margin:0">${icon('shield', { size: 20 })} Suspendidos para la Fecha ${proxFecha}</h3></div>
+        <div class="card-header"><h3 style="margin:0">${icon('shield', { size: 20 })} ${titulo}</h3></div>
         ${susp.length ? `
         <div class="table-wrap mt-2"><table class="tbl">
-          <thead><tr><th>Jugador</th><th>Equipo</th><th>Motivo</th><th>Se pierde</th></tr></thead>
+          <thead><tr><th>Jugador</th><th>Equipo</th>${multiSerie ? '<th>Serie</th>' : ''}<th>Motivo</th><th>Se pierde</th></tr></thead>
           <tbody>${susp.map(s => `<tr>
             <td style="font-weight:700">${esc(s.nombre || '—')}</td>
             <td>${s.equipo ? teamInline(byId[s.equipo]?.logo, byId[s.equipo]?.nombre || s.equipo, { size: 22 }) : '<span class="muted">—</span>'}</td>
+            ${multiSerie ? `<td class="muted">${esc(serieNombre(s.serieId))}</td>` : ''}
             <td class="muted">${esc(s.motivo || '')}</td>
             <td><span class="pill pill-red">${s.definitivo ? 'Expulsado de la LIV' : (s.hasta > s.desde ? `Fechas ${s.desde}–${s.hasta}` : `Fecha ${s.desde}`)}</span></td>
           </tr>`).join('')}</tbody>
