@@ -255,22 +255,56 @@ function renderEquipos(el) {
       </div>
     </div>` : ''}
     <div class="card mb-3">
-      <h3 class="mb-2">Agregar equipo</h3>
-      <form id="f-eq" class="form-row-3">
-        <div class="form-group"><label>Nombre</label><input class="input" name="nombre" required></div>
-        <div class="form-group"><label>Serie</label><select class="select" name="serie" required>${serieOptions()}</select></div>
-        <div class="form-group" style="justify-content:end"><button class="btn btn-primary">Agregar</button></div>
+      <h3 class="mb-2" id="eq-form-title">Agregar equipo</h3>
+      <form id="f-eq">
+        <input type="hidden" name="id" value="">
+        <div class="form-row-3">
+          <div class="form-group"><label>Nombre</label><input class="input" name="nombre" required></div>
+          <div class="form-group"><label>Serie</label><select class="select" name="serie" required>${serieOptions()}</select></div>
+          <div class="form-group"><label>Logo (ruta)</label><input class="input" name="logo" placeholder="/assets/equipos/ausc.png"></div>
+        </div>
+        <div class="spread" style="gap:8px;margin-top:8px">
+          <p class="muted" style="margin:0;font-size:.82rem">Para <strong>reemplazar</strong> un equipo (ej. Equipo 8), toca <strong>Editar</strong> en la tabla, cambia el nombre y pega la ruta del logo; conserva el mismo equipo (y sus partidos).</p>
+          <div style="display:flex;gap:8px">
+            <button type="button" class="btn btn-ghost btn-sm" id="eq-form-reset" hidden>Cancelar</button>
+            <button class="btn btn-primary" id="eq-form-submit">Agregar</button>
+          </div>
+        </div>
       </form>
     </div>
     <div class="table-wrap"><table class="tbl">
-      <thead><tr><th>Equipo</th><th>Serie</th><th></th></tr></thead>
+      <thead><tr><th></th><th>Equipo</th><th>Serie</th><th></th></tr></thead>
       <tbody>${rows.map(e => `<tr>
+        <td style="width:44px">${e.logo ? `<img src="${esc(e.logo)}" alt="" style="width:32px;height:32px;object-fit:contain">` : '<span class="muted" style="font-size:.72rem">sin logo</span>'}</td>
         <td style="font-weight:700">${esc(e.nombre)}</td>
         <td>${esc((C.config.series.find(s => s.id === e.serie) || {}).nombre || e.serie)}</td>
-        <td style="text-align:right"><button class="btn btn-danger btn-sm" data-del="${esc(e.id)}">Eliminar</button></td>
-      </tr>`).join('') || '<tr><td colspan="3" class="muted center">Sin equipos aún.</td></tr>'}</tbody>
+        <td style="text-align:right;white-space:nowrap"><button class="btn btn-ghost btn-sm" data-edit="${esc(e.id)}">Editar</button> <button class="btn btn-danger btn-sm" data-del="${esc(e.id)}">Eliminar</button></td>
+      </tr>`).join('') || '<tr><td colspan="4" class="muted center">Sin equipos aún.</td></tr>'}</tbody>
     </table></div>`;
-  el.querySelector('#f-eq').onsubmit = (ev) => { ev.preventDefault(); const d = Object.fromEntries(new FormData(ev.target).entries()); reload('eq', () => saveEquipo(d)); };
+  const form = el.querySelector('#f-eq');
+  const resetBtn = el.querySelector('#eq-form-reset');
+  const resetForm = () => {
+    form.reset(); form.id.value = '';
+    el.querySelector('#eq-form-title').textContent = 'Agregar equipo';
+    el.querySelector('#eq-form-submit').textContent = 'Agregar';
+    resetBtn.hidden = true;
+  };
+  form.onsubmit = (ev) => {
+    ev.preventDefault();
+    const d = Object.fromEntries(new FormData(ev.target).entries());
+    if (!d.id) delete d.id;            // sin id → equipo nuevo
+    if (!d.logo) delete d.logo;        // no pisar con logo vacío
+    reload('eq', () => saveEquipo(d));
+  };
+  resetBtn.onclick = resetForm;
+  el.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => {
+    const e = C.equipos.find(x => x.id === b.dataset.edit); if (!e) return;
+    form.id.value = e.id; form.nombre.value = e.nombre || ''; form.serie.value = e.serie || ''; form.logo.value = e.logo || '';
+    el.querySelector('#eq-form-title').textContent = `Editar: ${e.nombre}`;
+    el.querySelector('#eq-form-submit').textContent = 'Guardar cambios';
+    resetBtn.hidden = false;
+    form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
   const bimp = el.querySelector('#btn-import-eq');
   if (bimp) bimp.onclick = () => { bimp.disabled = true; bimp.textContent = 'Importando…'; reload('eq', () => importEquipos()); };
   el.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { if (confirm('¿Eliminar equipo?')) reload('eq', () => deleteEquipo(b.dataset.del)); });
