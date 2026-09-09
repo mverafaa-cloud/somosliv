@@ -342,7 +342,7 @@ table.tbl td.pts { font-weight: 800; color: var(--c-ink); }
 /* ===================================================
    TABS
 =================================================== */
-.tabs { display: flex; gap: 4px; overflow-x: auto; margin-bottom: 18px; border-bottom: 2px solid var(--c-line); scrollbar-width: none; }
+.tabs { display: flex; flex-wrap: wrap; gap: 4px 6px; overflow-x: auto; margin-bottom: 18px; border-bottom: 2px solid var(--c-line); scrollbar-width: thin; }
 .tabs::-webkit-scrollbar { display: none; }
 .tabs button { display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; background: transparent; border: none; border-bottom: 3px solid transparent; font-weight: 700; font-size: 0.95rem; color: var(--c-muted); white-space: nowrap; }
 .tabs button.active { color: var(--c-brand); border-bottom-color: var(--c-brand); }
