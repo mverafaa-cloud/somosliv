@@ -113,6 +113,12 @@ function render() {
       <button class="btn btn-danger btn-sm" id="baja-fx" style="margin-left:8px">Bajar fixture senior (quitar de la web)</button>
     </div>
 
+    <div class="card mb-3" style="border-left:4px solid var(--c-brand)">
+      <h3 style="margin:0 0 6px">${icon('shuffle', { size: 18 })} Intercambiar Los Pibes ↔ Ventastore (todo el calendario)</h3>
+      <p class="muted" style="margin:0 0 8px">Intercambia por completo los calendarios de <strong>Los Pibes</strong> y <strong>Ventastore</strong> en <strong>todas las fechas</strong> (cada partido donde juega uno, pasa a jugarlo el otro). El todos-contra-todos sigue válido y no cambia horarios, canchas, grabados ni clásicos. En la Fecha 2 queda <strong>Los Pibes vs Camilo Henríquez</strong> y <strong>Ventastore vs AUSC</strong>. No toca los resultados ya cargados.</p>
+      <button class="btn btn-primary btn-sm" id="swap-lpv">Intercambiar Los Pibes ↔ Ventastore</button>
+    </div>
+
     ${(falt.length || arielSinLogo || retirar.length) ? `
     <div class="card mb-3" style="border-left:4px solid #f59e0b">
       <h3 style="margin:0 0 6px">${icon('users', { size: 18 })} Equipos senior</h3>
@@ -334,6 +340,25 @@ function bind() {
       toast(`Corrección aplicada: ${ups.length} partidos ✓`, 'success');
       setTimeout(() => location.reload(), 800);
     } catch (err) { toast(err.message || 'Error al aplicar', 'error'); pf.disabled = false; pf.textContent = 'Aplicar corrección al fixture publicado'; }
+  };
+  const sw = document.getElementById('swap-lpv');
+  if (sw) sw.onclick = async () => {
+    if (!SRP.length) { toast('No hay fixture senior publicado', 'error'); return; }
+    const A = 'sr-los-pibes', B = 'sr-arsenal'; // Ventastore conserva el id sr-arsenal
+    const swp = id => id === A ? B : (id === B ? A : id);
+    const ups = [];
+    SRP.forEach(p => {
+      const local = swp(p.local), visita = swp(p.visita);
+      if (local !== p.local || visita !== p.visita) ups.push({ id: p.id, local, visita });
+    });
+    if (!ups.length) { toast('No hay partidos de Los Pibes/Ventastore para intercambiar'); return; }
+    if (!confirm(`Se intercambian Los Pibes ↔ Ventastore en ${ups.length} partidos (todas las fechas). No cambia horarios, canchas, grabados, clásicos ni resultados. ¿Continuar?`)) return;
+    sw.disabled = true; sw.textContent = 'Aplicando…';
+    try {
+      for (const u of ups) await savePartido(u);
+      toast(`Intercambio aplicado: ${ups.length} partidos ✓`, 'success');
+      setTimeout(() => location.reload(), 800);
+    } catch (err) { toast(err.message || 'Error al aplicar', 'error'); sw.disabled = false; sw.textContent = 'Intercambiar Los Pibes ↔ Ventastore'; }
   };
   const bf = document.getElementById('baja-fx');
   if (bf) bf.onclick = async () => {
