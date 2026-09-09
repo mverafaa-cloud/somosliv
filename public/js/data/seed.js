@@ -50,7 +50,7 @@ export const SEED = {
     { id: 'sr-arquitectura',    nombre: 'Arquitectura',        serie: 'senior', logo: '/assets/equipos/arquitectura.png' },
     { id: 'sr-camilo-enriquez', nombre: 'Camilo Henríquez',     serie: 'senior', logo: '/assets/equipos/camilo-enriquez.png' },
     { id: 'sr-afc',             nombre: 'AFC',                 serie: 'senior', logo: '/assets/equipos/afc.png' },
-    { id: 'sr-arsenal',         nombre: 'Arsenal',             serie: 'senior', logo: '/assets/equipos/arsenal.png' },
+    { id: 'sr-arsenal',         nombre: 'Ventastore',          serie: 'senior', logo: '/assets/equipos/ventastore.png' },
     { id: 'sr-los-pibes',       nombre: 'Los Pibes',           serie: 'senior', logo: '/assets/equipos/los-pibes.png' },
     { id: 'sr-historicos',      nombre: 'Históricos FC',       serie: 'senior', logo: '/assets/equipos/historicos.png' }
   ],
