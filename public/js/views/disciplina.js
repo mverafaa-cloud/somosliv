@@ -155,6 +155,53 @@ export async function showDisciplina() {
       </div>`;
   }
 
+  // Flujo de amarillas acumuladas por jugador (5 amarillas = 1 fecha de suspensión).
+  const MES3 = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+  const fechaCorta = (iso) => { const p = String(iso || '').split('-').map(Number); return (p[2] && p[1]) ? `${p[2]} ${MES3[p[1] - 1]}` : ''; };
+
+  function renderAmar() {
+    const el = document.getElementById('disc-amar');
+    if (!el) return;
+    const amar = tarjetas.filter(t => t.tipo === 'amarilla' && (_serie === 'all' || (t.serie || 'libre') === _serie));
+    const groups = {};
+    amar.forEach(t => {
+      const key = t.jugadorId || `${t.jugador || '—'}|${t.equipo || ''}`;
+      (groups[key] = groups[key] || { nombre: t.jugador, equipo: t.equipo, serie: t.serie, items: [] }).items.push(t);
+    });
+    const rows = Object.values(groups)
+      .map(g => { g.items.sort((a, b) => (+a.fecha_num || 0) - (+b.fecha_num || 0) || (parseDate(a.fecha) - parseDate(b.fecha))); return g; })
+      .filter(g => g.items.length >= 2)
+      .sort((a, b) => b.items.length - a.items.length || String(a.nombre || '').localeCompare(String(b.nombre || '')));
+
+    if (!rows.length) { el.innerHTML = emptyBox('Ningún jugador tiene 2 o más amarillas acumuladas todavía.'); return; }
+
+    el.innerHTML = rows.map(g => {
+      const n = g.items.length;
+      const faltan = (n % 5 === 0) ? 0 : 5 - (n % 5);
+      const flujo = g.items.map((t, i) => {
+        const k = i + 1, trigger = k % 5 === 0;
+        const fecha = fechaCorta(t.fecha) || (t.fecha_num ? `F${t.fecha_num}` : '—');
+        return `<span class="pill" style="background:${trigger ? '#fee2e2' : '#fef9c3'};color:${trigger ? '#991b1b' : '#854d0e'};font-weight:700;white-space:nowrap">${k}. ${esc(fecha)}${trigger ? ' · 5ª → suspensión' : ''}</span>`;
+      }).join('<span style="color:#cbd5e1;margin:0 3px">→</span>');
+      const estado = faltan === 0
+        ? '<span class="pill pill-red">Completó 5 · suspendido 1 fecha</span>'
+        : `<span class="pill" style="background:#fef9c3;color:#854d0e">Falta${faltan > 1 ? 'n' : ''} ${faltan} para suspensión</span>`;
+      return `<div class="card" style="margin-bottom:10px">
+        <div class="spread" style="align-items:center;gap:10px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:10px;min-width:0">
+            <strong>${esc(g.nombre || '—')}</strong>
+            ${g.equipo ? teamInline(byId[g.equipo]?.logo, byId[g.equipo]?.nombre || g.equipo, { size: 20 }) : ''}
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span class="pill pill-dark">${n} amarilla${n > 1 ? 's' : ''}</span>
+            ${estado}
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;flex-wrap:wrap;gap:2px;margin-top:10px">${flujo}</div>
+      </div>`;
+    }).join('');
+  }
+
   function renderData() {
     const list = tarjetas
       .filter(t => _serie === 'all' || t.serie === _serie)
@@ -203,10 +250,16 @@ export async function showDisciplina() {
     <h2 class="mb-2">Tarjetas y sanciones</h2>
     ${serieChips(series)}
     <div id="disc-body"></div>
+
+    <span class="eyebrow">Amarillas</span>
+    <h2 class="mb-1">Acumulación de amarillas</h2>
+    <p class="muted mb-2">Con <strong>5 amarillas</strong> acumuladas el jugador queda suspendido <strong>1 fecha</strong>. Flujo por jugador (2 o más amarillas): en qué fechas las recibió y el total acumulado.</p>
+    <div id="disc-amar"></div>
   </div>`;
 
   mount(shell(inner, config));
-  document.querySelectorAll('#serie-chips .chip').forEach(c => c.addEventListener('click', () => { _serie = c.dataset.serie; renderSusp(); renderData(); }));
+  document.querySelectorAll('#serie-chips .chip').forEach(c => c.addEventListener('click', () => { _serie = c.dataset.serie; renderSusp(); renderData(); renderAmar(); }));
   renderSusp();
   renderData();
+  renderAmar();
 }
