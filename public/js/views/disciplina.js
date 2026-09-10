@@ -135,13 +135,21 @@ export async function showDisciplina() {
         ${susp.length ? `
         <div class="table-wrap mt-2"><table class="tbl">
           <thead><tr><th>Jugador</th><th>Equipo</th>${multiSerie ? '<th>Serie</th>' : ''}<th>Motivo</th><th>Se pierde</th></tr></thead>
-          <tbody>${susp.map(s => `<tr>
+          <tbody>${susp.map(s => {
+            const pend = s.via === 'comite' && !s.definitivo;   // falta grave: la fija el comité
+            const n = isFinite(s.hasta) ? (s.hasta - s.desde + 1) : 0;
+            const sePierde = s.definitivo
+              ? '<span class="pill pill-red">Expulsado de la LIV</span>'
+              : (pend
+                  ? `<span class="pill" style="background:#fef3c7;color:#92400e">Mín. ${n} fecha${n > 1 ? 's' : ''}</span>`
+                  : `<span class="pill pill-red">${s.hasta > s.desde ? `Fechas ${s.desde}–${s.hasta}` : `Fecha ${s.desde}`}</span>`);
+            return `<tr>
             <td style="font-weight:700">${esc(s.nombre || '—')}</td>
             <td>${s.equipo ? teamInline(byId[s.equipo]?.logo, byId[s.equipo]?.nombre || s.equipo, { size: 22 }) : '<span class="muted">—</span>'}</td>
             ${multiSerie ? `<td class="muted">${esc(serieNombre(s.serieId))}</td>` : ''}
-            <td class="muted">${esc(s.motivo || '')}</td>
-            <td><span class="pill pill-red">${s.definitivo ? 'Expulsado de la LIV' : (s.hasta > s.desde ? `Fechas ${s.desde}–${s.hasta}` : `Fecha ${s.desde}`)}</span></td>
-          </tr>`).join('')}</tbody>
+            <td class="muted">${esc(s.motivo || '')}${pend ? `<div style="font-size:.8rem;color:#92400e;margin-top:3px">⏳ A la espera de la reunión del comité de disciplina para definir la sanción (mínimo ${n} fechas).</div>` : ''}</td>
+            <td>${sePierde}</td>
+          </tr>`; }).join('')}</tbody>
         </table></div>`
         : `<p class="muted mt-1" style="margin:0">Sin suspendidos para la próxima fecha. ✔️</p>`}
       </div>`;

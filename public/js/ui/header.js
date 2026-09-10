@@ -11,7 +11,7 @@ export const NAV = [
   { href: '/goleadores',    label: 'Goleadores',   icon: 'ball' },
   { href: '/disciplina',    label: 'Disciplina',   icon: 'cards' },
   { href: '/reglamentos',   label: 'Reglamentos',  icon: 'book' },
-  { href: '/admision',      label: 'Admisión',     icon: 'clipboard' },
+  // { href: '/admision',      label: 'Admisión',     icon: 'clipboard' }, // oculto por ahora
   { href: '/audiovisual',   label: 'Audiovisual',  icon: 'video' }
 ];
 

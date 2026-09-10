@@ -9,7 +9,7 @@ let _serie = null;
 
 export async function showPosiciones() {
   mount(loading());
-  const [config, partidos, equipos, goleadores] = await Promise.all([getConfig(), getPartidos(), getEquipos(), getGoleadores()]);
+  const [config, partidos, equipos] = await Promise.all([getConfig(), getPartidos(), getEquipos()]);
   const series = config.series || [];
   const byId = equiposById(equipos);
 
@@ -48,17 +48,6 @@ export async function showPosiciones() {
 
     document.getElementById('pos-body').innerHTML = body;
 
-    // Goleadores de la serie
-    const gs = (goleadores || []).filter(g => g.serie === _serie).sort((a, b) => b.goles - a.goles).slice(0, 10);
-    document.getElementById('gol-body').innerHTML = gs.length ? `
-      <div class="card">
-        <div class="card-header"><h3>${icon('ball', { size: 22 })} Goleadores</h3></div>
-        <div class="table-wrap" style="border:none">
-          <table class="tbl"><thead><tr><th class="num">#</th><th>Jugador</th><th>Equipo</th><th class="num">Goles</th></tr></thead>
-          <tbody>${gs.map((g, i) => `<tr><td class="pos">${i + 1}</td><td style="font-weight:700">${esc(g.jugador)}</td><td>${teamInline(byId[g.equipo]?.logo, byId[g.equipo]?.nombre || g.equipo, { size: 22 })}</td><td class="num pts">${g.goles}</td></tr>`).join('')}</tbody></table>
-        </div>
-      </div>` : '';
-
     document.querySelectorAll('#pos-chips .chip').forEach(c => c.classList.toggle('active', c.dataset.serie === _serie));
   }
 
@@ -71,7 +60,6 @@ export async function showPosiciones() {
       ${series.map(s => `<button class="chip" data-serie="${esc(s.id)}">${esc(s.nombre)}</button>`).join('')}
     </div>
     <div id="pos-body"></div>
-    <div id="gol-body" class="mt-3"></div>
   </div>`;
 
   mount(shell(inner, config));

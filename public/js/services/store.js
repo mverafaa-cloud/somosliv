@@ -214,9 +214,12 @@ export function calcSuspensiones(disciplina) {
   (disciplina || []).filter(d => d.tipo === 'roja').forEach(d => {
     const F = +d.fecha_num; if (!F) return;
     if (d.claseRoja === 'doble') return;              // doble amonestación: sin suspensión
-    if (d.definitivo) { out.push({ jugadorId: d.jugadorId, nombre: d.jugador, equipo: d.equipo, serie: d.serie, desde: F + 1, hasta: Infinity, motivo: d.falta || 'Expulsión definitiva', tipo: 'roja', definitivo: true }); return; }
+    // Vía de la falta (auto = firme; comite = rango pendiente de sesión del comité).
+    const f = FALTAS_ROJA.find(x => x.id === d.falta || x.falta === d.falta || x.id === d.faltaId) || null;
+    const via = (f ? f.via : null) || d.via || null;
+    if (d.definitivo) { out.push({ jugadorId: d.jugadorId, nombre: d.jugador, equipo: d.equipo, serie: d.serie, desde: F + 1, hasta: Infinity, motivo: d.falta || 'Expulsión definitiva', tipo: 'roja', definitivo: true, via }); return; }
     const n = +d.fechas || 0;
-    if (n > 0) out.push({ jugadorId: d.jugadorId, nombre: d.jugador, equipo: d.equipo, serie: d.serie, desde: F + 1, hasta: F + n, motivo: d.falta || 'Roja directa', tipo: 'roja', fechas: n });
+    if (n > 0) out.push({ jugadorId: d.jugadorId, nombre: d.jugador, equipo: d.equipo, serie: d.serie, desde: F + 1, hasta: F + n, motivo: d.falta || 'Roja directa', tipo: 'roja', fechas: n, via });
   });
   const byJ = {};
   (disciplina || []).filter(d => d.tipo === 'amarilla' && d.jugadorId).forEach(d => { (byJ[d.jugadorId] = byJ[d.jugadorId] || []).push(d); });

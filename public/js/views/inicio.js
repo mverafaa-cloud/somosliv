@@ -23,8 +23,10 @@ export async function showInicio() {
   const lastResults = lastDate ? finGroups[lastDate].slice(0, 8) : [];
   const lastFechaNum = lastResults.length ? lastResults[0].fecha_num : null;
 
-  // Próxima fecha programada
-  const prog = partidos.filter(p => p.estado === 'programado' && parseDate(p.fecha))
+  // Próxima fecha programada (solo fechas de hoy en adelante: no arrastrar
+  // partidos programados de fechas ya pasadas que quedaron sin cargar).
+  const hoy0 = new Date(); hoy0.setHours(0, 0, 0, 0);
+  const prog = partidos.filter(p => p.estado === 'programado' && parseDate(p.fecha) && parseDate(p.fecha) >= hoy0)
     .sort((a, b) => parseDate(a.fecha) - parseDate(b.fecha));
   const nextDate = prog.length ? prog[0].fecha : null;
   const nextMatches = nextDate ? prog.filter(p => p.fecha === nextDate) : [];
