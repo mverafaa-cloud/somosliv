@@ -326,10 +326,14 @@ function renderPartidos(el) {
           <div class="form-group"><label>N° Fecha</label><input class="input" name="fecha_num" type="number" min="1" value="${esc(p.fecha_num ?? '')}"></div>
           <div class="form-group"><label>Cancha</label><input class="input" name="cancha" value="${esc(p.cancha ?? '')}"></div>
         </div>
-        <div class="form-group" style="margin:-2px 0 10px">
+        <div class="form-group" style="margin:-2px 0 10px;display:flex;flex-wrap:wrap;gap:8px 22px">
           <label style="display:flex;align-items:center;gap:8px;font-weight:600;cursor:pointer">
             <input type="checkbox" name="amistoso" ${p.amistoso ? 'checked' : ''}>
             Partido amistoso <span class="muted" style="font-weight:400">(no cuenta para la tabla ni para una fecha)</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;font-weight:600;cursor:pointer">
+            <input type="checkbox" name="grabado" ${p.grabado ? 'checked' : ''}>
+            ${icon('video', { size: 16 })} Se graba (VeoPro) <span class="muted" style="font-weight:400">(cámara en cancha 1 o 2)</span>
           </label>
         </div>
         <div class="form-row-3">
@@ -355,21 +359,23 @@ function renderPartidos(el) {
       </form>
     </div>
     <div class="table-wrap"><table class="tbl">
-      <thead><tr><th>Fecha</th><th>Serie</th><th>Partido</th><th class="num">Marcador</th><th>Estado</th><th></th></tr></thead>
+      <thead><tr><th>Fecha</th><th>Serie</th><th>Partido</th><th class="num">Marcador</th><th>Estado</th><th style="text-align:center" title="Se graba (VeoPro)">${icon('video', { size: 14 })}</th><th></th></tr></thead>
       <tbody>${rows.map(m => `<tr>
         <td class="muted" style="white-space:nowrap">${esc(fmtDate(m.fecha))} ${esc(m.hora || '')}</td>
         <td>${esc(m.serie)}</td>
         <td style="font-weight:600">${esc(byId[m.local]?.nombre || m.local)} vs ${esc(byId[m.visita]?.nombre || m.visita)}</td>
         <td class="num">${m.golesLocal != null ? `${m.golesLocal}-${m.golesVisita}` : '—'}</td>
         <td><span class="pill ${m.estado === 'finalizado' ? 'pill-green' : m.estado === 'en_vivo' ? 'pill-red' : 'pill-grey'}">${esc(m.estado)}</span></td>
+        <td style="text-align:center"><button class="btn btn-sm ${m.grabado ? 'btn-primary' : 'btn-secondary'}" data-grab="${esc(m.id)}" title="${m.grabado ? 'Se graba — clic para quitar' : 'Marcar para grabar'}">${icon('video', { size: 14 })}</button></td>
         <td style="text-align:right;white-space:nowrap"><button class="btn btn-secondary btn-sm" data-edit="${esc(m.id)}">✎</button> <button class="btn btn-danger btn-sm" data-del="${esc(m.id)}">✕</button></td>
-      </tr>`).join('') || '<tr><td colspan="6" class="muted center">Sin partidos.</td></tr>'}</tbody>
+      </tr>`).join('') || '<tr><td colspan="7" class="muted center">Sin partidos.</td></tr>'}</tbody>
     </table></div>`;
 
   el.querySelector('#f-p').onsubmit = (ev) => {
     ev.preventDefault();
     const d = Object.fromEntries(new FormData(ev.target).entries());
     d.amistoso = !!d.amistoso;
+    d.grabado = !!d.grabado;
     d.fecha_num = d.amistoso ? null : (d.fecha_num ? +d.fecha_num : null);
     d.golesLocal = d.golesLocal === '' ? null : +d.golesLocal;
     d.golesVisita = d.golesVisita === '' ? null : +d.golesVisita;
@@ -379,6 +385,7 @@ function renderPartidos(el) {
   el.querySelector('#cancel-edit') && (el.querySelector('#cancel-edit').onclick = () => { editP = null; renderTab(); });
   el.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => { editP = C.partidos.find(x => x.id === b.dataset.edit); renderTab(); window.scrollTo(0, 0); });
   el.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { if (confirm('¿Eliminar partido?')) reload('p', () => deletePartido(b.dataset.del)); });
+  el.querySelectorAll('[data-grab]').forEach(b => b.onclick = () => { const m = C.partidos.find(x => x.id === b.dataset.grab); reload('p', () => savePartido({ id: b.dataset.grab, grabado: !m.grabado })); });
 }
 
 /* ---------- ANOTACIONES (goles y tarjetas por partido) ---------- */
@@ -1146,8 +1153,9 @@ function renderContenido(el) {
       <button class="btn btn-primary btn-sm" id="fixcanchas" type="button">Reasignar canchas (grabados → C1 y C2)</button>
     </div>
     <div class="card mt-3">
-      <h3 class="mb-2">Grabaciones del fixture</h3>
+      <h3 class="mb-2">Grabaciones del fixture · Junior</h3>
       <p class="muted mb-2" style="font-size:.9rem"><strong>3 grabados por fecha</strong>; el <strong>clásico</strong> de cada fecha (2 en la Fecha 1) debe ser uno de los grabados. Objetivo: cada equipo <strong>2 clásicos</strong> y <strong>Capibara 4 grabados</strong> (el resto 5–6). Los grabados van en cancha 1 y 2. No cambia horarios ni rivales.</p>
+      <p class="muted mb-2" style="font-size:.85rem">Este asistente equilibra la categoría <strong>Junior</strong>. Para marcar el partido que se graba en <strong>Senior</strong> (o cualquier partido suelto), usa la columna ${icon('video', { size: 13 })} en la pestaña <strong>Partidos</strong>.</p>
       <div class="form-group" style="max-width:220px"><label>Fecha</label><select class="input" id="grabfecha"></select></div>
       <div id="grabbody" class="mt-2"><p class="muted">Cargando fixture…</p></div>
       <div class="mt-2" style="display:flex;gap:8px;flex-wrap:wrap">
