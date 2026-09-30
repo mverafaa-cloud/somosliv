@@ -87,13 +87,6 @@ export async function showLIV() {
           </div>`).join('')}
       </div>
     </div>
-
-    <div class="hero-flat">
-      <div class="deco">${icon('ball', { size: 210, stroke: 1.2 })}</div>
-      <h2>Sé parte de la LIV</h2>
-      <p>Cupos limitados por serie. Inscribe a tu equipo y vive cada sábado como el mejor día de la semana.</p>
-      <a href="/admision" data-link class="btn btn-primary btn-lg mt-2">Ver admisión</a>
-    </div>
   </div>`;
 
   mount(shell(inner, config));

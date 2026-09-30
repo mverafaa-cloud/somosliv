@@ -15,7 +15,6 @@ import { showPosiciones } from './views/posiciones.js';
 import { showDisciplina } from './views/disciplina.js';
 import { showReglamentos } from './views/reglamentos.js';
 import { showGoleadores } from './views/goleadores.js';
-import { showAdmision } from './views/admision.js';
 import { showAudiovisual } from './views/audiovisual.js';
 import { showAdmin } from './views/admin.js';
 import { showSorteo } from './views/sorteo.js';
@@ -41,7 +40,6 @@ async function boot() {
     '/goleadores':   () => showGoleadores(),
     '/disciplina':   () => showDisciplina(),
     '/reglamentos':  () => showReglamentos(),
-    '/admision':     () => showAdmision(),
     '/audiovisual':  () => showAudiovisual(),
     '/admin':        () => showAdmin(),
     '/sorteo':       () => showSorteo(),

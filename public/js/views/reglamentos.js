@@ -187,7 +187,6 @@ export async function showReglamentos() {
       <div class="card card-tinted-accent">
         <h3>Inscripción</h3>
         <div class="price-box mt-1"><span class="amount">${clp(config.valorInscripcion || 1800000)}</span><span class="unit">Por equipo · 3 cuotas de $600.000</span></div>
-        <a href="/admision" data-link class="btn btn-primary btn-sm mt-2">Inscribir equipo</a>
       </div>
     </div>
 

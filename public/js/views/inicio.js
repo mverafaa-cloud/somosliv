@@ -63,7 +63,6 @@ export async function showInicio() {
           <a href="/resultados" data-link class="btn btn-accent btn-lg">${icon('check', { size: 18 })} Últimos resultados</a>
           <a href="/posiciones" data-link class="btn btn-ghost-light btn-lg">${icon('trophy', { size: 18 })} Tabla de posiciones</a>
         </div>
-        <a href="/admision" data-link class="hero-senior">${icon('shield', { size: 16 })} Categoría <strong>Senior</strong>: quedan los últimos cupos · <u>inscribe tu equipo</u></a>
       </div>
     </div>
 
@@ -117,15 +116,6 @@ export async function showInicio() {
             <p class="${i === 1 ? '' : 'muted'}" style="${i === 1 ? 'color:rgba(255,255,255,.9)' : ''}">${v.d}</p>
           </div>`).join('')}
       </div>
-    </div>
-
-    <!-- CTA reclutamiento SOLO Senior -->
-    <div class="hero-flat">
-      <div class="deco">${icon('ball', { size: 210, stroke: 1.2 })}</div>
-      <span class="eyebrow" style="color:var(--c-ink)">Categoría Senior · +32</span>
-      <h2>Quedan los últimos cupos Senior</h2>
-      <p>El torneo ya arrancó, pero todavía puedes sumar tu equipo a la serie Senior. Cupos muy limitados: conversemos y aseguramos tu lugar.</p>
-      <a href="/admision" data-link class="btn btn-primary btn-lg mt-2">Inscribe tu equipo Senior</a>
     </div>
   </div>`;
 

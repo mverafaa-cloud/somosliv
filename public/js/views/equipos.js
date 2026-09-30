@@ -45,13 +45,6 @@ export async function showEquipos() {
     <p class="subtitle mb-3">Los equipos confirmados para el estreno de la LIV en ${esc(config.sede || 'Complejo Deggiano')}.</p>
     ${logoMarquee(uniq)}
     ${series.map(grupo).join('')}
-    <div class="hero-flat mt-4">
-      <div class="deco">${icon('ball', { size: 210, stroke: 1.2 })}</div>
-      <span class="eyebrow" style="color:var(--c-ink)">¿Aún no estás?</span>
-      <h2>Suma a tu equipo a la LIV</h2>
-      <p>Quedan cupos por serie. Asegura tu lugar antes del estreno.</p>
-      <a href="/admision" data-link class="btn btn-primary btn-lg mt-2">Inscribe tu equipo</a>
-    </div>
   </div>`;
   mount(shell(inner, config));
 }

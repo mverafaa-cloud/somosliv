@@ -16,7 +16,6 @@ export function preSeason(config = {}, que = 'la información') {
     ${fecha ? `<p class="subtitle">Estreno: <strong>${esc(fecha)}</strong> en ${esc(config.sede || 'Complejo Deggiano')}.</p>` : ''}
     <p class="muted mt-1">Muy pronto verás acá ${esc(que)}, fecha a fecha.</p>
     <div class="row mt-3" style="justify-content:center">
-      <a href="/admision" data-link class="btn btn-primary">Inscribe tu equipo</a>
       <a href="/reglamentos" data-link class="btn btn-ghost">Ver reglamento</a>
     </div>
   </div>`;
@@ -42,14 +41,12 @@ export function footer(config = {}) {
         <a href="/programacion" data-link>Programación</a>
         <a href="/posiciones" data-link>Posiciones</a>
         <a href="/reglamentos" data-link>Reglamentos</a>
-        <a href="/admision" data-link>Admisión</a>
       </div>
       <div class="foot-links">
         <strong style="color:#fff;margin-bottom:4px;">Contacto</strong>
         ${ig ? `<a href="${esc(ig)}" target="_blank" rel="noopener">Instagram</a>` : ''}
         ${wsp ? `<a href="https://wa.me/${esc(String(wsp).replace(/\D/g,''))}" target="_blank" rel="noopener">WhatsApp</a>` : ''}
         ${email ? `<a href="mailto:${esc(email)}">${esc(email)}</a>` : ''}
-        <a href="/admision" data-link>Inscribe tu equipo</a>
       </div>
     </div>
     <div class="foot-inner"><div class="foot-copy">© ${new Date().getFullYear()} LIV · Liga La Cuarta · Región de Coquimbo</div></div>
