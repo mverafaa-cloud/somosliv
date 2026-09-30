@@ -136,13 +136,13 @@ export async function showDisciplina() {
         <div class="table-wrap mt-2"><table class="tbl">
           <thead><tr><th>Jugador</th><th>Equipo</th>${multiSerie ? '<th>Serie</th>' : ''}<th>Motivo</th><th>Se pierde</th></tr></thead>
           <tbody>${susp.map(s => {
-            const pend = s.via === 'comite' && !s.definitivo;   // falta grave: la fija el comité
             const n = isFinite(s.hasta) ? (s.hasta - s.desde + 1) : 0;
+            const pend = s.via === 'comite' && !s.definitivo && !(+s.fechas > 0);   // pendiente solo si el comité aún no fija las fechas
             const sePierde = s.definitivo
               ? '<span class="pill pill-red">Expulsado de la LIV</span>'
               : (pend
                   ? `<span class="pill" style="background:#fef3c7;color:#92400e">Mín. ${n} fecha${n > 1 ? 's' : ''}</span>`
-                  : `<span class="pill pill-red">${s.hasta > s.desde ? `Fechas ${s.desde}–${s.hasta}` : `Fecha ${s.desde}`}</span>`);
+                  : `<span class="pill pill-red">${n > 1 ? `${n} fechas` : `Fecha ${s.desde}`}</span>`);
             return `<tr>
             <td style="font-weight:700">${esc(s.nombre || '—')}</td>
             <td>${s.equipo ? teamInline(byId[s.equipo]?.logo, byId[s.equipo]?.nombre || s.equipo, { size: 22 }) : '<span class="muted">—</span>'}</td>
