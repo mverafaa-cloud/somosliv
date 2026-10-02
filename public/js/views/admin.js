@@ -412,7 +412,8 @@ function renderAnotaciones(el) {
   const rosterV = p ? (C.jugadores || []).filter(j => j.equipo === p.visita).sort((a, b) => a.nombre.localeCompare(b.nombre)) : [];
   const playerOpts = (selId) => {
     const grp = (label, arr) => arr.length ? `<optgroup label="${esc(label)}">${arr.map(j => `<option value="${esc(j.id)}" ${selId === j.id ? 'selected' : ''}>${esc(j.nombre)}</option>`).join('')}</optgroup>` : '';
-    return `<option value="">— jugador —</option>` + (p ? grp(nm(p.local), rosterL) + grp(nm(p.visita), rosterV) : '');
+    const lbl = (id) => `${nm(id)} · ${(byId[id]?.serie || 'libre') === 'senior' ? 'Senior' : 'Junior'}`;
+    return `<option value="">— jugador —</option>` + (p ? grp(lbl(p.local), rosterL) + grp(lbl(p.visita), rosterV) : '');
   };
   const golRow = (jid = '', g = '') => `<div class="anot-row" style="display:flex;gap:8px;margin-bottom:6px;align-items:center">
     <select class="select gol-j" style="flex:1;min-width:160px">${playerOpts(jid)}</select>
@@ -533,10 +534,11 @@ let jugQ = '';
 
 function renderJugadores(el) {
   const byId = equiposById(C.equipos);
-  const equiposJr = C.equipos.slice()
-    .filter(e => (e.serie || 'libre') === 'libre')
-    .sort((a, b) => a.nombre.localeCompare(b.nombre));
-  const eqOpts = (sel) => equiposJr.map(e => `<option value="${esc(e.id)}" ${sel === e.id ? 'selected' : ''}>${esc(e.nombre)}</option>`).join('');
+  const serieLbl = (e) => (e && (e.serie || 'libre') === 'senior') ? 'Senior' : 'Junior';
+  const eqLabel = (e) => e ? `${e.nombre} · ${serieLbl(e)}` : '';
+  const equiposAll = C.equipos.slice()
+    .sort((a, b) => serieLbl(a).localeCompare(serieLbl(b)) || a.nombre.localeCompare(b.nombre));
+  const eqOpts = (sel) => equiposAll.map(e => `<option value="${esc(e.id)}" ${sel === e.id ? 'selected' : ''}>${esc(eqLabel(e))}</option>`).join('');
   const jugs = (C.jugadores || []).slice();
   const nEq = {}; jugs.forEach(j => { nEq[j.equipo] = (nEq[j.equipo] || 0) + 1; });
 
@@ -577,7 +579,7 @@ function renderJugadores(el) {
       <div class="chips filter-row" id="jug-eq">
         <span class="chips-label">Equipo</span>
         <button class="chip ${jugEq === 'all' ? 'active' : ''}" data-eq="all">Todos (${jugs.length})</button>
-        ${equiposJr.map(e => `<button class="chip ${jugEq === e.id ? 'active' : ''}" data-eq="${esc(e.id)}">${esc(e.nombre)} (${nEq[e.id] || 0})</button>`).join('')}
+        ${equiposAll.map(e => `<button class="chip ${jugEq === e.id ? 'active' : ''}" data-eq="${esc(e.id)}">${esc(eqLabel(e))} (${nEq[e.id] || 0})</button>`).join('')}
       </div>
       <input class="input" id="jug-q" placeholder="Buscar por nombre…" value="${esc(jugQ)}" style="max-width:220px">
     </div>
@@ -587,7 +589,7 @@ function renderJugadores(el) {
       <tbody>${list.map((j, i) => `<tr>
         <td class="muted">${i + 1}</td>
         <td style="font-weight:600">${esc(j.nombre)}</td>
-        <td>${esc(byId[j.equipo]?.nombre || j.equipo)}</td>
+        <td>${esc(byId[j.equipo] ? eqLabel(byId[j.equipo]) : j.equipo)}</td>
         <td class="num">${j.edad ?? '—'}</td>
         <td style="text-align:right;white-space:nowrap"><button class="btn btn-secondary btn-sm" data-edit="${esc(j.id)}">✎</button> <button class="btn btn-danger btn-sm" data-del="${esc(j.id)}">✕</button></td>
       </tr>`).join('') || `<tr><td colspan="5" class="muted center">${jugs.length ? 'Sin jugadores para el filtro.' : 'Aún no hay jugadores. Importa el archivo jugadores.json arriba.'}</td></tr>`}</tbody>
