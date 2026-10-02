@@ -259,10 +259,13 @@ function matchCard(p, byId, series) {
   const L = byId[p.local]?.nombre || p.local;
   const V = byId[p.visita]?.nombre || p.visita;
   const fin = p.estado === 'finalizado' && p.golesLocal != null;
+  const repro = p.estado === 'reprogramado';
   const serieName = (series.find(s => s.id === p.serie) || {}).nombre || '';
   const mid = fin
     ? `<div class="score">${esc(p.golesLocal)} - ${esc(p.golesVisita)}</div><div class="meta">Final</div>`
-    : `<div class="scheduled">${esc(fmtTime(p.hora)) || '—'}</div><div class="meta">${esc(p.cancha || '')}</div>`;
+    : repro
+      ? `<div class="scheduled" style="font-size:1rem">↻</div><div class="meta">Reprogramado</div>`
+      : `<div class="scheduled">${esc(fmtTime(p.hora)) || '—'}</div><div class="meta">${esc(p.cancha || '')}</div>`;
   return `
   <div class="match-card ${fin ? 'finished' : ''}">
     <div class="team home"><span class="name">${esc(L)}</span>${teamLogo(byId[p.local]?.logo, L, 34)}</div>

@@ -108,9 +108,14 @@ export async function showDisciplina() {
   const proxPorSerie = {};
   serieIds.forEach(sid => {
     const ps = partidos.filter(p => (p.serie || 'libre') === sid && p.fecha_num != null);
-    const prog = ps.filter(p => p.estado !== 'finalizado').map(p => +p.fecha_num);
+    const prog = ps.filter(p => p.estado !== 'finalizado' && p.estado !== 'reprogramado').map(p => +p.fecha_num);
     const jug = ps.filter(p => p.estado === 'finalizado').map(p => +p.fecha_num);
-    proxPorSerie[sid] = prog.length ? Math.min(...prog) : (jug.length ? Math.max(...jug) + 1 : null);
+    // Próxima fecha = la menor programada POSTERIOR a la última jugada (ignora
+    // partidos viejos que quedaron en "programado" y arrastraban la fecha hacia atrás).
+    const maxJug = jug.length ? Math.max(...jug) : 0;
+    const futProg = prog.filter(f => f > maxJug);
+    proxPorSerie[sid] = futProg.length ? Math.min(...futProg)
+      : (prog.length ? Math.min(...prog) : (jug.length ? maxJug + 1 : null));
   });
   const serieNombre = (sid) => (series.find(s => s.id === sid) || {}).nombre || (sid === 'libre' ? 'Junior' : (sid === 'senior' ? 'Senior' : sid));
 

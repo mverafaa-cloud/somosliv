@@ -342,6 +342,7 @@ function renderPartidos(el) {
           <div class="form-group"><label>Estado</label><select class="select" name="estado">
             <option value="programado" ${p.estado === 'programado' ? 'selected' : ''}>Programado</option>
             <option value="en_vivo" ${p.estado === 'en_vivo' ? 'selected' : ''}>En vivo</option>
+            <option value="reprogramado" ${p.estado === 'reprogramado' ? 'selected' : ''}>Reprogramado</option>
             <option value="finalizado" ${p.estado === 'finalizado' ? 'selected' : ''}>Finalizado</option>
           </select></div>
         </div>
@@ -803,9 +804,11 @@ function renderDisciplina(el) {
   const fechas = [...fechasSet].sort((a, b) => a - b);
 
   // Próxima fecha (para el panel de suspendidos)
-  const prog = C.partidos.filter(p => p.estado !== 'finalizado' && p.fecha_num != null).map(p => +p.fecha_num);
+  const prog = C.partidos.filter(p => p.estado !== 'finalizado' && p.estado !== 'reprogramado' && p.fecha_num != null).map(p => +p.fecha_num);
   const jug = C.partidos.filter(p => p.estado === 'finalizado' && p.fecha_num != null).map(p => +p.fecha_num);
-  const proxFecha = prog.length ? Math.min(...prog) : (jug.length ? Math.max(...jug) + 1 : null);
+  const maxJug = jug.length ? Math.max(...jug) : 0;
+  const futProg = prog.filter(f => f > maxJug);
+  const proxFecha = futProg.length ? Math.min(...futProg) : (prog.length ? Math.min(...prog) : (jug.length ? maxJug + 1 : null));
   const susp = proxFecha ? suspendidosParaFecha(cards, proxFecha) : [];
 
   const list = cards
