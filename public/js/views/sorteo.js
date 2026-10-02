@@ -32,7 +32,7 @@ function defaultParams(teams, config) {
     inicio, excluir,
     fechas: sabadosDesde(inicio, excluir, nRondas),
     grabadosPorFecha: 3,
-    marcas: ['Auspiciador 1', 'Auspiciador 2', 'Auspiciador 3', 'Auspiciador 4'],
+    marcas: ['Auspiciador 1', 'Auspiciador 2', 'Auspiciador 3', 'Auspiciador 4', 'Auspiciador 5', 'Auspiciador 6'],
     preferHorario: Object.fromEntries(teams.map(t => [t.id, ''])),
     // Clásicos reales por defecto (solo se aplican si esos equipos existen).
     rivalries: defaultRivalries(teams)
@@ -47,7 +47,7 @@ function loadState(teams, config) {
       // reasocia equipos actuales (por si cambian nombres/orden)
       p.teams = teams;
       // Espacios de auspiciador fijos (4). La marca real se define en Admin → Contenido.
-      p.marcas = ['Auspiciador 1', 'Auspiciador 2', 'Auspiciador 3', 'Auspiciador 4'];
+      p.marcas = ['Auspiciador 1', 'Auspiciador 2', 'Auspiciador 3', 'Auspiciador 4', 'Auspiciador 5', 'Auspiciador 6'];
       p.preferHorario = p.preferHorario || {};
       teams.forEach(t => { if (!(t.id in p.preferHorario)) p.preferHorario[t.id] = ''; });
       return p;
@@ -121,11 +121,11 @@ function render() {
         ${p.fechas.map((d, i) => `<div class="row"><span class="fnum">F${i + 1}</span><input class="input" type="date" data-f="${i}" value="${esc(d)}"></div>`).join('')}
       </div>
 
-      <label class="lbl mt-2">Auspiciadores del premio (MVP) <span class="muted">— 1 por cancha</span></label>
-      <div class="grid grid-4">
-        ${p.marcas.map((m, i) => `<span class="pill pill-grey" style="justify-content:center;padding:8px 10px">C${i + 1} · ${esc(ausp(m))}</span>`).join('')}
+      <label class="lbl mt-2">Auspiciadores del premio (MVP) <span class="muted">— 6 espacios</span></label>
+      <div class="grid grid-3">
+        ${p.marcas.map((m) => `<span class="pill pill-grey" style="justify-content:center;padding:8px 10px">${esc(ausp(m))}</span>`).join('')}
       </div>
-      <p class="muted" style="font-size:.82rem;margin:6px 0 0">Cada cancha tiene una marca fija: <strong>C1→Auspiciador 1 · C2→2 · C3→3 · C4→4</strong>. El Senior usa las marcas 5 y 6 (C1·C2 y C3·C4). La marca real de cada espacio se define en <strong>Admin → Contenido</strong> y ahí se revela en el fixture, sin volver a sortear.</p>
+      <p class="muted" style="font-size:.82rem;margin:6px 0 0">Se sortean como 6 espacios repartidos parejo entre todos los partidos (mezclado, sin fijar cancha). La marca real de cada espacio se define en <strong>Admin → Contenido</strong> y ahí se revela en el fixture, sin necesidad de volver a sortear.</p>
 
       <label class="lbl mt-2">Preferencia de horario por equipo <span class="muted">(opcional — % de sus partidos en ese horario)</span></label>
       <div class="prefs-grid">
@@ -278,7 +278,7 @@ function readParams() {
   p.grabadosPorFecha = Math.max(0, +(document.getElementById('p-grab')?.value || 3));
   p.excluir = [...document.querySelectorAll('[data-ex]')].map(i => i.value).filter(Boolean);
   p.fechas = [...document.querySelectorAll('[data-f]')].map(i => i.value).filter(Boolean);
-  p.marcas = ['Auspiciador 1', 'Auspiciador 2', 'Auspiciador 3', 'Auspiciador 4']; // espacios fijos
+  p.marcas = ['Auspiciador 1', 'Auspiciador 2', 'Auspiciador 3', 'Auspiciador 4', 'Auspiciador 5', 'Auspiciador 6']; // 6 espacios
   document.querySelectorAll('[data-pref-h]').forEach(sel => {
     const id = sel.dataset.prefH, h = sel.value;
     const pctEl = document.querySelector(`[data-pref-pct="${id}"]`);

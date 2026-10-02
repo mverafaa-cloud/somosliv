@@ -637,14 +637,9 @@ let FXSERIE = null;
 const FX_HORDEN = ['10:40', '12:20'];
 const FX_CANCHAS = [1, 2, 3, 4];
 
-// Auspiciador del premio MVP SEGÚN LA CANCHA (modelo por cancha, 6 marcas):
-//   Junior (serie 'libre'): C1→Ausp.1 · C2→Ausp.2 · C3→Ausp.3 · C4→Ausp.4
-//   Senior:                 C1·C2→Ausp.5 · C3·C4→Ausp.6
-function premioPorCancha(serie, cancha) {
-  const c = +cancha || 0;
-  if ((serie || 'libre') === 'senior') return c <= 2 ? 'Auspiciador 5' : 'Auspiciador 6';
-  return 'Auspiciador ' + (c >= 1 && c <= 4 ? c : 1);
-}
+// Las 6 marcas del premio MVP. Se reparten PAREJO (mezcladas) entre todos los
+// partidos de ambas series; no van fijadas a una cancha.
+const MVP_MARCAS = ['Auspiciador 1', 'Auspiciador 2', 'Auspiciador 3', 'Auspiciador 4', 'Auspiciador 5', 'Auspiciador 6'];
 
 function renderFixture(el) {
   const byId = equiposById(C.equipos);
@@ -677,9 +672,9 @@ function renderFixture(el) {
     <p class="muted mb-2">Misma vista que la <a href="/programacion" data-link>Programación</a>, editable. Cambia la <strong>cancha</strong> y escribe el <strong>premio</strong> (marca que presenta el premio al mejor jugador) de cada partido. El desplegable de cancha respeta la única regla dura: <strong>grabados y clásicos van sí o sí en cancha 1 o 2</strong>. Los no grabados pueden ir en cualquier cancha que esté libre en ese horario (incluida la 1 o 2 si no la usa un grabado), y nunca dos partidos en la misma cancha y horario. Guarda por fecha. No modifica horarios, rivales, grabados ni clásicos.</p>
     ${serieChipRow}
     <div class="card mb-2" style="border-left:4px solid var(--c-brand)">
-      <h3 style="margin:0 0 6px">${icon('shuffle', { size: 17 })} Repartir auspiciadores MVP por cancha</h3>
-      <p class="muted" style="margin:0 0 8px;font-size:.9rem">Asigna el premio de cada partido según su cancha, para <strong>ambas series</strong>, <strong>solo en las fechas por jugar</strong> (no toca partidos finalizados). Junior: <strong>C1→Auspiciador 1 · C2→2 · C3→3 · C4→4</strong>. Senior: <strong>C1·C2→Auspiciador 5 · C3·C4→6</strong>. Las marcas reales se definen en <strong>Contenido → Auspiciadores</strong>.</p>
-      <button class="btn btn-primary btn-sm" id="fx-apply-mvp" type="button">Aplicar reparto por cancha (fechas por jugar)</button>
+      <h3 style="margin:0 0 6px">${icon('shuffle', { size: 17 })} Repartir auspiciadores MVP (6 marcas, parejo)</h3>
+      <p class="muted" style="margin:0 0 8px;font-size:.9rem">Reparte las <strong>6 marcas</strong> lo más parejo posible (mezcladas) entre los partidos de <strong>ambas series</strong>, <strong>solo en las fechas por jugar</strong> (no toca partidos finalizados). Cada marca presenta ~la misma cantidad de MVP y se evita que un mismo equipo repita marca. Las marcas reales se definen en <strong>Contenido → Auspiciadores</strong>.</p>
+      <button class="btn btn-primary btn-sm" id="fx-apply-mvp" type="button">Repartir las 6 marcas parejo (fechas por jugar)</button>
     </div>
     ${fechas.map(n => {
       const rows = sortRows(groups[n]);
@@ -724,28 +719,45 @@ function renderFixture(el) {
 
   el.querySelectorAll('#fx-serie-sel .chip').forEach(c => c.onclick = () => { FXSERIE = c.dataset.serie; renderTab(); });
 
-  // Reparto de auspiciadores MVP por cancha (ambas series, solo fechas por jugar).
+  // Reparto parejo de las 6 marcas MVP (mezcladas) sobre las fechas por jugar de ambas series.
   const applyBtn = el.querySelector('#fx-apply-mvp');
   if (applyBtn) applyBtn.onclick = async () => {
+    // Partidos por jugar, en orden determinista.
+    const pend = C.partidos
+      .filter(p => !p.amistoso && p.fecha_num != null && p.estado !== 'finalizado')
+      .slice().sort((a, b) =>
+        (+a.fecha_num - +b.fecha_num) ||
+        String(a.serie || 'libre').localeCompare(String(b.serie || 'libre')) ||
+        String(a.hora || '').localeCompare(String(b.hora || '')) ||
+        ((+a.cancha || 0) - (+b.cancha || 0)) ||
+        String(a.id).localeCompare(String(b.id)));
+    // Greedy: cada partido toma la marca menos usada en total (reparto parejo),
+    // desempatando por la menos usada por sus dos equipos (evita repetir marca por equipo).
+    const gcount = Object.fromEntries(MVP_MARCAS.map(m => [m, 0]));
+    const tcount = {};
+    const tc = (id, m) => (tcount[id] && tcount[id][m]) || 0;
+    const bump = (id, m) => { (tcount[id] = tcount[id] || {})[m] = tc(id, m) + 1; };
     const ups = [];
-    C.partidos.forEach(p => {
-      if (p.amistoso || p.fecha_num == null) return;
-      if (p.estado === 'finalizado') return;        // solo fechas por jugar
-      if (p.cancha == null) return;                 // sin cancha asignada, no se puede mapear
-      const target = premioPorCancha(p.serie, p.cancha);
-      if ((p.premio || '') !== target) ups.push({ id: p.id, premio: target });
+    pend.forEach(p => {
+      let best = MVP_MARCAS[0], bs = Infinity;
+      MVP_MARCAS.forEach(m => {
+        const s = gcount[m] * 100 + tc(p.local, m) + tc(p.visita, m);
+        if (s < bs) { bs = s; best = m; }
+      });
+      gcount[best]++; bump(p.local, best); bump(p.visita, best);
+      if ((p.premio || '') !== best) ups.push({ id: p.id, premio: best });
     });
-    if (!ups.length) { toast('Los premios ya están repartidos por cancha ✓'); return; }
-    if (!confirm(`Se asignará el auspiciador por cancha en ${ups.length} partido(s) por jugar (Junior y Senior). No toca fechas ya jugadas, ni horarios, rivales, canchas o grabados. ¿Continuar?`)) return;
+    if (!ups.length) { toast('Las 6 marcas ya están repartidas parejo ✓'); return; }
+    if (!confirm(`Se repartirán las 6 marcas en ${ups.length} partido(s) por jugar (Junior y Senior), lo más parejo posible. No toca fechas ya jugadas, ni horarios, rivales, canchas o grabados. ¿Continuar?`)) return;
     applyBtn.disabled = true; applyBtn.textContent = `Aplicando… (0/${ups.length})`;
     try {
       let n = 0;
       for (const u of ups) { await savePartido(u); applyBtn.textContent = `Aplicando… (${++n}/${ups.length})`; }
-      toast(`Listo: ${ups.length} premio(s) repartido(s) por cancha ✓`, 'success');
+      toast(`Listo: ${ups.length} premio(s) repartido(s) ✓`, 'success');
       await loadAll(); renderTab();
     } catch (err) {
       toast(err.message || 'Error al aplicar', 'error');
-      applyBtn.disabled = false; applyBtn.textContent = 'Aplicar reparto por cancha (fechas por jugar)';
+      applyBtn.disabled = false; applyBtn.textContent = 'Repartir las 6 marcas parejo (fechas por jugar)';
     }
   };
 
@@ -1163,14 +1175,10 @@ function renderContenido(el) {
     </div>
     <div class="card mb-3">
       <h3 class="mb-2">Auspiciadores del premio (MVP)</h3>
-      <p class="muted mb-2" style="font-size:.9rem">Son <strong>6 espacios asignados por cancha</strong>. Junior: <strong>1→C1 · 2→C2 · 3→C3 · 4→C4</strong>. Senior: <strong>5→C1·C2 · 6→C3·C4</strong>. Escribe aquí la marca real de cada espacio y se revelará en la <a href="/programacion" data-link>Programación</a>. Deja en blanco para mantener el nombre genérico. Para repartir los premios por cancha en los partidos ya publicados, usa el botón de la pestaña <strong>Fixture</strong>.</p>
+      <p class="muted mb-2" style="font-size:.9rem">Son <strong>6 espacios</strong> ("Auspiciador 1–6") que se reparten parejo (mezclados) entre todos los partidos de ambas series. Escribe aquí la marca real de cada espacio y se revelará en la <a href="/programacion" data-link>Programación</a>. Deja en blanco para mantener el nombre genérico. Para repartir las 6 marcas en los partidos ya publicados, usa el botón de la pestaña <strong>Fixture</strong>.</p>
       <form id="f-ausp" class="grid grid-2">
-        ${[
-          ['Auspiciador 1', 'Junior · Cancha 1'], ['Auspiciador 2', 'Junior · Cancha 2'],
-          ['Auspiciador 3', 'Junior · Cancha 3'], ['Auspiciador 4', 'Junior · Cancha 4'],
-          ['Auspiciador 5', 'Senior · Canchas 1 y 2'], ['Auspiciador 6', 'Senior · Canchas 3 y 4']
-        ].map(([slot, hint]) => `
-          <div class="form-group"><label>${esc(slot)} <span class="muted" style="font-weight:400;font-size:.82rem">— ${esc(hint)}</span></label>
+        ${['Auspiciador 1', 'Auspiciador 2', 'Auspiciador 3', 'Auspiciador 4', 'Auspiciador 5', 'Auspiciador 6'].map(slot => `
+          <div class="form-group"><label>${esc(slot)}</label>
             <input class="input" data-ausp="${esc(slot)}" value="${esc((c.auspiciadores || {})[slot] || '')}" placeholder="Marca real (ej: Red Bull)"></div>`).join('')}
         <div class="form-group" style="justify-content:end"><button class="btn btn-primary">Guardar auspiciadores</button></div>
       </form>
