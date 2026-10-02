@@ -223,14 +223,13 @@ function buildOne(params, seed) {
       if (m.grabado) { T[m.local].grab++; T[m.visita].grab++; }
     });
 
-    // ---- 5) Marca del premio (equitativo por equipo) ----
+    // ---- 5) Marca del premio POR CANCHA: C1→marcas[0] · C2→[1] · C3→[2] · C4→[3] ----
+    // Cada cancha tiene una marca fija (modelo por cancha). La marca ya no se
+    // "equilibra" por equipo: queda determinada por la cancha del partido.
     matches.forEach(m => {
-      let bm = marcas[0], bs = Infinity;
-      shuffle(marcas, rand).forEach(mk => {
-        const s = T[m.local].marca[mk] + T[m.visita].marca[mk];
-        if (s < bs) { bs = s; bm = mk; }
-      });
-      m.marca = bm; T[m.local].marca[bm]++; T[m.visita].marca[bm]++;
+      const mk = marcas[(+m.cancha || 1) - 1] || marcas[0];
+      m.marca = mk;
+      if (mk in T[m.local].marca) { T[m.local].marca[mk]++; T[m.visita].marca[mk]++; }
     });
 
     // camarines derivados de la cancha
@@ -239,47 +238,7 @@ function buildOne(params, seed) {
     return { n: rd.n, fecha: rd.fecha, matches };
   });
 
-  // ---- 6) Reparación de marcas: hill-climb para acercar todos a 3/3/3 ----
-  // El greedy por jornada suele dejar 1-2 equipos en 2/4/3. Recoloreamos partidos
-  // (cambia la marca de AMBOS equipos del partido) mientras baje la dispersión total.
-  {
-    const spr = obj => { const v = Object.values(obj); return Math.max(...v) - Math.min(...v); };
-    const totalSpread = () => ids.reduce((a, id) => a + spr(T[id].marca), 0);
-    const setMarca = (m, mk) => { T[m.local].marca[m.marca]--; T[m.visita].marca[m.marca]--; m.marca = mk; T[m.local].marca[mk]++; T[m.visita].marca[mk]++; };
-    const allM = rounds.flatMap(r => r.matches);
-    let improved = true, guard = 0;
-    while (improved && guard++ < 400) {
-      improved = false;
-      // (a) recolorear un partido si baja la dispersión total
-      for (const m of allM) {
-        const cur = m.marca;
-        for (const alt of marcas) {
-          if (alt === cur) continue;
-          const before = spr(T[m.local].marca) + spr(T[m.visita].marca);
-          T[m.local].marca[cur]--; T[m.visita].marca[cur]--;
-          T[m.local].marca[alt]++; T[m.visita].marca[alt]++;
-          const after = spr(T[m.local].marca) + spr(T[m.visita].marca);
-          if (after < before) { m.marca = alt; improved = true; }
-          else { T[m.local].marca[cur]++; T[m.visita].marca[cur]++; T[m.local].marca[alt]--; T[m.visita].marca[alt]--; }
-        }
-      }
-      // (b) intercambiar las marcas de DOS partidos (saca de mínimos locales del
-      //     paso (a), donde mover un solo partido queda neutro pero un swap sí ayuda)
-      if (!improved) {
-        for (let i = 0; i < allM.length && !improved; i++) {
-          for (let j = i + 1; j < allM.length; j++) {
-            const a = allM[i], b = allM[j];
-            if (a.marca === b.marca) continue;
-            const before = totalSpread();
-            const ma = a.marca, mb = b.marca;
-            setMarca(a, mb); setMarca(b, ma);
-            if (totalSpread() < before) { improved = true; break; }
-            setMarca(a, ma); setMarca(b, mb); // revertir
-          }
-        }
-      }
-    }
-  }
+  // ---- 6) (La marca se define por cancha; no hay reparación de marcas.) ----
 
   return { rounds, tally: T };
 }
@@ -300,8 +259,7 @@ function scoreDraw(T, params) {
     s += sinCancha * 25 + spread(t.cancha) * 2;
     // clásico: penaliza 0 fuerte + dispersión
     if (t.clasico === 0) s += 60;
-    // marcas: dispersión por equipo (objetivo 3/3/3)
-    s += spread(t.marca) * 8;
+    // (la marca del premio ahora se define por cancha; no se penaliza su dispersión)
   });
   // Topes duros por equipo: grabados en [GR_MIN,GR_MAX] y clásicos en [CL_MIN,CL_MAX].
   ids.forEach(id => {

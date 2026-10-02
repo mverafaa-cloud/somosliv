@@ -154,11 +154,11 @@ function buildOne(params, seed) {
     }
     matches.forEach(m => { T[m.local].cancha[m.cancha]++; T[m.visita].cancha[m.cancha]++; });
 
-    // 5) Marca del premio (equitativo por equipo)
+    // 5) Marca del premio POR CANCHA: C1·C2→marcas[0] (Ausp.5) · C3·C4→marcas[1] (Ausp.6)
     matches.forEach(m => {
-      let bm = marcas[0], bs = Infinity;
-      shuffle(marcas, rand).forEach(mk => { const s = T[m.local].marca[mk] + T[m.visita].marca[mk]; if (s < bs) { bs = s; bm = mk; } });
-      m.marca = bm; T[m.local].marca[bm]++; T[m.visita].marca[bm]++;
+      const mk = (+m.cancha <= 2 ? marcas[0] : marcas[1]) || marcas[0];
+      m.marca = mk;
+      if (mk in T[m.local].marca) { T[m.local].marca[mk]++; T[m.visita].marca[mk]++; }
     });
 
     matches.forEach(m => { m.camarines = CAMARINES[m.cancha] || []; });

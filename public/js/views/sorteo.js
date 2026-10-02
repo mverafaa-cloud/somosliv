@@ -121,11 +121,11 @@ function render() {
         ${p.fechas.map((d, i) => `<div class="row"><span class="fnum">F${i + 1}</span><input class="input" type="date" data-f="${i}" value="${esc(d)}"></div>`).join('')}
       </div>
 
-      <label class="lbl mt-2">Auspiciadores del premio (MVP) <span class="muted">— 4 espacios</span></label>
+      <label class="lbl mt-2">Auspiciadores del premio (MVP) <span class="muted">— 1 por cancha</span></label>
       <div class="grid grid-4">
-        ${p.marcas.map((m) => `<span class="pill pill-grey" style="justify-content:center;padding:8px 10px">${esc(ausp(m))}</span>`).join('')}
+        ${p.marcas.map((m, i) => `<span class="pill pill-grey" style="justify-content:center;padding:8px 10px">C${i + 1} · ${esc(ausp(m))}</span>`).join('')}
       </div>
-      <p class="muted" style="font-size:.82rem;margin:6px 0 0">Se sortean como 4 espacios equilibrados. La marca real de cada auspiciador se define en <strong>Admin → Contenido</strong> y ahí se revela en el fixture, sin necesidad de volver a sortear.</p>
+      <p class="muted" style="font-size:.82rem;margin:6px 0 0">Cada cancha tiene una marca fija: <strong>C1→Auspiciador 1 · C2→2 · C3→3 · C4→4</strong>. El Senior usa las marcas 5 y 6 (C1·C2 y C3·C4). La marca real de cada espacio se define en <strong>Admin → Contenido</strong> y ahí se revela en el fixture, sin volver a sortear.</p>
 
       <label class="lbl mt-2">Preferencia de horario por equipo <span class="muted">(opcional — % de sus partidos en ese horario)</span></label>
       <div class="prefs-grid">

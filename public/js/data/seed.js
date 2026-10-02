@@ -27,10 +27,16 @@ export const SEED = {
       { id: 'libre',  nombre: 'Junior', detalle: '18 años en adelante' },
       { id: 'senior', nombre: 'Senior', detalle: '+32 · nacidos 1994 o antes' }
     ],
-    // Marcas que presentan el premio al MVP. Se sortean como 4 espacios
-    // ("Auspiciador 1..4"); el admin define aquí qué marca real es cada uno y
-    // recién ahí se revela en el fixture. Vacío = se muestra "Auspiciador N".
-    auspiciadores: { 'Auspiciador 1': '', 'Auspiciador 2': '', 'Auspiciador 3': '', 'Auspiciador 4': '' }
+    // Marcas que presentan el premio al MVP. Son 6 espacios asignados POR CANCHA:
+    //   Junior (serie 'libre'): Auspiciador 1→C1 · 2→C2 · 3→C3 · 4→C4
+    //   Senior:                 Auspiciador 5→C1·C2 · 6→C3·C4
+    // El admin define aquí qué marca real es cada espacio y ahí se revela en el
+    // fixture. Vacío = se muestra "Auspiciador N".
+    auspiciadores: {
+      'Auspiciador 1': 'Taiming', 'Auspiciador 2': 'Multifruts',
+      'Auspiciador 3': 'Fastlye', 'Auspiciador 4': 'Powerade',
+      'Auspiciador 5': 'Kaizen',  'Auspiciador 6': 'One+'
+    }
   },
 
   // Equipos inscritos 2026 (con logo). serie: 'libre' = Junior · 'senior' = Senior.

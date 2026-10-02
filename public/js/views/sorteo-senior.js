@@ -77,7 +77,8 @@ function buildParams() {
   const fechas = sabadosDesde(S.inicio, S.excluir, nR);
   return {
     teams, fechas,
-    marcas: ['Auspiciador 1', 'Auspiciador 2', 'Auspiciador 3', 'Auspiciador 4'],
+    // Senior usa 2 marcas por cancha: C1·C2→Auspiciador 5 · C3·C4→Auspiciador 6.
+    marcas: ['Auspiciador 5', 'Auspiciador 6'],
     rivalries: S.rivalries || [],
     block1040: buildBlock(fechas),
     free1040: buildFree1040(fechas),
@@ -180,7 +181,7 @@ function fmt(iso) {
 function renderResultado() {
   const R = S.result;
   const byId = Object.fromEntries(EQS.map(t => [t.id, t]));
-  const marcas = ['Auspiciador 1', 'Auspiciador 2', 'Auspiciador 3', 'Auspiciador 4'];
+  const marcas = ['Auspiciador 5', 'Auspiciador 6'];
   const nPart = R.rounds.reduce((a, r) => a + r.matches.length, 0);
 
   const fechaCard = (rd) => {
