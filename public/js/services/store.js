@@ -455,9 +455,40 @@ export function computeStandings(partidos, equipos, serieId) {
       else { L.pe++; V.pe++; L.pts++; V.pts++; }
     });
 
-  return Object.values(table)
-    .map(r => ({ ...r, dg: r.gf - r.gc }))
-    .sort((a, b) => b.pts - a.pts || b.dg - a.dg || b.gf - a.gf || a.equipo.nombre.localeCompare(b.equipo.nombre));
+  // Partidos válidos de la serie (para el desempate por enfrentamiento directo).
+  const fin = partidos.filter(p => p.serie === serieId && !p.amistoso && p.estado === 'finalizado'
+    && p.golesLocal != null && p.golesVisita != null && table[p.local] && table[p.visita]);
+
+  const rows = Object.values(table).map(r => ({ ...r, dg: r.gf - r.gc }));
+  // Orden base.
+  rows.sort((a, b) => b.pts - a.pts || b.dg - a.dg || b.gf - a.gf || a.equipo.nombre.localeCompare(b.equipo.nombre));
+
+  // Desempate según reglamento: ante igualdad de PUNTOS manda el ENFRENTAMIENTO
+  // DIRECTO entre los empatados (mini-liga: pts, luego dif. de gol y goles de esos
+  // partidos); si persiste, la diferencia de goles general, luego goles a favor.
+  const out = [];
+  for (let i = 0; i < rows.length;) {
+    let j = i; while (j < rows.length && rows[j].pts === rows[i].pts) j++;
+    const group = rows.slice(i, j);
+    if (group.length > 1) {
+      const ids = new Set(group.map(g => g.equipo.id));
+      const mini = {}; group.forEach(g => mini[g.equipo.id] = { pts: 0, gf: 0, gc: 0 });
+      fin.forEach(p => {
+        if (!ids.has(p.local) || !ids.has(p.visita)) return;      // solo partidos ENTRE los empatados
+        const gl = +p.golesLocal, gv = +p.golesVisita, L = mini[p.local], V = mini[p.visita];
+        L.gf += gl; L.gc += gv; V.gf += gv; V.gc += gl;
+        if (gl > gv) L.pts += 3; else if (gl < gv) V.pts += 3; else { L.pts++; V.pts++; }
+      });
+      group.sort((a, b) => {
+        const ma = mini[a.equipo.id], mb = mini[b.equipo.id];
+        return (mb.pts - ma.pts) || ((mb.gf - mb.gc) - (ma.gf - ma.gc)) || (mb.gf - ma.gf)  // enfrentamiento directo
+          || (b.dg - a.dg) || (b.gf - a.gf)                                                  // luego dif. de gol general
+          || a.equipo.nombre.localeCompare(b.equipo.nombre);
+      });
+    }
+    out.push(...group); i = j;
+  }
+  return out;
 }
 
 // Goleadores: usa la colección/seed si existe.

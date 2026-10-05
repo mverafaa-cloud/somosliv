@@ -25,6 +25,15 @@ export async function showPosiciones() {
   function render() {
     const table = _serie ? computeStandings(partidos, equipos, _serie) : [];
     const jugados = table.reduce((a, r) => a + r.pj, 0);
+    const n = table.length;
+    const hasProm = n > 8;                 // zona de promoción (9°–10°) solo en ligas de 9+ equipos
+    const zona = (i) => i < 4 ? 'pos-oro' : (i < 8 ? 'pos-plata' : (hasProm && i >= 8 ? 'pos-prom' : ''));
+    const rowCls = (i) => {
+      const cls = [zona(i)];
+      if (i === 3 && n > 4) cls.push('zend');                 // separa Oro de Plata
+      if (i === 7 && hasProm) cls.push('zend');               // separa Plata de Promoción
+      return cls.filter(Boolean).join(' ');
+    };
     const body = (!table.length)
       ? emptyBox('No hay equipos en esta serie todavía.')
       : `<div class="table-wrap"><table class="tbl">
@@ -35,7 +44,7 @@ export async function showPosiciones() {
           </tr></thead>
           <tbody>
             ${table.map((r, i) => `
-              <tr class="${i === 0 ? 'row-promote' : ''}">
+              <tr class="${rowCls(i)}">
                 <td class="pos">${i + 1}</td>
                 <td>${teamInline(r.equipo.logo, r.equipo.nombre, { size: 26 })}</td>
                 <td class="num">${r.pj}</td><td class="num">${r.pg}</td><td class="num">${r.pe}</td><td class="num">${r.pp}</td>
@@ -44,7 +53,12 @@ export async function showPosiciones() {
               </tr>`).join('')}
           </tbody></table></div>
           ${jugados === 0 ? '<div class="alert alert-info mt-2">La serie aún no registra partidos finalizados. La tabla se actualiza automáticamente al cargar resultados.</div>' : ''}
-          <div class="table-legend"><span><span class="dot" style="background:var(--c-green)"></span> Líder</span></div>`;
+          <div class="table-legend">
+            <span><span class="dot dot-oro"></span> Clasifican a Copa de Oro (1°–4°)</span>
+            <span><span class="dot dot-plata"></span> Clasifican a Copa de Plata (5°–8°)</span>
+            ${hasProm ? '<span><span class="dot dot-prom"></span> Promoción / descenso (9°–10°)</span>' : ''}
+          </div>
+          <p class="pos-note">Ante igualdad de puntos define el <strong>enfrentamiento directo</strong> entre los equipos empatados; si persiste, la <strong>diferencia de goles</strong> (reglamento LIV).</p>`;
 
     document.getElementById('pos-body').innerHTML = body;
 

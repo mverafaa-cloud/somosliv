@@ -312,6 +312,17 @@ table.tbl td.pts { font-weight: 800; color: var(--c-ink); }
 .table-legend span { display: inline-flex; align-items: center; gap: 6px; }
 .dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
 
+/* Zonas de clasificación en la tabla de posiciones (Copa de Oro / Plata / Promoción) */
+table.tbl tr.pos-oro td   { background: rgba(201,162,39,0.10); }
+table.tbl tr.pos-plata td { background: rgba(142,157,170,0.14); }
+table.tbl tr.pos-prom td  { background: rgba(155,28,28,0.07); }
+table.tbl tr.pos-oro   td.pos { box-shadow: inset 4px 0 0 #C9A227; color: #9a7b16; }
+table.tbl tr.pos-plata td.pos { box-shadow: inset 4px 0 0 #8E9DAA; color: #5f6b76; }
+table.tbl tr.pos-prom  td.pos { box-shadow: inset 4px 0 0 #b0484a; color: #9b1c1c; }
+table.tbl tr.zend td { border-bottom: 2px solid var(--c-line); }
+.dot.dot-oro { background: #C9A227; } .dot.dot-plata { background: #8E9DAA; } .dot.dot-prom { background: #b0484a; }
+.pos-note { margin-top: 8px; font-size: 0.8rem; color: var(--c-muted); line-height: 1.4; }
+
 /* ===================================================
    MATCH / FIXTURE
 =================================================== */
