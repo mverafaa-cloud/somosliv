@@ -139,20 +139,25 @@ export async function showDisciplina() {
         <div class="card-header"><h3 style="margin:0">${icon('shield', { size: 20 })} ${titulo}</h3></div>
         ${susp.length ? `
         <div class="table-wrap mt-2"><table class="tbl">
-          <thead><tr><th>Jugador</th><th>Equipo</th>${multiSerie ? '<th>Serie</th>' : ''}<th>Motivo</th><th>Se pierde</th></tr></thead>
+          <thead><tr><th>Jugador</th><th>Equipo</th>${multiSerie ? '<th>Serie</th>' : ''}<th>Motivo</th><th>Fechas restantes</th></tr></thead>
           <tbody>${susp.map(s => {
             const n = isFinite(s.hasta) ? (s.hasta - s.desde + 1) : 0;
+            // Fechas que le QUEDAN de suspensión (incluye la que viene): desde la próxima
+            // fecha de su serie hasta la última fecha sancionada. Así todos muestran lo
+            // mismo (un número de fechas), sin mezclar "Fecha X" con "N fechas".
+            const pf = proxPorSerie[s.serieId];
+            const restan = isFinite(s.hasta) ? Math.max(1, s.hasta - pf + 1) : n;
             const pend = s.via === 'comite' && !s.definitivo && !(+s.fechas > 0);   // pendiente solo si el comité aún no fija las fechas
             const sePierde = s.definitivo
               ? '<span class="pill pill-red">Expulsado de la LIV</span>'
               : (pend
-                  ? `<span class="pill" style="background:#fef3c7;color:#92400e">Mín. ${n} fecha${n > 1 ? 's' : ''}</span>`
-                  : `<span class="pill pill-red">${n > 1 ? `${n} fechas` : `Fecha ${s.desde}`}</span>`);
+                  ? `<span class="pill" style="background:#fef3c7;color:#92400e">Mín. ${restan} fecha${restan > 1 ? 's' : ''}</span>`
+                  : `<span class="pill pill-red">${restan} fecha${restan > 1 ? 's' : ''}</span>`);
             return `<tr>
             <td style="font-weight:700">${esc(s.nombre || '—')}</td>
             <td>${s.equipo ? teamInline(byId[s.equipo]?.logo, byId[s.equipo]?.nombre || s.equipo, { size: 22 }) : '<span class="muted">—</span>'}</td>
             ${multiSerie ? `<td class="muted">${esc(serieNombre(s.serieId))}</td>` : ''}
-            <td class="muted">${esc(s.motivo || '')}${pend ? `<div style="font-size:.8rem;color:#92400e;margin-top:3px">⏳ A la espera de la reunión del comité de disciplina para definir la sanción (mínimo ${n} fechas).</div>` : ''}</td>
+            <td class="muted">${esc(s.motivo || '')}${pend ? `<div style="font-size:.8rem;color:#92400e;margin-top:3px">⏳ A la espera de la reunión del comité de disciplina para definir la sanción (mínimo ${restan} fechas).</div>` : ''}</td>
             <td>${sePierde}</td>
           </tr>`; }).join('')}</tbody>
         </table></div>`
