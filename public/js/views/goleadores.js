@@ -6,30 +6,39 @@ import { serieChips, emptyBox } from './programacion.js';
 
 let _serie = 'all';
 
+const TOP_N = 5;   // Se muestra solo el Top 5 de goleadores por serie.
+
 export async function showGoleadores() {
   mount(loading('Cargando goleadores…'));
   const [config, goles, equipos] = await Promise.all([getConfig(), getGoleadores(), getEquipos()]);
   const byId = equiposById(equipos);
   const series = config.series || [];
 
-  function render() {
-    // Agrupa por jugador y suma goles.
+  // Ranking de goleadores de UNA serie, limitado al Top 5.
+  // El corte es por posición (r._pos <= 5), así los empates en el 5º puesto
+  // se muestran todos y no se deja a nadie fuera por desempate arbitrario.
+  function rankSerie(serieId) {
     const acc = {};
-    goles.filter(g => _serie === 'all' || g.serie === _serie).forEach(g => {
+    goles.filter(g => g.serie === serieId).forEach(g => {
       const k = g.jugadorId || `${g.equipo}:${g.nombre}`;
       if (!acc[k]) acc[k] = { nombre: g.nombre || '—', equipo: g.equipo, goles: 0 };
       acc[k].goles += (+g.goles || 0);
     });
     const rows = Object.values(acc).filter(r => r.goles > 0)
       .sort((a, b) => b.goles - a.goles || (a.nombre || '').localeCompare(b.nombre || ''));
-
-    // Ranking con posiciones compartidas (mismo nº de goles = misma posición).
     let pos = 0, prev = null;
     rows.forEach((r, i) => { if (r.goles !== prev) { pos = i + 1; prev = r.goles; } r._pos = pos; });
+    return rows.filter(r => r._pos <= TOP_N);
+  }
 
-    const maxG = rows.length ? rows[0].goles : 0;
-    const body = rows.length ? `
-      <div class="table-wrap"><table class="tbl tbl-pos">
+  function serieTable(serieId, serieNombre) {
+    const rows = rankSerie(serieId);
+    if (!rows.length) return `
+      <h2 class="mb-2">${esc(serieNombre)}</h2>
+      ${emptyBox('Todavía no hay goles registrados en esta serie.')}`;
+    return `
+      <h2 class="mb-2">${esc(serieNombre)} · Top ${TOP_N}</h2>
+      <div class="table-wrap mb-3"><table class="tbl tbl-pos">
         <thead><tr><th style="width:44px">#</th><th>Jugador</th><th>Equipo</th><th class="num">Goles</th></tr></thead>
         <tbody>
           ${rows.map(r => `
@@ -40,8 +49,13 @@ export async function showGoleadores() {
               <td class="num"><span class="pill pill-dark" style="font-weight:800">${r.goles}</span></td>
             </tr>`).join('')}
         </tbody>
-      </table></div>
-      <p class="muted mt-2" style="font-size:.85rem">${rows.length} goleador${rows.length === 1 ? '' : 'es'} · ${rows.reduce((s, r) => s + r.goles, 0)} goles en total${maxG ? ` · puntero con ${maxG}` : ''}.</p>`
+      </table></div>`;
+  }
+
+  function render() {
+    const shown = (_serie === 'all') ? series : series.filter(s => s.id === _serie);
+    const body = shown.length
+      ? shown.map(s => serieTable(s.id, s.nombre)).join('')
       : emptyBox('Todavía no hay goles registrados. Aparecerán aquí en cuanto se carguen los resultados.');
 
     const el = document.getElementById('gol-body');
@@ -53,7 +67,7 @@ export async function showGoleadores() {
   <div class="container">
     <span class="eyebrow">Tabla del torneo</span>
     <h1>Goleadores</h1>
-    <p class="subtitle mb-3">Todos los que han convertido, ordenados de mayor a menor. Se actualiza al cargar los resultados de cada fecha.</p>
+    <p class="subtitle mb-3">El Top ${TOP_N} de goleadores de cada serie. Se actualiza al cargar los resultados de cada fecha.</p>
     ${serieChips(series)}
     <div id="gol-body"></div>
   </div>`;
