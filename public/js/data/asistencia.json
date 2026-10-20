@@ -1,5 +1,280 @@
 {
-  "fechas": { "libre": [1, 2, 3, 4, 5, 6], "senior": [1, 2, 3, 4, 5] },
-  "presentes": {},
-  "dudosos": {}
+  "fechas": {
+    "libre": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "senior": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ]
+  },
+  "presentes": {
+    "jr-40-grados": {
+      "1": [
+        "jr-40-grados-j01",
+        "jr-40-grados-j02",
+        "jr-40-grados-j03",
+        "jr-40-grados-j04",
+        "jr-40-grados-j05",
+        "jr-40-grados-j06",
+        "jr-40-grados-j08",
+        "jr-40-grados-j11",
+        "jr-40-grados-j13",
+        "jr-40-grados-j14",
+        "jr-40-grados-j15",
+        "jr-40-grados-j16",
+        "jr-40-grados-j17",
+        "jr-40-grados-j18",
+        "jr-40-grados-j19",
+        "jr-40-grados-j22",
+        "jr-40-grados-j23",
+        "jr-40-grados-j24"
+      ]
+    },
+    "jr-bunker": {
+      "1": [
+        "jr-bunker-j03",
+        "jr-bunker-j05",
+        "jr-bunker-j09",
+        "jr-bunker-j14",
+        "jr-bunker-j15",
+        "jr-bunker-j18",
+        "jr-bunker-j19",
+        "jr-bunker-j20",
+        "jr-bunker-j24",
+        "jr-bunker-j25",
+        "jr-bunker-j27",
+        "jr-bunker-j28",
+        "jr-bunker-j30",
+        "jr-bunker-j32",
+        "jr-bunker-j34"
+      ]
+    },
+    "jr-los-pibes": {
+      "1": [
+        "jr-los-pibes-j01",
+        "jr-los-pibes-j04",
+        "jr-los-pibes-j07",
+        "jr-los-pibes-j08",
+        "jr-los-pibes-j10",
+        "jr-los-pibes-j11",
+        "jr-los-pibes-j14",
+        "jr-los-pibes-j15",
+        "jr-los-pibes-j17",
+        "jr-los-pibes-j20",
+        "jr-los-pibes-j21",
+        "jr-los-pibes-j23",
+        "jr-los-pibes-j24",
+        "jr-los-pibes-j25",
+        "jr-los-pibes-j27",
+        "jr-los-pibes-j29"
+      ]
+    },
+    "jr-capibara": {
+      "1": [
+        "jr-capibara-j01",
+        "jr-capibara-j08",
+        "jr-capibara-j09",
+        "jr-capibara-j10",
+        "jr-capibara-j11",
+        "jr-capibara-j13",
+        "jr-capibara-j14",
+        "jr-capibara-j25",
+        "jr-capibara-j26",
+        "jr-capibara-j27",
+        "jr-capibara-j32",
+        "jr-capibara-j34"
+      ]
+    },
+    "jr-mesa-cuadrada": {
+      "1": [
+        "jr-mesa-cuadrada-j01",
+        "jr-mesa-cuadrada-j02",
+        "jr-mesa-cuadrada-j04",
+        "jr-mesa-cuadrada-j06",
+        "jr-mesa-cuadrada-j08",
+        "jr-mesa-cuadrada-j09",
+        "jr-mesa-cuadrada-j10",
+        "jr-mesa-cuadrada-j13",
+        "jr-mesa-cuadrada-j16",
+        "jr-mesa-cuadrada-j17",
+        "jr-mesa-cuadrada-j18",
+        "jr-mesa-cuadrada-j22",
+        "jr-mesa-cuadrada-j23",
+        "jr-mesa-cuadrada-j27",
+        "jr-mesa-cuadrada-j28",
+        "jr-mesa-cuadrada-j29",
+        "jr-mesa-cuadrada-j31",
+        "jr-mesa-cuadrada-j32"
+      ]
+    },
+    "jr-los-prados": {
+      "1": [
+        "jr-los-prados-j01",
+        "jr-los-prados-j03",
+        "jr-los-prados-j05",
+        "jr-los-prados-j07",
+        "jr-los-prados-j14",
+        "jr-los-prados-j16",
+        "jr-los-prados-j17",
+        "jr-los-prados-j19",
+        "jr-los-prados-j20",
+        "jr-los-prados-j23",
+        "jr-los-prados-j24",
+        "jr-los-prados-j25",
+        "jr-los-prados-j29",
+        "jr-los-prados-j31",
+        "jr-los-prados-j32",
+        "jr-los-prados-j34"
+      ]
+    },
+    "jr-huracan": {
+      "1": [
+        "jr-huracan-j05",
+        "jr-huracan-j06",
+        "jr-huracan-j07",
+        "jr-huracan-j08",
+        "jr-huracan-j09",
+        "jr-huracan-j11",
+        "jr-huracan-j13",
+        "jr-huracan-j16",
+        "jr-huracan-j20",
+        "jr-huracan-j22",
+        "jr-huracan-j28",
+        "jr-huracan-j30",
+        "jr-huracan-j37"
+      ]
+    },
+    "jr-camilo-enriquez": {
+      "1": [
+        "jr-camilo-enriquez-j02",
+        "jr-camilo-enriquez-j03",
+        "jr-camilo-enriquez-j08",
+        "jr-camilo-enriquez-j11",
+        "jr-camilo-enriquez-j12",
+        "jr-camilo-enriquez-j14",
+        "jr-camilo-enriquez-j18",
+        "jr-camilo-enriquez-j21",
+        "jr-camilo-enriquez-j22",
+        "jr-camilo-enriquez-j25",
+        "jr-camilo-enriquez-j26",
+        "jr-camilo-enriquez-j32"
+      ]
+    },
+    "jr-arquitectura": {
+      "1": [
+        "jr-arquitectura-j02",
+        "jr-arquitectura-j03",
+        "jr-arquitectura-j06",
+        "jr-arquitectura-j09",
+        "jr-arquitectura-j10",
+        "jr-arquitectura-j11",
+        "jr-arquitectura-j13",
+        "jr-arquitectura-j15",
+        "jr-arquitectura-j16",
+        "jr-arquitectura-j17",
+        "jr-arquitectura-j18",
+        "jr-arquitectura-j19",
+        "jr-arquitectura-j21",
+        "jr-arquitectura-j22",
+        "jr-arquitectura-j24",
+        "jr-arquitectura-j26",
+        "jr-arquitectura-j27",
+        "jr-arquitectura-j30"
+      ]
+    },
+    "jr-bayern": {
+      "1": [
+        "jr-bayern-j02",
+        "jr-bayern-j03",
+        "jr-bayern-j04",
+        "jr-bayern-j06",
+        "jr-bayern-j09",
+        "jr-bayern-j11",
+        "jr-bayern-j14",
+        "jr-bayern-j16",
+        "jr-bayern-j17",
+        "jr-bayern-j18",
+        "jr-bayern-j21",
+        "jr-bayern-j23",
+        "jr-bayern-j24",
+        "jr-bayern-j25",
+        "jr-bayern-j26",
+        "jr-bayern-j27",
+        "jr-bayern-j30",
+        "jr-bayern-j31",
+        "jr-bayern-j33"
+      ]
+    },
+    "sr-ariel-honores": {
+      "1": [
+        "sr-ariel-honores-j03",
+        "sr-ariel-honores-j04",
+        "sr-ariel-honores-j05",
+        "sr-ariel-honores-j06",
+        "sr-ariel-honores-j07",
+        "sr-ariel-honores-j10",
+        "sr-ariel-honores-j11",
+        "sr-ariel-honores-j15",
+        "sr-ariel-honores-j17",
+        "sr-ariel-honores-j18",
+        "sr-ariel-honores-j22",
+        "sr-ariel-honores-j24",
+        "sr-ariel-honores-j25",
+        "sr-ariel-honores-j30"
+      ]
+    },
+    "sr-gunners": {
+      "1": [
+        "sr-gunners-j04",
+        "sr-gunners-j05",
+        "sr-gunners-j07",
+        "sr-gunners-j10",
+        "sr-gunners-j13",
+        "sr-gunners-j14",
+        "sr-gunners-j18",
+        "sr-gunners-j22",
+        "sr-gunners-j30",
+        "sr-gunners-j31"
+      ]
+    }
+  },
+  "dudosos": {
+    "jr-los-pibes": {
+      "1": [
+        "jr-los-pibes-j17"
+      ]
+    },
+    "jr-mesa-cuadrada": {
+      "1": [
+        "jr-mesa-cuadrada-j04"
+      ]
+    },
+    "jr-los-prados": {
+      "1": [
+        "jr-los-prados-j24"
+      ]
+    },
+    "jr-huracan": {
+      "1": [
+        "jr-huracan-j08",
+        "jr-huracan-j28",
+        "jr-huracan-j37"
+      ]
+    },
+    "jr-bayern": {
+      "1": [
+        "jr-bayern-j09",
+        "jr-bayern-j21"
+      ]
+    }
+  }
 }
