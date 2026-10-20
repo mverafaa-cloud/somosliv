@@ -260,6 +260,25 @@ export const deleteInscripcion = (id) => remove('inscripciones', id);
 export const getPagos = () => readAll('pagos', '__none__');
 export const savePagos = (d) => upsert('pagos', d);
 
+// ---------- ASISTENCIA (presencia por fecha, leída de las actas; archivo estático en el repo) ----------
+// Formato de /js/data/asistencia.json:
+//   { "fechas": { "libre":[1,2,3,...], "senior":[1,2,...] },
+//     "presentes": { "<equipoId>": { "<fecha>": ["<jugadorId>", ...] } },
+//     "dudosos":   { "<equipoId>": { "<fecha>": ["<jugadorId>", ...] } } }
+// Un jugador está PRESENTE una fecha si su id aparece en presentes[equipo][fecha].
+// Si el id está en dudosos[equipo][fecha] se marca para revisar a mano.
+// Si no hay entrada presentes[equipo][fecha] => esa acta aún no se ha cargado.
+let _asisCache = null;
+export async function getAsistencia() {
+  if (_asisCache) return _asisCache;
+  const vacio = { fechas: {}, presentes: {}, dudosos: {} };
+  try {
+    const r = await fetch('/js/data/asistencia.json', { cache: 'no-cache' });
+    _asisCache = r.ok ? await r.json() : vacio;
+  } catch (_) { _asisCache = vacio; }
+  return _asisCache;
+}
+
 // ---------- JUGADORES (base de datos del plantel: nombre + edad, sin datos sensibles) ----------
 export const getJugadores = () => readAll('jugadores', '__none__');
 export const saveJugador = (d) => upsert('jugadores', d);

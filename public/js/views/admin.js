@@ -8,7 +8,7 @@ import {
   FALTAS_ROJA, faltaById, sancionTexto, suspendidosParaFecha, AMARILLAS_PARA_SUSPENSION,
   getInscripciones, updateInscripcion, deleteInscripcion,
   getPagos, savePagos,
-  getJugadores, saveJugador, deleteJugador, importJugadores,
+  getJugadores, saveJugador, deleteJugador, importJugadores, getAsistencia,
   getAudiovisual, saveAudiovisual,
   sandboxOn, setSandbox, resetSandbox,
   equiposById, camarinesPorCancha
@@ -36,7 +36,8 @@ async function loadAll() {
     getJugadores().catch(() => []), getGoleadores().catch(() => [])
   ]);
   const pagos = await getPagos().catch(() => []);
-  C = { config, equipos, partidos, disciplina, inscripciones, av, jugadores, goleadores, pagos };
+  const asistencia = await getAsistencia().catch(() => ({ fechas: {}, presentes: {}, dudosos: {} }));
+  C = { config, equipos, partidos, disciplina, inscripciones, av, jugadores, goleadores, pagos, asistencia };
 }
 
 /* ---------------- LOGIN ---------------- */
@@ -550,6 +551,55 @@ function renderJugadores(el) {
     .sort((a, b) => (byId[a.equipo]?.nombre || a.equipo).localeCompare(byId[b.equipo]?.nombre || b.equipo) || (a.nombre || '').localeCompare(b.nombre || ''));
 
   const jp = editJug || {};
+
+  // Línea de tiempo de asistencia (presencia fecha por fecha, desde las actas).
+  const asis = C.asistencia || { fechas: {}, presentes: {}, dudosos: {} };
+  function asistenciaBlock() {
+    if (jugEq === 'all') {
+      return `<div class="card mb-3"><p class="muted" style="margin:0">${icon('calendar', { size: 16 })} Elige un equipo en los filtros para ver su <strong>línea de tiempo de asistencia</strong> (presencia fecha por fecha).</p></div>`;
+    }
+    const team = byId[jugEq];
+    const serie = (team && (team.serie || 'libre') === 'senior') ? 'senior' : 'libre';
+    const fechas = (asis.fechas && asis.fechas[serie]) || [];
+    const roster = jugs.filter(j => j.equipo === jugEq).sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+    if (!fechas.length || !roster.length) return '';
+    const pres = (asis.presentes && asis.presentes[jugEq]) || {};
+    const dud = (asis.dudosos && asis.dudosos[jugEq]) || {};
+    const cell = (pid, f) => {
+      const p = pres[String(f)];
+      if (!p) return '<td class="asis-cell asis-nd" title="Sin acta cargada">—</td>';
+      if ((dud[String(f)] || []).includes(pid)) return '<td class="asis-cell asis-dud" title="Dudoso — revisar a mano">?</td>';
+      return p.includes(pid)
+        ? '<td class="asis-cell asis-ok" title="Presente">✓</td>'
+        : '<td class="asis-cell asis-no" title="Ausente">✗</td>';
+    };
+    const cargadas = fechas.filter(f => pres[String(f)]).length;
+    return `
+    <style>
+      .asis-wrap{overflow-x:auto;border:1px solid var(--c-line,#dfe5e0);border-radius:10px}
+      .asis-tbl{border-collapse:separate;border-spacing:0;min-width:max-content;margin:0}
+      .asis-tbl th,.asis-tbl td{border-bottom:1px solid var(--c-line,#eef2ef);border-right:1px solid var(--c-line,#eef2ef);padding:5px 9px;font-size:.84rem;text-align:center;white-space:nowrap}
+      .asis-tbl thead th{background:var(--c-brand,#067A3E);color:#fff;font-weight:700}
+      .asis-name{position:sticky;left:0;background:#fff;text-align:left!important;font-weight:600;min-width:190px;z-index:2}
+      .asis-tbl thead th.asis-name{background:var(--c-brand,#067A3E);color:#fff;z-index:3}
+      .asis-tbl tbody tr:nth-child(even) td{background:#f7faf8}
+      .asis-tbl tbody tr:nth-child(even) td.asis-name{background:#f7faf8}
+      .asis-col{min-width:42px}
+      .asis-ok{color:#067A3E;font-weight:800}
+      .asis-no{color:#b0484a;font-weight:800}
+      .asis-dud{color:#b7850f;font-weight:800;background:#fdf6e3}
+      .asis-nd{color:#c3c9c4}
+    </style>
+    <div class="card mb-3">
+      <h3 class="mb-1">${icon('calendar', { size: 18 })} Asistencia por fecha — ${esc(eqLabel(team))}</h3>
+      <p class="muted" style="font-size:.84rem;margin:0 0 10px"><span class="asis-ok">✓</span> presente (tiene número en el acta) · <span class="asis-no">✗</span> ausente · <span class="asis-dud">?</span> dudoso (revisar a mano) · <span class="asis-nd">—</span> acta aún no cargada. Desliza la tabla →. <span class="muted">(${cargadas}/${fechas.length} fechas cargadas)</span></p>
+      <div class="asis-wrap"><table class="tbl asis-tbl">
+        <thead><tr><th class="asis-name">Jugador</th>${fechas.map(f => `<th class="asis-col">F${f}</th>`).join('')}</tr></thead>
+        <tbody>${roster.map(j => `<tr><td class="asis-name">${esc(j.nombre)}</td>${fechas.map(f => cell(j.id, f)).join('')}</tr>`).join('')}</tbody>
+      </table></div>
+    </div>`;
+  }
+
   el.innerHTML = `
     <div class="card mb-3" style="background:var(--c-brand-soft);border-radius:12px">
       <h3 class="mb-1">${icon('users', { size: 18 })} Base de jugadores</h3>
@@ -584,6 +634,8 @@ function renderJugadores(el) {
       </div>
       <input class="input" id="jug-q" placeholder="Buscar por nombre…" value="${esc(jugQ)}" style="max-width:220px">
     </div>
+
+    ${asistenciaBlock()}
 
     <div class="table-wrap"><table class="tbl">
       <thead><tr><th style="width:40px">#</th><th>Nombre</th><th>Equipo</th><th class="num">Edad</th><th></th></tr></thead>
