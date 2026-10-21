@@ -129,6 +129,47 @@ async function remove(coll, id) {
   await deleteDoc(doc(fb.db, coll, id));
 }
 
+// ---------- RE-VINCULACIÓN POR JUGADOR (no por id posicional) ----------
+// Los goles y tarjetas guardan el NOMBRE del jugador además del id. El id de la
+// plataforma es posicional (se asigna según el orden alfabético del plantel), así
+// que si se agrega/quita un jugador el orden se corre y los ids viejos quedan
+// apuntando a otra persona. Para que el dato "pertenezca al jugador" y no al id,
+// al leer goles/tarjetas re-resolvemos el id ACTUAL a partir del nombre+equipo.
+// El nombre es la fuente de verdad; el id es solo un puntero que se reconstruye.
+function _nk(s) {
+  return String(s || '')
+    .toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9 ]/g, ' ')
+    .trim().replace(/\s+/g, ' ');
+}
+let _jugIdx = null;                               // cache del índice de jugadores
+export function _invalidateJugadorIndex() { _jugIdx = null; }
+async function _jugadorIndex() {
+  if (_jugIdx) return _jugIdx;
+  const jug = await readAll('jugadores', '__none__').catch(() => []);
+  const byName = {}, byId = {};
+  for (const j of jug) {
+    if (!j || !j.equipo || !j.nombre) continue;
+    (byName[j.equipo] || (byName[j.equipo] = {}))[_nk(j.nombre)] = j.id;
+    byId[j.id] = j.nombre;
+  }
+  _jugIdx = { byName, byId };
+  return _jugIdx;
+}
+// Reasigna r.jugadorId al id actual del jugador (match por nombre+equipo) y
+// refresca el nombre al canónico del plantel. Si no hay match, deja el dato tal
+// cual (no rompe nada).
+function _relinkByName(records, idx, nameField) {
+  for (const r of records) {
+    const nom = r[nameField] != null ? r[nameField] : (r.nombre != null ? r.nombre : r.jugador);
+    const byN = idx.byName[r.equipo];
+    const correct = byN && byN[_nk(nom)];
+    if (correct) { r.jugadorId = correct; if (idx.byId[correct]) r[nameField] = idx.byId[correct]; }
+  }
+  return records;
+}
+
 // ---------- CONFIG ----------
 export async function getConfig() {
   if (sandboxOn()) return { ...JSON.parse(JSON.stringify(SEED.config)), ...(sbGet('config')[0] || {}) };
@@ -172,7 +213,12 @@ export const savePartido = (d) => upsert('partidos', d);
 export const deletePartido = (id) => remove('partidos', id);
 
 // ---------- DISCIPLINA ----------
-export const getDisciplina = () => readAll('disciplina', 'disciplina');
+// Lee las tarjetas y re-vincula cada una al jugador por nombre (ver arriba), para
+// que una reordenación de ids no las deje apuntando a otra persona.
+export async function getDisciplina() {
+  const [recs, idx] = await Promise.all([readAll('disciplina', 'disciplina'), _jugadorIndex()]);
+  return _relinkByName(recs, idx, 'jugador');
+}
 export const saveTarjeta = (d) => upsert('disciplina', d);
 export const deleteTarjeta = (id) => remove('disciplina', id);
 
@@ -281,10 +327,11 @@ export async function getAsistencia() {
 
 // ---------- JUGADORES (base de datos del plantel: nombre + edad, sin datos sensibles) ----------
 export const getJugadores = () => readAll('jugadores', '__none__');
-export const saveJugador = (d) => upsert('jugadores', d);
-export const deleteJugador = (id) => remove('jugadores', id);
+export const saveJugador = (d) => { _invalidateJugadorIndex(); return upsert('jugadores', d); };
+export const deleteJugador = (id) => { _invalidateJugadorIndex(); return remove('jugadores', id); };
 // Carga masiva por lotes (writeBatch). Usa ids estables, así re-importar actualiza (no duplica).
 export async function importJugadores(lista) {
+  _invalidateJugadorIndex();
   if (sandboxOn()) {
     const map = Object.fromEntries(sbGet('jugadores').map(x => [x.id, x]));
     lista.forEach(j => { map[j.id] = { ...map[j.id], ...j }; });
@@ -513,5 +560,6 @@ export function computeStandings(partidos, equipos, serieId) {
 // Goleadores: usa la colección/seed si existe.
 export async function getGoleadores() {
   if (mode === 'demo') return (SEED.goleadores || []).map(x => ({ ...x }));
-  return readAll('goleadores', '__none__');
+  const [recs, idx] = await Promise.all([readAll('goleadores', '__none__'), _jugadorIndex()]);
+  return _relinkByName(recs, idx, 'nombre');
 }
