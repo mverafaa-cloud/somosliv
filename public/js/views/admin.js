@@ -565,11 +565,21 @@ function renderJugadores(el) {
     if (!fechas.length || !roster.length) return '';
     const pres = (asis.presentes && asis.presentes[jugEq]) || {};
     const dud = (asis.dudosos && asis.dudosos[jugEq]) || {};
-    const cell = (pid, f) => {
-      const p = pres[String(f)];
-      if (!p) return '<td class="asis-cell asis-nd" title="Sin acta cargada">—</td>';
-      if ((dud[String(f)] || []).includes(pid)) return '<td class="asis-cell asis-dud" title="Dudoso — revisar a mano">?</td>';
-      return p.includes(pid)
+    // La asistencia se guarda por NOMBRE de jugador (no por id posicional), así
+    // que reordenar el plantel no la desvincula. Cruzamos por nombre normalizado.
+    const _an = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9 ]/g, ' ').trim().replace(/\s+/g, ' ');
+    const presSet = {}, dudSet = {};
+    for (const f of fechas) {
+      const fk = String(f);
+      if (pres[fk]) presSet[fk] = new Set(pres[fk].map(_an));
+      if (dud[fk]) dudSet[fk] = new Set(dud[fk].map(_an));
+    }
+    const cell = (nombre, f) => {
+      const fk = String(f);
+      if (!presSet[fk]) return '<td class="asis-cell asis-nd" title="Sin acta cargada">—</td>';
+      const key = _an(nombre);
+      if (dudSet[fk] && dudSet[fk].has(key)) return '<td class="asis-cell asis-dud" title="Dudoso — revisar a mano">?</td>';
+      return presSet[fk].has(key)
         ? '<td class="asis-cell asis-ok" title="Presente">✓</td>'
         : '<td class="asis-cell asis-no" title="Ausente">✗</td>';
     };
@@ -595,7 +605,7 @@ function renderJugadores(el) {
       <p class="muted" style="font-size:.84rem;margin:0 0 10px"><span class="asis-ok">✓</span> presente (tiene número en el acta) · <span class="asis-no">✗</span> ausente · <span class="asis-dud">?</span> dudoso (revisar a mano) · <span class="asis-nd">—</span> acta aún no cargada. Desliza la tabla →. <span class="muted">(${cargadas}/${fechas.length} fechas cargadas)</span></p>
       <div class="asis-wrap"><table class="tbl asis-tbl">
         <thead><tr><th class="asis-name">Jugador</th>${fechas.map(f => `<th class="asis-col">F${f}</th>`).join('')}</tr></thead>
-        <tbody>${roster.map(j => `<tr><td class="asis-name">${esc(j.nombre)}</td>${fechas.map(f => cell(j.id, f)).join('')}</tr>`).join('')}</tbody>
+        <tbody>${roster.map(j => `<tr><td class="asis-name">${esc(j.nombre)}</td>${fechas.map(f => cell(j.nombre, f)).join('')}</tr>`).join('')}</tbody>
       </table></div>
     </div>`;
   }
