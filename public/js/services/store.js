@@ -325,6 +325,20 @@ export async function getAsistencia() {
   return _asisCache;
 }
 
+// ---------- PLANTELES PÚBLICOS (nómina por equipo: nombre + fecha de nacimiento, SIN RUT) ----------
+// Archivo estático en el repo: /js/data/planteles.json con forma
+//   { "<equipoId>": [ { "n": 1, "nombre": "...", "nac": "dd-mm-aaaa"|null }, ... ] }
+// Sirve para mostrar la planilla inscrita de cada equipo de forma pública y transparente.
+let _plantelesCache = null;
+export async function getPlanteles() {
+  if (_plantelesCache) return _plantelesCache;
+  try {
+    const r = await fetch('/js/data/planteles.json', { cache: 'no-cache' });
+    _plantelesCache = r.ok ? await r.json() : {};
+  } catch (_) { _plantelesCache = {}; }
+  return _plantelesCache;
+}
+
 // ---------- JUGADORES (base de datos del plantel: nombre + edad, sin datos sensibles) ----------
 export const getJugadores = () => readAll('jugadores', '__none__');
 export const saveJugador = (d) => { _invalidateJugadorIndex(); return upsert('jugadores', d); };
