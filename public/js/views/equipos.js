@@ -1,12 +1,32 @@
-import { getConfig, getEquipos, getPlanteles } from '../services/store.js';
+import { getConfig, getEquipos, getPlanteles, getPartidos, getDisciplina, computeStandings } from '../services/store.js';
 import { mount, esc, initials } from '../ui/helpers.js';
 import { shell, loading, logoMarquee, preSeason } from '../ui/layout.js';
 import { icon } from '../ui/icons.js';
 
 export async function showEquipos() {
   mount(loading());
-  const [config, equipos, planteles] = await Promise.all([getConfig(), getEquipos(), getPlanteles()]);
+  const [config, equipos, planteles, partidos, tarjetas] = await Promise.all([
+    getConfig(), getEquipos(), getPlanteles(), getPartidos(), getDisciplina()]);
   const series = config.series || [];
+
+  // --- Estadísticas por equipo (fase regular de su serie) ---
+  const standingsCache = {};
+  const statsOf = (e) => {
+    const serie = e.serie;
+    if (!(serie in standingsCache)) standingsCache[serie] = computeStandings(partidos, equipos, serie);
+    const table = standingsCache[serie];
+    const idx = table.findIndex(r => r.equipo.id === e.id);
+    const r = idx >= 0 ? table[idx] : null;
+    const pj = r?.pj || 0, pts = r?.pts || 0, obten = pj * 3;
+    return {
+      pos: idx >= 0 ? idx + 1 : null, total: table.length,
+      pj, pg: r?.pg || 0, pe: r?.pe || 0, pp: r?.pp || 0,
+      gf: r?.gf || 0, gc: r?.gc || 0, dg: r?.dg || 0, pts,
+      rend: obten ? Math.round((pts / obten) * 100) : null,
+      amar: tarjetas.filter(t => t.equipo === e.id && t.tipo === 'amarilla').length,
+      rojas: tarjetas.filter(t => t.equipo === e.id && t.tipo === 'roja').length,
+    };
+  };
 
   if (!equipos.length) {
     mount(shell(`<div class="container"><span class="eyebrow">Temporada ${esc(config.temporada || '2026')}</span><h1>Equipos</h1>${preSeason(config, 'los equipos inscritos')}</div>`, config));
@@ -60,11 +80,40 @@ export async function showEquipos() {
   const byId = {}; equipos.forEach(e => byId[e.id] = e);
 
   app.querySelectorAll('.equipo-card.is-clickable').forEach(btn => {
-    btn.addEventListener('click', () => openPlantel(byId[btn.dataset.eid], planteles[btn.dataset.eid] || []));
+    const e = byId[btn.dataset.eid];
+    btn.addEventListener('click', () => openPlantel(e, planteles[btn.dataset.eid] || [], statsOf(e)));
   });
 }
 
-function openPlantel(equipo, jugadores) {
+function statsBlock(st) {
+  if (!st) return '';
+  const tile = (val, lbl, cls) => `<div class="ts-tile${cls ? ' ' + cls : ''}"><span class="ts-val">${val}</span><span class="ts-lbl">${lbl}</span></div>`;
+  const pos = st.pos ? `${st.pos}<span class="ts-ord">º</span>` : '—';
+  const rend = st.rend == null ? '—' : `${st.rend}<span class="ts-ord">%</span>`;
+  const dg = (st.dg > 0 ? '+' : '') + st.dg;
+  return `
+    <div class="ts-sec">Rendimiento · fase regular</div>
+    <div class="ts-wrap">
+      <div class="ts-hero">
+        ${tile(pos, 'Posición', 'ts-brand')}
+        ${tile(st.pts, 'Puntos', 'ts-brand')}
+        ${tile(rend, 'Rendimiento', 'ts-brand')}
+      </div>
+      <div class="ts-grid">
+        ${tile(st.pj, 'PJ')}
+        ${tile(st.pg, 'PG')}
+        ${tile(st.pe, 'PE')}
+        ${tile(st.pp, 'PP')}
+        ${tile(st.gf, 'GF')}
+        ${tile(st.gc, 'GC')}
+        ${tile(dg, 'Dif.')}
+        ${tile(st.amar, 'Amarillas', 'ts-amar')}
+        ${tile(st.rojas, 'Rojas', 'ts-roja')}
+      </div>
+    </div>`;
+}
+
+function openPlantel(equipo, jugadores, stats) {
   if (!equipo) return;
   document.getElementById('plantel-modal')?.remove();
 
@@ -93,6 +142,8 @@ function openPlantel(equipo, jugadores) {
         </div>
         <button class="pm-close" aria-label="Cerrar">&times;</button>
       </div>
+      ${statsBlock(stats)}
+      <div class="ts-sec">Plantel · ${jugadores.length} jugadores</div>
       <div class="pm-cols">
         <ol class="pm-list" start="1">${colList(jugadores.slice(0, half))}</ol>
         <ol class="pm-list">${colList(jugadores.slice(half))}</ol>
@@ -136,7 +187,19 @@ function ensurePlantelStyles() {
   .pm-nom{flex:1;min-width:0;font-weight:600;color:var(--c-ink,#23271F);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .pm-nac{flex:0 0 auto;font-variant-numeric:tabular-nums;color:var(--c-muted,#6B7268);font-size:.82rem}
   .pm-foot{padding:12px 20px 18px;font-size:.76rem;color:var(--c-muted,#6B7268);border-top:1px solid var(--c-line,#D9E6DE)}
-  @media (max-width:560px){.pm-cols{grid-template-columns:1fr}.pm-head h3{font-size:1.25rem}}
+  .ts-sec{padding:16px 20px 0;font-size:.7rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--c-brand-2,#056433)}
+  .ts-wrap{padding:10px 20px 4px}
+  .ts-hero{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:9px}
+  .ts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(66px,1fr));gap:8px}
+  .ts-tile{background:var(--c-surface,#fff);border:1px solid var(--c-line,#D9E6DE);border-radius:12px;padding:11px 6px;text-align:center;display:flex;flex-direction:column;gap:3px;box-shadow:0 1px 3px rgba(11,18,12,.05)}
+  .ts-val{font-family:var(--font-display,Anton),sans-serif;font-weight:400;font-size:1.7rem;line-height:1;color:var(--c-ink,#23271F)}
+  .ts-ord{font-size:.95rem;font-weight:700;margin-left:1px}
+  .ts-lbl{font-size:.63rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--c-muted,#6B7268)}
+  .ts-hero .ts-val{font-size:2rem}
+  .ts-brand{background:var(--c-brand,#067A3E);border-color:var(--c-brand,#067A3E)}
+  .ts-brand .ts-val{color:#fff}.ts-brand .ts-lbl{color:var(--c-lime,#C8F542)}
+  .ts-amar .ts-val{color:#B7860B}.ts-roja .ts-val{color:#9b1c1c}
+  @media (max-width:560px){.pm-cols{grid-template-columns:1fr}.pm-head h3{font-size:1.25rem}.ts-hero .ts-val{font-size:1.7rem}}
   `;
   document.head.appendChild(st);
 }
