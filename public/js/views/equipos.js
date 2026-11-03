@@ -1,12 +1,12 @@
-import { getConfig, getEquipos, getPlanteles, getPartidos, getDisciplina, computeStandings } from '../services/store.js';
+import { getConfig, getEquipos, getPlanteles, getPartidos, getDisciplina, getGoleadores, computeStandings } from '../services/store.js';
 import { mount, esc, initials } from '../ui/helpers.js';
 import { shell, loading, logoMarquee, preSeason } from '../ui/layout.js';
 import { icon } from '../ui/icons.js';
 
 export async function showEquipos() {
   mount(loading());
-  const [config, equipos, planteles, partidos, tarjetas] = await Promise.all([
-    getConfig(), getEquipos(), getPlanteles(), getPartidos(), getDisciplina()]);
+  const [config, equipos, planteles, partidos, tarjetas, goles] = await Promise.all([
+    getConfig(), getEquipos(), getPlanteles(), getPartidos(), getDisciplina(), getGoleadores()]);
   const series = config.series || [];
 
   const byId = {}; equipos.forEach(e => byId[e.id] = e);
@@ -46,6 +46,18 @@ export async function showEquipos() {
         res: gf > gc ? 'G' : (gf < gc ? 'P' : 'E'), tag: serieTag(p.serie || '') };
     })
     .sort((a, b) => (new Date(a.fecha || 0) - new Date(b.fecha || 0)) || ((a.fnum || 0) - (b.fnum || 0)));
+
+  // --- Goleador del equipo (suma de goles por jugador) ---
+  const topScorerOf = (e) => {
+    const acc = {};
+    goles.filter(g => g.equipo === e.id).forEach(g => {
+      const k = g.jugadorId || `${g.nombre || '—'}`;
+      if (!acc[k]) acc[k] = { nombre: g.nombre || '—', goles: 0 };
+      acc[k].goles += (+g.goles || 0);
+    });
+    const rows = Object.values(acc).filter(r => r.goles > 0).sort((a, b) => b.goles - a.goles);
+    return rows[0] || null;
+  };
 
   if (!equipos.length) {
     mount(shell(`<div class="container"><span class="eyebrow">Temporada ${esc(config.temporada || '2026')}</span><h1>Equipos</h1>${preSeason(config, 'los equipos inscritos')}</div>`, config));
@@ -99,7 +111,7 @@ export async function showEquipos() {
 
   app.querySelectorAll('.equipo-card.is-clickable').forEach(btn => {
     const e = byId[btn.dataset.eid];
-    btn.addEventListener('click', () => openPlantel(e, planteles[btn.dataset.eid] || [], statsOf(e), matchesOf(e)));
+    btn.addEventListener('click', () => openPlantel(e, planteles[btn.dataset.eid] || [], statsOf(e), matchesOf(e), topScorerOf(e)));
   });
 }
 
@@ -123,13 +135,23 @@ function donutSVG(st) {
   </svg>`;
 }
 
-function statsBlock(st) {
+function statsBlock(st, matches, scorer) {
   if (!st) return '';
   const nf = (n) => (Math.round(n * 100) / 100).toString().replace('.', ',');
   const med = (v) => st.pj ? `${nf(v / st.pj)} por partido` : '—';
   const pos = st.pos ? `${st.pos}º` : '—';
   const rend = st.rend == null ? 0 : st.rend;
   const dg = (st.dg > 0 ? '+' : '') + st.dg;
+  const resWord = { G: 'Ganó', E: 'Empató', P: 'Perdió' };
+  const last5 = (matches || []).slice(-5);
+  const formStrip = last5.length
+    ? `<div class="ts2-form"><span class="ts2-form-lbl">Últimos</span>${last5.map(m => `<span class="ts2-dot ts2-d-${m.res}" title="${resWord[m.res]} ${m.gf}-${m.gc}">${m.res}</span>`).join('')}</div>`
+    : '';
+  const scorerCard = scorer
+    ? `<div class="ts2-scorer"><span class="ts2-sc-ico">${icon('ball', { size: 20 })}</span>
+        <div class="ts2-sc-txt"><span class="ts2-sc-lbl">Goleador del equipo</span><span class="ts2-sc-nom">${esc(scorer.nombre)}</span></div>
+        <span class="ts2-sc-goles">${scorer.goles}<small>${scorer.goles === 1 ? 'gol' : 'goles'}</small></span></div>`
+    : '';
   const metric = (val, lbl, sub, cls, ico) => `
     <div class="ts2-m${cls ? ' ' + cls : ''}">
       ${ico || ''}<span class="ts2-m-v">${val}</span>
@@ -158,8 +180,10 @@ function statsBlock(st) {
           <div class="ts2-bar"><i style="width:${rend}%"></i></div>
           <span class="ts2-rend-sub">${st.pts} de ${st.pj * 3} puntos posibles</span>
         </div>
+        ${formStrip}
       </div>
     </div>
+    ${scorerCard}
     <div class="ts2-metrics">
       ${metric(st.gf, 'Goles a favor', `${med(st.gf)}`)}
       ${metric(st.gc, 'Goles en contra', `${med(st.gc)}`)}
@@ -192,7 +216,7 @@ function matchesBlock(matches, equipo) {
     <ul class="mt-list">${matches.map(row).join('')}</ul>`;
 }
 
-function openPlantel(equipo, jugadores, stats, matches) {
+function openPlantel(equipo, jugadores, stats, matches, scorer) {
   if (!equipo) return;
   document.getElementById('plantel-modal')?.remove();
 
@@ -221,7 +245,7 @@ function openPlantel(equipo, jugadores, stats, matches) {
         </div>
         <button class="pm-close" aria-label="Cerrar">&times;</button>
       </div>
-      ${statsBlock(stats)}
+      ${statsBlock(stats, matches, scorer)}
       ${matchesBlock(matches, equipo)}
       <div class="ts2-sec">Plantel · ${jugadores.length} jugadores</div>
       <div class="pm-cols">
@@ -289,6 +313,19 @@ function ensurePlantelStyles() {
   .ts2-bar{height:9px;background:#E3EDE6;border-radius:6px;overflow:hidden;margin:6px 0 5px}
   .ts2-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--c-brand,#067A3E),var(--c-lime,#5DBB63));border-radius:6px}
   .ts2-rend-sub{font-size:.72rem;color:var(--c-muted,#6B7268)}
+  /* racha últimos 5 */
+  .ts2-form{display:flex;align-items:center;gap:6px}
+  .ts2-form-lbl{font-size:.63rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--c-muted,#6B7268);margin-right:2px}
+  .ts2-dot{width:22px;height:22px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#fff}
+  .ts2-d-G{background:${C_WIN}}.ts2-d-E{background:${C_DRAW}}.ts2-d-P{background:${C_LOSS}}
+  /* goleador del equipo */
+  .ts2-scorer{display:flex;align-items:center;gap:12px;margin:12px 20px 0;padding:11px 14px;border-radius:12px;background:linear-gradient(90deg,var(--c-brand,#067A3E),var(--c-brand-2,#056433));color:#fff}
+  .ts2-sc-ico{display:flex;width:34px;height:34px;flex:0 0 34px;align-items:center;justify-content:center;border-radius:9px;background:rgba(255,255,255,.16);color:#fff}
+  .ts2-sc-txt{display:flex;flex-direction:column;min-width:0;flex:1}
+  .ts2-sc-lbl{font-size:.64rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--c-lime,#C8F542)}
+  .ts2-sc-nom{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ts2-sc-goles{font-family:var(--font-display,Anton),sans-serif;font-size:1.7rem;line-height:1;display:flex;align-items:baseline;gap:5px}
+  .ts2-sc-goles small{font-family:inherit;font-size:.62rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.85}
   /* métricas */
   .ts2-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:12px 20px 4px}
   .ts2-m{background:var(--c-surface,#fff);border:1px solid var(--c-line,#D9E6DE);border-radius:12px;padding:12px 14px;position:relative;box-shadow:0 1px 3px rgba(11,18,12,.05)}
