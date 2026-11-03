@@ -113,17 +113,19 @@ function renderPublicFixture(config, fx) {
   const nameOf = id => (series.find(s => s.id === id) || {}).nombre || id;
   const avail = (fx.series || []).filter(s => s.fechas.length || s.amistosos.length);
   if (!avail.length) { mount(shell(`<div class="container"><span class="eyebrow">Calendario</span><h1>Programación</h1>${emptyBox('Aún no hay partidos publicados.')}</div>`, config)); return; }
-  if (!_fxSerie || !avail.find(s => s.serieId === _fxSerie)) _fxSerie = avail[0].serieId;
+  const ORDER = ['libre', 'senior', 'senior-oro', 'senior-plata'];
+  const SENIOR = ['senior', 'senior-oro', 'senior-plata'];
+  const exists = id => !!avail.find(s => s.serieId === id);
+  const isSenior = s => SENIOR.includes(s);
+  if (!_fxSerie || !exists(_fxSerie)) _fxSerie = ORDER.find(exists) || avail[0].serieId;
 
   const inner = `
   <div class="container">
     <span class="eyebrow">Calendario</span>
     <h1>Programación</h1>
     <p class="subtitle mb-2">Fixture oficial · Temporada ${esc(config.temporada || '2026')} · ${esc(config.sede || 'Complejo Deggiano')}.</p>
-    ${avail.length > 1 ? `<div class="chips filter-row mb-2" id="fx-serie">
-      <span class="chips-label">Serie</span>
-      ${avail.map(s => `<button class="chip ${_fxSerie === s.serieId ? 'active' : ''}" data-serie="${esc(s.serieId)}">${esc(nameOf(s.serieId))}</button>`).join('')}
-    </div>` : ''}
+    <style>.fx-nav-row{margin-bottom:6px}.fx-nav-sub{padding-left:4px}.fx-nav-sub .chip{font-size:.82rem;padding:5px 12px}</style>
+    <div id="fx-nav" class="fx-nav mb-2"></div>
     <div class="chips filter-row mb-2" id="fx-fechas"></div>
     <div id="fx-body"></div>
     <div class="card-sm mt-2" style="background:var(--c-brand-soft);border-radius:12px;padding:10px 14px;font-size:.88rem">
@@ -143,7 +145,37 @@ function renderPublicFixture(config, fx) {
       _fx = c.dataset.fx === 'all' ? 'all' : Number(c.dataset.fx); draw();
     }));
   }
+  const navBtn = (label, active, key) => `<button class="chip ${active ? 'active' : ''}" data-nav="${key}">${esc(label)}</button>`;
+  function renderNav() {
+    const rows = [];
+    const top = [];
+    if (exists('libre')) top.push(navBtn('Junior', _fxSerie === 'libre', 'libre'));
+    if (SENIOR.some(exists)) top.push(navBtn('Senior', isSenior(_fxSerie), 'senior-group'));
+    if (top.length) rows.push(`<div class="chips filter-row fx-nav-row">${top.join('')}</div>`);
+    if (isSenior(_fxSerie)) {
+      const sub = [];
+      if (exists('senior')) sub.push(navBtn('Fase Regular', _fxSerie === 'senior', 'senior'));
+      if (exists('senior-oro') || exists('senior-plata')) sub.push(navBtn('Playoffs', _fxSerie !== 'senior', 'playoffs'));
+      if (sub.length > 1) rows.push(`<div class="chips filter-row fx-nav-row fx-nav-sub">${sub.join('')}</div>`);
+      if (_fxSerie === 'senior-oro' || _fxSerie === 'senior-plata') {
+        const pl = [];
+        if (exists('senior-oro')) pl.push(navBtn('Oro', _fxSerie === 'senior-oro', 'senior-oro'));
+        if (exists('senior-plata')) pl.push(navBtn('Plata', _fxSerie === 'senior-plata', 'senior-plata'));
+        if (pl.length) rows.push(`<div class="chips filter-row fx-nav-row fx-nav-sub">${pl.join('')}</div>`);
+      }
+    }
+    const el = document.getElementById('fx-nav'); el.innerHTML = rows.join('');
+    el.querySelectorAll('[data-nav]').forEach(c => c.addEventListener('click', () => {
+      const k = c.dataset.nav;
+      if (k === 'libre') _fxSerie = 'libre';
+      else if (k === 'senior-group') _fxSerie = exists('senior') ? 'senior' : (exists('senior-oro') ? 'senior-oro' : 'senior-plata');
+      else if (k === 'playoffs') _fxSerie = exists('senior-oro') ? 'senior-oro' : 'senior-plata';
+      else _fxSerie = k;
+      _fx = 'all'; draw();
+    }));
+  }
   function draw() {
+    renderNav();
     const cur = avail.find(s => s.serieId === _fxSerie);
     drawFechas(cur);
     const rounds = cur.fechas.slice().sort((a, b) => a.n - b.n);
@@ -151,11 +183,7 @@ function renderPublicFixture(config, fx) {
     let html = shown.map(rd => fechaBlock(rd, config)).join('');
     if (_fx === 'all' && cur.amistosos.length) html += amistososBlock(cur.amistosos);
     document.getElementById('fx-body').innerHTML = html || emptyBox('Sin partidos en esta serie.');
-    document.querySelectorAll('#fx-serie .chip').forEach(c => c.classList.toggle('active', c.dataset.serie === _fxSerie));
   }
-  document.querySelectorAll('#fx-serie .chip').forEach(c => c.addEventListener('click', () => {
-    _fxSerie = c.dataset.serie; _fx = 'all'; draw();
-  }));
   draw();
 }
 

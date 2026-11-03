@@ -19,6 +19,10 @@ export async function showPosiciones() {
     .map(sid => ({ id: sid, nombre: EXTRA_LABELS[sid] || sid, playoff: true }));
   const series = [...baseSeries, ...extraSeries];
   const isPlayoffSerie = (sid) => !!extraSeries.find(s => s.id === sid);
+  const ORDER = ['libre', 'senior', 'senior-oro', 'senior-plata'];
+  const SENIOR = ['senior', 'senior-oro', 'senior-plata'];
+  const exists = (id) => !!series.find(s => s.id === id);
+  const isSenior = (s) => SENIOR.includes(s);
   const byId = equiposById(equipos);
 
   // Activa apenas hay equipos cargados: la tabla parte en 0 y se actualiza sola
@@ -28,7 +32,7 @@ export async function showPosiciones() {
     return;
   }
 
-  if (!_serie || !series.find(s => s.id === _serie)) _serie = series[0]?.id || null;
+  if (!_serie || !exists(_serie)) _serie = ORDER.find(exists) || series[0]?.id || null;
 
   function render() {
     const table = _serie ? computeStandings(partidos, equipos, _serie) : [];
@@ -75,8 +79,37 @@ export async function showPosiciones() {
           <p class="pos-note">Ante igualdad de puntos define el <strong>enfrentamiento directo</strong> entre los equipos empatados; si persiste, la <strong>diferencia de goles</strong> (reglamento LIV).</p>`}`;
 
     document.getElementById('pos-body').innerHTML = body;
+    renderNav();
+  }
 
-    document.querySelectorAll('#pos-chips .chip').forEach(c => c.classList.toggle('active', c.dataset.serie === _serie));
+  const navBtn = (label, active, key) => `<button class="chip ${active ? 'active' : ''}" data-nav="${key}">${esc(label)}</button>`;
+  function renderNav() {
+    const rows = [];
+    const top = [];
+    if (exists('libre')) top.push(navBtn('Junior', _serie === 'libre', 'libre'));
+    if (SENIOR.some(exists)) top.push(navBtn('Senior', isSenior(_serie), 'senior-group'));
+    if (top.length) rows.push(`<div class="chips pos-nav-row">${top.join('')}</div>`);
+    if (isSenior(_serie)) {
+      const sub = [];
+      if (exists('senior')) sub.push(navBtn('Fase Regular', _serie === 'senior', 'senior'));
+      if (exists('senior-oro') || exists('senior-plata')) sub.push(navBtn('Playoffs', _serie !== 'senior', 'playoffs'));
+      if (sub.length > 1) rows.push(`<div class="chips pos-nav-row pos-nav-sub">${sub.join('')}</div>`);
+      if (_serie === 'senior-oro' || _serie === 'senior-plata') {
+        const pl = [];
+        if (exists('senior-oro')) pl.push(navBtn('Oro', _serie === 'senior-oro', 'senior-oro'));
+        if (exists('senior-plata')) pl.push(navBtn('Plata', _serie === 'senior-plata', 'senior-plata'));
+        if (pl.length) rows.push(`<div class="chips pos-nav-row pos-nav-sub">${pl.join('')}</div>`);
+      }
+    }
+    const el = document.getElementById('pos-chips'); el.innerHTML = rows.join('');
+    el.querySelectorAll('[data-nav]').forEach(c => c.addEventListener('click', () => {
+      const k = c.dataset.nav;
+      if (k === 'libre') _serie = 'libre';
+      else if (k === 'senior-group') _serie = exists('senior') ? 'senior' : (exists('senior-oro') ? 'senior-oro' : 'senior-plata');
+      else if (k === 'playoffs') _serie = exists('senior-oro') ? 'senior-oro' : 'senior-plata';
+      else _serie = k;
+      render();
+    }));
   }
 
   const inner = `
@@ -84,13 +117,11 @@ export async function showPosiciones() {
     <span class="eyebrow">Tabla</span>
     <h1>Posiciones</h1>
     <p class="subtitle mb-3">Se actualiza automáticamente a partir de los resultados. 3 puntos por victoria, 1 por empate.</p>
-    <div class="chips" id="pos-chips">
-      ${series.map(s => `<button class="chip" data-serie="${esc(s.id)}">${esc(s.nombre)}</button>`).join('')}
-    </div>
+    <style>.pos-nav-row{margin-bottom:6px}.pos-nav-sub{padding-left:4px}.pos-nav-sub .chip{font-size:.82rem;padding:5px 12px}</style>
+    <div id="pos-chips" class="mb-2"></div>
     <div id="pos-body"></div>
   </div>`;
 
   mount(shell(inner, config));
-  document.querySelectorAll('#pos-chips .chip').forEach(c => c.addEventListener('click', () => { _serie = c.dataset.serie; render(); }));
   render();
 }
