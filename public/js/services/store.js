@@ -519,7 +519,16 @@ export function equiposById(equipos) {
 
 // Tabla de posiciones calculada desde los partidos finalizados de una serie.
 export function computeStandings(partidos, equipos, serieId) {
-  const teams = equipos.filter(e => e.serie === serieId);
+  let teams = equipos.filter(e => e.serie === serieId);
+  // Serie sin equipos propios (p.ej. playoff 'senior-oro' / 'senior-plata'):
+  // los participantes se derivan de los partidos de esa serie (los equipos
+  // siguen teniendo serie 'senior', así que no se filtran por equipo).
+  if (!teams.length) {
+    const byId = {}; equipos.forEach(e => byId[e.id] = e);
+    const ids = new Set();
+    partidos.forEach(p => { if (p.serie === serieId) { if (p.local) ids.add(p.local); if (p.visita) ids.add(p.visita); } });
+    teams = [...ids].map(id => byId[id]).filter(Boolean);
+  }
   const table = {};
   teams.forEach(t => table[t.id] = { equipo: t, pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, pts: 0 });
 
