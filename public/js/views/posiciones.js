@@ -10,7 +10,15 @@ let _serie = null;
 export async function showPosiciones() {
   mount(loading());
   const [config, partidos, equipos] = await Promise.all([getConfig(), getPartidos(), getEquipos()]);
-  const series = config.series || [];
+  // Series base (de config) + series extra presentes en los partidos (p.ej. los
+  // playoff 'senior-oro' / 'senior-plata'), que se muestran como pestañas aparte.
+  const baseSeries = config.series || [];
+  const EXTRA_LABELS = { 'senior-oro': 'Copa de Oro', 'senior-plata': 'Copa de Plata' };
+  const extraSeries = [...new Set(partidos.map(p => p.serie).filter(Boolean))]
+    .filter(sid => !baseSeries.find(s => s.id === sid))
+    .map(sid => ({ id: sid, nombre: EXTRA_LABELS[sid] || sid, playoff: true }));
+  const series = [...baseSeries, ...extraSeries];
+  const isPlayoffSerie = (sid) => !!extraSeries.find(s => s.id === sid);
   const byId = equiposById(equipos);
 
   // Activa apenas hay equipos cargados: la tabla parte en 0 y se actualiza sola
@@ -26,12 +34,15 @@ export async function showPosiciones() {
     const table = _serie ? computeStandings(partidos, equipos, _serie) : [];
     const jugados = table.reduce((a, r) => a + r.pj, 0);
     const n = table.length;
+    const playoff = isPlayoffSerie(_serie);                   // tabla de playoff (Oro/Plata): sin zonas de clasificación
     const hasProm = n > 8;                 // zona de promoción (9°–10°) solo en ligas de 9+ equipos
-    const zona = (i) => i < 4 ? 'pos-oro' : (i < 8 ? 'pos-plata' : (hasProm && i >= 8 ? 'pos-prom' : ''));
+    const zona = (i) => playoff
+      ? (i === 0 ? 'pos-oro' : '')                            // en playoff solo se resalta al líder (campeón)
+      : (i < 4 ? 'pos-oro' : (i < 8 ? 'pos-plata' : (hasProm && i >= 8 ? 'pos-prom' : '')));
     const rowCls = (i) => {
       const cls = [zona(i)];
-      if (i === 3 && n > 4) cls.push('zend');                 // separa Oro de Plata
-      if (i === 7 && hasProm) cls.push('zend');               // separa Plata de Promoción
+      if (!playoff && i === 3 && n > 4) cls.push('zend');     // separa Oro de Plata
+      if (!playoff && i === 7 && hasProm) cls.push('zend');   // separa Plata de Promoción
       return cls.filter(Boolean).join(' ');
     };
     const body = (!table.length)
@@ -53,12 +64,15 @@ export async function showPosiciones() {
               </tr>`).join('')}
           </tbody></table></div>
           ${jugados === 0 ? '<div class="alert alert-info mt-2">La serie aún no registra partidos finalizados. La tabla se actualiza automáticamente al cargar resultados.</div>' : ''}
+          ${playoff ? `
+          <div class="table-legend"><span><span class="dot dot-oro"></span> 1° = Campeón de la copa</span></div>
+          <p class="pos-note">Todos contra todos (3 fechas). El equipo con más puntos gana la copa. Ante igualdad de puntos define el <strong>enfrentamiento directo</strong> y luego la <strong>diferencia de goles</strong> (reglamento LIV).</p>` : `
           <div class="table-legend">
             <span><span class="dot dot-oro"></span> Clasifican a Copa de Oro (1°–4°)</span>
             <span><span class="dot dot-plata"></span> Clasifican a Copa de Plata (5°–8°)</span>
             ${hasProm ? '<span><span class="dot dot-prom"></span> Promoción / descenso (9°–10°)</span>' : ''}
           </div>
-          <p class="pos-note">Ante igualdad de puntos define el <strong>enfrentamiento directo</strong> entre los equipos empatados; si persiste, la <strong>diferencia de goles</strong> (reglamento LIV).</p>`;
+          <p class="pos-note">Ante igualdad de puntos define el <strong>enfrentamiento directo</strong> entre los equipos empatados; si persiste, la <strong>diferencia de goles</strong> (reglamento LIV).</p>`}`;
 
     document.getElementById('pos-body').innerHTML = body;
 
