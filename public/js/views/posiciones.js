@@ -80,32 +80,34 @@ export async function showPosiciones() {
   const winnerId = (p) => (!p || p.estado !== 'finalizado' || p.golesLocal == null) ? null : (+p.golesLocal > +p.golesVisita ? p.local : (+p.golesVisita > +p.golesLocal ? p.visita : null));
   const scoreL = (p) => (p && p.estado === 'finalizado' && p.golesLocal != null) ? p.golesLocal : '';
   const scoreV = (p) => (p && p.estado === 'finalizado' && p.golesVisita != null) ? p.golesVisita : '';
-  function side(teamId, score, win, placeholder) {
-    const e = teamId ? byId[teamId] : null;
-    const nm = e ? e.nombre : (placeholder || 'Por definir');
-    const logo = e ? teamLogo(e.logo, nm, 24) : '<span class="badge" style="width:24px;height:24px">·</span>';
-    return `<div class="brk-side ${win ? 'brk-win' : ''} ${e ? '' : 'brk-tbd'}">${logo}<span class="brk-nm">${esc(nm)}</span><span class="brk-sc">${score === '' || score == null ? '' : esc(score)}</span></div>`;
-  }
-  function matchBox(title, center, t1, t2, s1, s2, w1, w2, meta, ph1, ph2) {
-    return `<div class="brk-match${center ? ' brk-final' : ''}">
-      <div class="brk-title">${esc(title)}</div>
-      <div class="brk-box">${side(t1, s1, w1, ph1)}${side(t2, s2, w2, ph2)}</div>
-      ${meta ? `<div class="brk-meta">${meta}</div>` : ''}
-    </div>`;
-  }
   function metaOf(p) {
     if (!p) return '';
     const parts = [];
-    if (p.fecha) { const d = p.fecha; parts.push(esc(d)); }
+    if (p.fecha) parts.push(esc(p.fecha));
     if (p.hora) parts.push(esc(p.hora));
     if (p.cancha) parts.push('Cancha ' + esc(p.cancha));
     return parts.join(' · ');
   }
-  function sfBox(p, title) {
-    if (!p) return matchBox(title, false, null, null, '', '', false, false, 'Por jugar', 'Por definir', 'Por definir');
+  function brkTeam(teamId, placeholder, score, win) {
+    const e = teamId ? byId[teamId] : null;
+    const nm = e ? e.nombre : (placeholder || 'Por definir');
+    const logo = e ? teamLogo(e.logo, nm, 30) : '<span class="brk2-ph">?</span>';
+    return `<div class="brk2-team${win ? ' brk2-win' : ''}${e ? '' : ' brk2-tbd'}">
+        <span class="brk2-logo">${logo}</span>
+        <span class="brk2-nm">${esc(nm)}</span>
+        <span class="brk2-sc">${score === '' || score == null ? '' : esc(score)}</span>
+      </div>`;
+  }
+  function brkMatch(p, phL, phR, cls) {
     const w = winnerId(p);
-    return matchBox(title, false, p.local, p.visita, scoreL(p), scoreV(p), w === p.local, w === p.visita, metaOf(p),
-                    p.seedLabelLocal || 'Por definir', p.seedLabelVisita || 'Por definir');
+    const meta = metaOf(p);
+    return `<div class="brk2-match${cls ? ' ' + cls : ''}">
+        <div class="brk2-teams">
+          ${brkTeam(p ? p.local : null, phL, scoreL(p), !!(w && p && w === p.local))}
+          ${brkTeam(p ? p.visita : null, phR, scoreV(p), !!(w && p && w === p.visita))}
+        </div>
+        ${meta ? `<div class="brk2-meta">${meta}</div>` : ''}
+      </div>`;
   }
   function renderBracket(serie) {
     const ms = partidos.filter(p => p.serie === serie);
@@ -113,17 +115,36 @@ export async function showPosiciones() {
     const fin = ms.find(p => /final/i.test(p.ronda || '') && !/semi/i.test(p.ronda || ''));
     const sf1 = sfs[0], sf2 = sfs[1];
     const w1 = winnerId(sf1), w2 = winnerId(sf2);
-    const ft1 = (fin && fin.local) || w1 || null;
-    const ft2 = (fin && fin.visita) || w2 || null;
     const fw = winnerId(fin);
-    const finBox = matchBox('Final', true, ft1, ft2, scoreL(fin), scoreV(fin), fw && fw === ft1, fw && fw === ft2, metaOf(fin), 'Ganador Semifinal 1', 'Ganador Semifinal 2');
     const champ = fw ? byId[fw]?.nombre : null;
-    return `<div class="bracket">
-      <div class="brk-col">${sfBox(sf1, 'Semifinal 1')}</div>
-      <div class="brk-col brk-center">${finBox}</div>
-      <div class="brk-col">${sfBox(sf2, 'Semifinal 2')}</div>
-    </div>
-    <p class="pos-note" style="text-align:center">Eliminación directa: el ganador de cada semifinal juega la <strong>final</strong>.${champ ? ` 🏆 Campeón: <strong>${esc(champ)}</strong>.` : ''}</p>`;
+    const plata = /plata/i.test(serie);
+    const copa = plata ? 'Copa de Plata' : 'Copa de Oro';
+    const seeds = plata ? [['5º', '8º'], ['6º', '7º']] : [['1º', '4º'], ['2º', '3º']];
+    const phL = (p, i) => (p && p.seedLabelLocal) || seeds[i][0];
+    const phR = (p, i) => (p && p.seedLabelVisita) || seeds[i][1];
+    const finForRender = fin
+      ? { ...fin, local: fin.local || w1 || '', visita: fin.visita || w2 || '' }
+      : { local: w1 || '', visita: w2 || '', ronda: 'final' };
+    return `
+      <div class="brk2 ${plata ? 'is-plata' : 'is-oro'}">
+        <div class="brk2-cell brk2-wing">
+          <span class="brk2-round">Semifinal 1</span>
+          ${brkMatch(sf1, phL(sf1, 0), phR(sf1, 0))}
+        </div>
+        <div class="brk2-link"></div>
+        <div class="brk2-cell brk2-hub">
+          <span class="brk2-cup" aria-hidden="true">🏆</span>
+          <span class="brk2-round brk2-round-fin">Final · ${esc(copa)}</span>
+          ${brkMatch(finForRender, 'Ganador Semifinal 1', 'Ganador Semifinal 2', 'brk2-final')}
+        </div>
+        <div class="brk2-link"></div>
+        <div class="brk2-cell brk2-wing">
+          <span class="brk2-round">Semifinal 2</span>
+          ${brkMatch(sf2, phL(sf2, 1), phR(sf2, 1))}
+        </div>
+      </div>
+      ${champ ? `<p class="brk2-champ">🏆 Campeón de la <strong>${esc(copa)}</strong>: <strong>${esc(champ)}</strong></p>` : ''}
+      <p class="pos-note" style="text-align:center">Eliminación directa a un partido: el ganador de cada semifinal juega la <strong>final</strong>.</p>`;
   }
 
   // ---------- DESCENSO (un solo partido; el perdedor desciende) ----------
@@ -132,16 +153,23 @@ export async function showPosiciones() {
     if (!p) return emptyBox('El partido de descenso se define al terminar la fase regular (9° vs 10°).');
     const w = winnerId(p), loser = w ? (w === p.local ? p.visita : p.local) : null;
     const L = byId[p.local], V = byId[p.visita];
-    return `<div class="bracket"><div class="brk-col brk-center" style="max-width:420px;margin:0 auto">
-      <div class="brk-match brk-final">
-        <div class="brk-title" style="background:#9b1c1c">Partido de descenso</div>
-        <div class="brk-box">
-          <div class="brk-side ${w === p.local ? 'brk-win' : ''} ${L ? '' : 'brk-tbd'}">${teamLogo(L?.logo, L?.nombre, 28)}<span class="brk-nm">${esc(L?.nombre || p.seedLabelLocal || 'Por definir')}</span><span class="brk-sc">${esc(scoreL(p))}</span></div>
-          <div class="brk-side ${w === p.visita ? 'brk-win' : ''} ${V ? '' : 'brk-tbd'}">${teamLogo(V?.logo, V?.nombre, 28)}<span class="brk-nm">${esc(V?.nombre || p.seedLabelVisita || 'Por definir')}</span><span class="brk-sc">${esc(scoreV(p))}</span></div>
+    const row = (e, seedLbl, score, win) => `<div class="brk2-team${win ? ' brk2-win' : ''}${e ? '' : ' brk2-tbd'}">
+        <span class="brk2-logo">${e ? teamLogo(e.logo, e.nombre, 30) : '<span class="brk2-ph">?</span>'}</span>
+        <span class="brk2-nm">${esc(e?.nombre || seedLbl || 'Por definir')}</span>
+        <span class="brk2-sc">${score === '' || score == null ? '' : esc(score)}</span>
+      </div>`;
+    return `<div class="brk2 brk2-solo">
+      <div class="brk2-cell brk2-hub">
+        <span class="brk2-round brk2-round-desc">Partido de descenso</span>
+        <div class="brk2-match brk2-desc">
+          <div class="brk2-teams">
+            ${row(L, p.seedLabelLocal, scoreL(p), w === p.local)}
+            ${row(V, p.seedLabelVisita, scoreV(p), w === p.visita)}
+          </div>
+          ${metaOf(p) ? `<div class="brk2-meta">${metaOf(p)}</div>` : ''}
         </div>
-        ${metaOf(p) ? `<div class="brk-meta">${metaOf(p)}</div>` : ''}
       </div>
-    </div></div>
+    </div>
     <p class="pos-note" style="text-align:center">Un solo partido entre el <strong>9°</strong> y el <strong>10°</strong>. El <strong>perdedor desciende</strong> la próxima temporada.${loser ? ` 🔻 Desciende: <strong>${esc(byId[loser]?.nombre || '')}</strong>.` : ''}</p>`;
   }
 
@@ -161,20 +189,42 @@ export async function showPosiciones() {
     <h1>Posiciones</h1>
     <p class="subtitle mb-3">Se actualiza automáticamente a partir de los resultados. 3 puntos por victoria, 1 por empate.</p>
     <style>${SNAV_CSS}
-      .bracket{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;align-items:center;margin-top:8px}
-      .brk-col{display:flex;flex-direction:column;gap:18px;justify-content:center;min-width:0}
-      .brk-match{background:var(--c-surface,#fff);border:1px solid var(--c-line,#D9E6DE);border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(11,18,12,.06)}
-      .brk-final{box-shadow:0 4px 16px rgba(6,122,62,.16)}
-      .brk-title{background:var(--c-brand,#067A3E);color:#fff;font-size:.72rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase;padding:5px 10px;text-align:center}
-      .brk-final .brk-title{background:#0B120C}
-      .brk-side{display:flex;align-items:center;gap:8px;padding:8px 10px}
-      .brk-side+.brk-side{border-top:1px solid var(--c-line,#D9E6DE)}
-      .brk-nm{flex:1;min-width:0;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-      .brk-sc{font-weight:800;font-variant-numeric:tabular-nums;min-width:14px;text-align:right}
-      .brk-win{background:var(--c-brand-soft,#D7EFE1)}.brk-win .brk-nm{color:var(--c-brand-2,#056433)}
-      .brk-tbd .brk-nm{color:var(--c-muted,#6B7268);font-weight:500;font-style:italic}
-      .brk-meta{font-size:.72rem;color:var(--c-muted,#6B7268);text-align:center;padding:4px 8px;border-top:1px solid var(--c-line,#D9E6DE)}
-      @media(max-width:640px){.bracket{grid-template-columns:1fr;gap:12px}.brk-center{order:3}}
+      /* ---- Llave de eliminación (bracket) ---- */
+      .brk2{display:flex;align-items:center;justify-content:center;margin:52px 0 6px;position:relative}
+      .brk2-cell{flex:1 1 0;min-width:0;position:relative}
+      .brk2-hub{flex:1.12 1 0}
+      .brk2-solo{max-width:440px;margin-left:auto;margin-right:auto;margin-top:34px}
+      .brk2-round{position:absolute;left:0;right:0;top:-22px;text-align:center;font-size:.7rem;font-weight:800;letter-spacing:.11em;text-transform:uppercase;color:var(--c-muted,#6B7268)}
+      .brk2-round-fin{color:var(--c-brand-2,#056433)}
+      .brk2-round-desc{position:static;display:block;margin-bottom:8px;color:#9b1c1c}
+      .brk2-cup{position:absolute;left:50%;top:-54px;transform:translateX(-50%);font-size:30px;line-height:1;filter:drop-shadow(0 3px 5px rgba(0,0,0,.18))}
+      .brk2-link{flex:0 0 42px;height:4px;align-self:center;background:linear-gradient(90deg,var(--c-brand,#067A3E),var(--c-brand-2,#056433));opacity:.55;border-radius:4px}
+      .brk2-match{position:relative;z-index:1;width:100%;background:var(--c-surface,#fff);border:1px solid var(--c-line,#D9E6DE);border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(11,18,12,.07)}
+      .brk2-final{border:2px solid var(--c-brand,#067A3E);box-shadow:0 8px 26px rgba(6,122,62,.22)}
+      .brk2-final::before,.brk2-final::after{content:'';position:absolute;top:50%;width:11px;height:11px;border-radius:50%;background:var(--c-brand,#067A3E);transform:translateY(-50%);z-index:2}
+      .brk2-final::before{left:-7px}.brk2-final::after{right:-7px}
+      .brk2-desc{border:2px solid #9b1c1c;box-shadow:0 6px 20px rgba(155,28,28,.16)}
+      .brk2-teams{display:flex;flex-direction:column}
+      .brk2-team{display:flex;align-items:center;gap:10px;padding:10px 12px}
+      .brk2-team+.brk2-team{border-top:1px solid var(--c-line,#D9E6DE)}
+      .brk2-logo{display:flex;width:30px;height:30px;flex:0 0 30px;align-items:center;justify-content:center}
+      .brk2-logo img{width:30px;height:30px;object-fit:contain}
+      .brk2-ph{display:flex;width:30px;height:30px;align-items:center;justify-content:center;border-radius:50%;background:var(--c-brand-soft,#D7EFE1);color:var(--c-brand-2,#056433);font-weight:800;font-size:.85rem}
+      .brk2-nm{flex:1;min-width:0;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .brk2-sc{font-weight:800;font-variant-numeric:tabular-nums;min-width:16px;text-align:right;font-size:1.05rem}
+      .brk2-win{background:var(--c-brand-soft,#D7EFE1)}.brk2-win .brk2-nm{color:var(--c-brand-2,#056433)}
+      .brk2-desc .brk2-win{background:#f7dede}.brk2-desc .brk2-win .brk2-nm{color:#9b1c1c}
+      .brk2-tbd .brk2-nm{color:var(--c-muted,#6B7268);font-weight:600;font-style:italic}
+      .brk2-meta{font-size:.72rem;color:var(--c-muted,#6B7268);text-align:center;padding:6px 8px;border-top:1px solid var(--c-line,#D9E6DE)}
+      .brk2-champ{text-align:center;margin:12px 0 0;font-size:.95rem;color:var(--c-brand-2,#056433)}
+      @media(max-width:640px){
+        .brk2{flex-direction:column;align-items:stretch;gap:26px;margin-top:8px}
+        .brk2-wing{order:1}.brk2-hub{order:3}
+        .brk2-round{position:static;display:block;margin-bottom:6px}
+        .brk2-cup{position:static;transform:none;display:block;text-align:center;margin:0 auto 2px}
+        .brk2-link{display:none}
+        .brk2-final::before,.brk2-final::after{display:none}
+      }
     </style>
     <div id="pos-chips" class="mb-2"></div>
     <div id="pos-body"></div>
