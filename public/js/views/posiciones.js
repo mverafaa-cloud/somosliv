@@ -104,7 +104,8 @@ export async function showPosiciones() {
   function sfBox(p, title) {
     if (!p) return matchBox(title, false, null, null, '', '', false, false, 'Por jugar', 'Por definir', 'Por definir');
     const w = winnerId(p);
-    return matchBox(title, false, p.local, p.visita, scoreL(p), scoreV(p), w === p.local, w === p.visita, metaOf(p));
+    return matchBox(title, false, p.local, p.visita, scoreL(p), scoreV(p), w === p.local, w === p.visita, metaOf(p),
+                    p.seedLabelLocal || 'Por definir', p.seedLabelVisita || 'Por definir');
   }
   function renderBracket(serie) {
     const ms = partidos.filter(p => p.serie === serie);
@@ -131,13 +132,12 @@ export async function showPosiciones() {
     if (!p) return emptyBox('El partido de descenso se define al terminar la fase regular (9° vs 10°).');
     const w = winnerId(p), loser = w ? (w === p.local ? p.visita : p.local) : null;
     const L = byId[p.local], V = byId[p.visita];
-    const row = (e, win) => `<div class="brk-side ${win ? 'brk-win' : ''}">${teamLogo(e?.logo, e?.nombre, 28)}<span class="brk-nm">${esc(e?.nombre || 'Por definir')}</span></div>`;
     return `<div class="bracket"><div class="brk-col brk-center" style="max-width:420px;margin:0 auto">
       <div class="brk-match brk-final">
         <div class="brk-title" style="background:#9b1c1c">Partido de descenso</div>
         <div class="brk-box">
-          <div class="brk-side ${w === p.local ? 'brk-win' : ''}">${teamLogo(L?.logo, L?.nombre, 28)}<span class="brk-nm">${esc(L?.nombre || 'Por definir')}</span><span class="brk-sc">${esc(scoreL(p))}</span></div>
-          <div class="brk-side ${w === p.visita ? 'brk-win' : ''}">${teamLogo(V?.logo, V?.nombre, 28)}<span class="brk-nm">${esc(V?.nombre || 'Por definir')}</span><span class="brk-sc">${esc(scoreV(p))}</span></div>
+          <div class="brk-side ${w === p.local ? 'brk-win' : ''} ${L ? '' : 'brk-tbd'}">${teamLogo(L?.logo, L?.nombre, 28)}<span class="brk-nm">${esc(L?.nombre || p.seedLabelLocal || 'Por definir')}</span><span class="brk-sc">${esc(scoreL(p))}</span></div>
+          <div class="brk-side ${w === p.visita ? 'brk-win' : ''} ${V ? '' : 'brk-tbd'}">${teamLogo(V?.logo, V?.nombre, 28)}<span class="brk-nm">${esc(V?.nombre || p.seedLabelVisita || 'Por definir')}</span><span class="brk-sc">${esc(scoreV(p))}</span></div>
         </div>
         ${metaOf(p) ? `<div class="brk-meta">${metaOf(p)}</div>` : ''}
       </div>

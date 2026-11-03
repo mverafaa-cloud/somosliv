@@ -107,11 +107,19 @@ function requireFb() {
   if (mode !== 'firebase') throw new Error('Modo demo: configura Firebase para guardar cambios.');
 }
 async function readAll(coll, seedKey) {
-  if (sandboxOn()) return sbGet(coll).map(x => ({ ...x }));
-  if (mode === 'demo') return (SEED[seedKey] || []).map(x => ({ ...x }));
+  if (sandboxOn()) return _maybeResolveSeeds(coll, sbGet(coll).map(x => ({ ...x })));
+  if (mode === 'demo') return _maybeResolveSeeds(coll, (SEED[seedKey] || []).map(x => ({ ...x })));
   const { collection, getDocs } = fb.fsMod;
   const snap = await getDocs(collection(fb.db, coll));
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  return _maybeResolveSeeds(coll, snap.docs.map(d => ({ id: d.id, ...d.data() })));
+}
+// Si hay partidos de playoff cargados por posición (seedLocal/seedVisita), les
+// asigna el equipo real desde la tabla regular (una vez terminada la fase).
+async function _maybeResolveSeeds(coll, arr) {
+  if (coll !== 'partidos') return arr;
+  if (!arr.some(p => p && (p.seedLocal != null || p.seedVisita != null))) return arr;
+  const equipos = await readAll('equipos', 'equipos'); // sin seeds => retorna directo, sin recursión
+  return resolvePlayoffSeeds(arr, equipos);
 }
 async function upsert(coll, data) {
   if (sandboxOn()) return sbUpsert(coll, data);
@@ -379,7 +387,7 @@ function assembleFixture(partidos, equipos) {
     const cam = camarinesPorCancha(p.cancha);
     return {
       localId: p.local, visitaId: p.visita,
-      local: byId[p.local]?.nombre || p.local, visita: byId[p.visita]?.nombre || p.visita,
+      local: byId[p.local]?.nombre || p.seedLabelLocal || p.local, visita: byId[p.visita]?.nombre || p.seedLabelVisita || p.visita,
       logoLocal: byId[p.local]?.logo || null, logoVisita: byId[p.visita]?.logo || null,
       horario: p.hora, cancha: p.cancha, camarinLocal: cam[0], camarinVisita: cam[1],
       grabado: !!p.grabado, clasico: !!p.clasico, premio: p.premio,
@@ -518,6 +526,43 @@ export function equiposById(equipos) {
 }
 
 // Tabla de posiciones calculada desde los partidos finalizados de una serie.
+// ── Llaves de playoff por posición de tabla ────────────────────────────────
+// Un partido de playoff puede cargarse con seedLocal/seedVisita (posición en la
+// tabla regular) en vez de equipos fijos. Mientras la fase regular no termine se
+// muestran "1º", "4º", etc.; apenas TODOS los resultados regulares están cargados,
+// se asignan los equipos reales según la tabla (mismo orden y desempates que la
+// vista Posiciones). No altera partidos sin seeds.
+const _ORD = (n) => n + 'º';
+const _REG_OF = {
+  'libre-oro': 'libre', 'libre-plata': 'libre', 'libre-descenso': 'libre',
+  'senior-oro': 'senior', 'senior-plata': 'senior', 'senior-descenso': 'senior',
+};
+export function regularFaseCompleta(partidos, regSerie) {
+  const regs = partidos.filter(p => (p.serie || 'libre') === regSerie && !p.amistoso && p.fecha_num != null);
+  return regs.length > 0 && regs.every(p => p.estado === 'finalizado' && p.golesLocal != null && p.golesVisita != null);
+}
+export function resolvePlayoffSeeds(partidos, equipos) {
+  if (!partidos.some(p => p && (p.seedLocal != null || p.seedVisita != null))) return partidos;
+  const cache = {};
+  const seedsOf = (regSerie) => {
+    if (cache[regSerie]) return cache[regSerie];
+    const complete = regularFaseCompleta(partidos, regSerie);
+    const map = {};
+    if (complete) computeStandings(partidos, equipos, regSerie).forEach((r, i) => { map[i + 1] = r.equipo.id; });
+    return (cache[regSerie] = { complete, map });
+  };
+  return partidos.map(p => {
+    if (p.seedLocal == null && p.seedVisita == null) return p;
+    const reg = _REG_OF[p.serie];
+    if (!reg) return p;
+    const { complete, map } = seedsOf(reg);
+    const q = { ...p };
+    if (p.seedLocal != null)  { q.seedLabelLocal  = _ORD(p.seedLocal);  if (complete && !q.local)  q.local  = map[p.seedLocal]  || q.local; }
+    if (p.seedVisita != null) { q.seedLabelVisita = _ORD(p.seedVisita); if (complete && !q.visita) q.visita = map[p.seedVisita] || q.visita; }
+    return q;
+  });
+}
+
 export function computeStandings(partidos, equipos, serieId) {
   let teams = equipos.filter(e => e.serie === serieId);
   // Serie sin equipos propios (p.ej. playoff 'senior-oro' / 'senior-plata'):
