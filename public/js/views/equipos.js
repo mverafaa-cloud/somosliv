@@ -3,85 +3,28 @@ import { mount, esc, initials } from '../ui/helpers.js';
 import { shell, loading, logoMarquee, preSeason } from '../ui/layout.js';
 import { icon } from '../ui/icons.js';
 
+// ===== LISTA DE EQUIPOS =====
 export async function showEquipos() {
   mount(loading());
-  const [config, equipos, planteles, partidos, tarjetas, goles] = await Promise.all([
-    getConfig(), getEquipos(), getPlanteles(), getPartidos(), getDisciplina(), getGoleadores()]);
+  const [config, equipos] = await Promise.all([getConfig(), getEquipos()]);
   const series = config.series || [];
-
-  const byId = {}; equipos.forEach(e => byId[e.id] = e);
-
-  // --- Estadísticas por equipo (fase regular de su serie) ---
-  const standingsCache = {};
-  const statsOf = (e) => {
-    const serie = e.serie;
-    if (!(serie in standingsCache)) standingsCache[serie] = computeStandings(partidos, equipos, serie);
-    const table = standingsCache[serie];
-    const idx = table.findIndex(r => r.equipo.id === e.id);
-    const r = idx >= 0 ? table[idx] : null;
-    const pj = r?.pj || 0, pts = r?.pts || 0, obten = pj * 3;
-    const vallas = partidos.filter(p => (p.local === e.id || p.visita === e.id) && p.serie === serie
-      && p.estado === 'finalizado' && p.golesLocal != null
-      && ((p.local === e.id ? +p.golesVisita : +p.golesLocal) === 0)).length;
-    return {
-      pos: idx >= 0 ? idx + 1 : null, total: table.length,
-      pj, pg: r?.pg || 0, pe: r?.pe || 0, pp: r?.pp || 0,
-      gf: r?.gf || 0, gc: r?.gc || 0, dg: r?.dg || 0, pts, vallas,
-      rend: obten ? Math.round((pts / obten) * 100) : null,
-      amar: tarjetas.filter(t => t.equipo === e.id && t.tipo === 'amarilla').length,
-      rojas: tarjetas.filter(t => t.equipo === e.id && t.tipo === 'roja').length,
-    };
-  };
-
-  // --- Partidos jugados por el equipo (todas las series, ordenados) ---
-  const serieTag = (s) => /oro$/.test(s) ? 'Oro' : (/plata$/.test(s) ? 'Plata' : (/descenso$/.test(s) ? 'Descenso' : ''));
-  const matchesOf = (e) => partidos
-    .filter(p => (p.local === e.id || p.visita === e.id) && p.estado === 'finalizado' && p.golesLocal != null && p.golesVisita != null)
-    .map(p => {
-      const home = p.local === e.id;
-      const gf = +(home ? p.golesLocal : p.golesVisita);
-      const gc = +(home ? p.golesVisita : p.golesLocal);
-      return { fecha: p.fecha, fnum: p.fecha_num, home, gf, gc,
-        rival: byId[home ? p.visita : p.local] || null,
-        res: gf > gc ? 'G' : (gf < gc ? 'P' : 'E'), tag: serieTag(p.serie || '') };
-    })
-    .sort((a, b) => (new Date(a.fecha || 0) - new Date(b.fecha || 0)) || ((a.fnum || 0) - (b.fnum || 0)));
-
-  // --- Goleador del equipo (suma de goles por jugador) ---
-  const topScorerOf = (e) => {
-    const acc = {};
-    goles.filter(g => g.equipo === e.id).forEach(g => {
-      const k = g.jugadorId || `${g.nombre || '—'}`;
-      if (!acc[k]) acc[k] = { nombre: g.nombre || '—', goles: 0 };
-      acc[k].goles += (+g.goles || 0);
-    });
-    const rows = Object.values(acc).filter(r => r.goles > 0).sort((a, b) => b.goles - a.goles);
-    return rows[0] || null;
-  };
 
   if (!equipos.length) {
     mount(shell(`<div class="container"><span class="eyebrow">Temporada ${esc(config.temporada || '2026')}</span><h1>Equipos</h1>${preSeason(config, 'los equipos inscritos')}</div>`, config));
     return;
   }
 
-  // Únicos por nombre para el banner de logos.
   const seen = new Set(); const uniq = [];
   equipos.forEach(e => { if (!seen.has(e.nombre)) { seen.add(e.nombre); uniq.push(e); } });
 
-  const nPlantel = (e) => (planteles[e.id] || []).length;
-
-  const card = (e) => {
-    const n = nPlantel(e);
-    const hint = n ? `<span class="equipo-cta">${n} jugadores · ver planilla</span>` : '';
-    return `
-    <button type="button" class="equipo-card${n ? ' is-clickable' : ''}" ${n ? `data-eid="${esc(e.id)}"` : 'disabled'}>
+  const card = (e) => `
+    <a class="equipo-card is-clickable" href="/equipos/${esc(e.id)}" data-link>
       <div class="badge-lg">${e.logo
         ? `<img src="${esc(e.logo)}" alt="${esc(e.nombre)}" loading="lazy">`
         : `<span style="font-family:var(--font-display);font-size:1.6rem;color:var(--c-brand)">${esc(initials(e.nombre))}</span>`}</div>
       <div class="nom">${esc(e.nombre)}</div>
-      ${hint}
-    </button>`;
-  };
+      <span class="equipo-cta">Ver equipo</span>
+    </a>`;
 
   const grupo = (s) => {
     const list = equipos.filter(e => e.serie === s.id);
@@ -100,19 +43,107 @@ export async function showEquipos() {
   <div class="container">
     <span class="eyebrow">Temporada ${esc(config.temporada || '2026')}</span>
     <h1>Equipos inscritos</h1>
-    <p class="subtitle mb-3">Los equipos confirmados para el estreno de la LIV en ${esc(config.sede || 'Complejo Deggiano')}. Toca un equipo para ver su planilla de jugadores inscritos.</p>
+    <p class="subtitle mb-3">Los equipos confirmados para el estreno de la LIV en ${esc(config.sede || 'Complejo Deggiano')}. Toca un equipo para ver su información y estadísticas.</p>
     ${logoMarquee(uniq)}
     ${series.map(grupo).join('')}
   </div>`;
-  const app = mount(shell(inner, config));
+  mount(shell(inner, config));
+  ensureTeamStyles();
+}
 
-  // ---- Modal de planilla por equipo (nombre + fecha de nacimiento, sin RUT) ----
-  ensurePlantelStyles();
+// ===== PÁGINA DE UN EQUIPO =====
+export async function showEquipo(id) {
+  mount(loading());
+  const [config, equipos, planteles, partidos, tarjetas, goles] = await Promise.all([
+    getConfig(), getEquipos(), getPlanteles(), getPartidos(), getDisciplina(), getGoleadores()]);
+  const equipo = equipos.find(e => e.id === id);
+  if (!equipo) {
+    mount(shell(`<div class="container"><a class="eq-back" href="/equipos" data-link>← Equipos</a><h1>Equipo no encontrado</h1><p class="subtitle">Puede que el enlace sea antiguo. Volvé a la lista de equipos.</p></div>`, config));
+    ensureTeamStyles();
+    return;
+  }
+  const byId = {}; equipos.forEach(e => byId[e.id] = e);
+  const stats = teamStats(equipo, partidos, equipos, tarjetas, {});
+  const matches = teamMatches(equipo, partidos, byId);
+  const scorer = teamTopScorer(equipo, goles);
+  const jugadores = planteles[id] || [];
+  const serieNombre = (config.series || []).find(s => s.id === equipo.serie)?.nombre || '';
 
-  app.querySelectorAll('.equipo-card.is-clickable').forEach(btn => {
-    const e = byId[btn.dataset.eid];
-    btn.addEventListener('click', () => openPlantel(e, planteles[btn.dataset.eid] || [], statsOf(e), matchesOf(e), topScorerOf(e)));
+  const logo = equipo.logo
+    ? `<img src="${esc(equipo.logo)}" alt="${esc(equipo.nombre)}">`
+    : `<span class="eq-logo-ini">${esc(initials(equipo.nombre))}</span>`;
+
+  const half = Math.ceil(jugadores.length / 2);
+  const colList = (arr) => arr.map(p => `
+    <li><span class="pm-num">${esc(p.n)}</span><span class="pm-nom">${esc(p.nombre)}</span><span class="pm-nac">${p.nac ? esc(p.nac) : '—'}</span></li>`).join('');
+  const roster = jugadores.length ? `
+    <div class="ts2-sec">Plantel · ${jugadores.length} jugadores</div>
+    <div class="pm-cols">
+      <ol class="pm-list" start="1">${colList(jugadores.slice(0, half))}</ol>
+      <ol class="pm-list">${colList(jugadores.slice(half))}</ol>
+    </div>
+    <p class="pm-foot" style="border:0;padding-left:0">Se muestran nombre y fecha de nacimiento. Los RUT se mantienen reservados.</p>` : '';
+
+  const inner = `
+  <div class="container eq-page">
+    <a class="eq-back" href="/equipos" data-link>← Volver a Equipos</a>
+    <div class="eq-hero">
+      <div class="eq-logo">${logo}</div>
+      <div class="eq-hero-txt">
+        <span class="eyebrow">${esc(serieNombre)}</span>
+        <h1 class="eq-name">${esc(equipo.nombre)}</h1>
+      </div>
+    </div>
+    ${statsBlock(stats, matches, scorer)}
+    ${matchesBlock(matches, equipo)}
+    ${roster}
+  </div>`;
+  mount(shell(inner, config));
+  ensureTeamStyles();
+}
+
+// ---- Cálculos por equipo (compartidos) ----
+function teamStats(e, partidos, equipos, tarjetas, cache) {
+  const serie = e.serie;
+  if (!(serie in cache)) cache[serie] = computeStandings(partidos, equipos, serie);
+  const table = cache[serie];
+  const idx = table.findIndex(r => r.equipo.id === e.id);
+  const r = idx >= 0 ? table[idx] : null;
+  const pj = r?.pj || 0, pts = r?.pts || 0, obten = pj * 3;
+  const vallas = partidos.filter(p => (p.local === e.id || p.visita === e.id) && p.serie === serie
+    && p.estado === 'finalizado' && p.golesLocal != null
+    && ((p.local === e.id ? +p.golesVisita : +p.golesLocal) === 0)).length;
+  return {
+    pos: idx >= 0 ? idx + 1 : null, total: table.length,
+    pj, pg: r?.pg || 0, pe: r?.pe || 0, pp: r?.pp || 0,
+    gf: r?.gf || 0, gc: r?.gc || 0, dg: r?.dg || 0, pts, vallas,
+    rend: obten ? Math.round((pts / obten) * 100) : null,
+    amar: tarjetas.filter(t => t.equipo === e.id && t.tipo === 'amarilla').length,
+    rojas: tarjetas.filter(t => t.equipo === e.id && t.tipo === 'roja').length,
+  };
+}
+const _serieTag = (s) => /oro$/.test(s) ? 'Oro' : (/plata$/.test(s) ? 'Plata' : (/descenso$/.test(s) ? 'Descenso' : ''));
+function teamMatches(e, partidos, byId) {
+  return partidos
+    .filter(p => (p.local === e.id || p.visita === e.id) && p.estado === 'finalizado' && p.golesLocal != null && p.golesVisita != null)
+    .map(p => {
+      const home = p.local === e.id;
+      const gf = +(home ? p.golesLocal : p.golesVisita);
+      const gc = +(home ? p.golesVisita : p.golesLocal);
+      return { fecha: p.fecha, fnum: p.fecha_num, home, gf, gc,
+        rival: byId[home ? p.visita : p.local] || null,
+        res: gf > gc ? 'G' : (gf < gc ? 'P' : 'E'), tag: _serieTag(p.serie || '') };
+    })
+    .sort((a, b) => (new Date(a.fecha || 0) - new Date(b.fecha || 0)) || ((a.fnum || 0) - (b.fnum || 0)));
+}
+function teamTopScorer(e, goles) {
+  const acc = {};
+  goles.filter(g => g.equipo === e.id).forEach(g => {
+    const k = g.jugadorId || `${g.nombre || '—'}`;
+    if (!acc[k]) acc[k] = { nombre: g.nombre || '—', goles: 0 };
+    acc[k].goles += (+g.goles || 0);
   });
+  return Object.values(acc).filter(r => r.goles > 0).sort((a, b) => b.goles - a.goles)[0] || null;
 }
 
 const C_WIN = '#067A3E', C_DRAW = '#9AA39B', C_LOSS = '#C23B3B';
@@ -216,63 +247,25 @@ function matchesBlock(matches, equipo) {
     <ul class="mt-list">${matches.map(row).join('')}</ul>`;
 }
 
-function openPlantel(equipo, jugadores, stats, matches, scorer) {
-  if (!equipo) return;
-  document.getElementById('plantel-modal')?.remove();
-
-  const half = Math.ceil(jugadores.length / 2);
-  const colList = (arr) => arr.map(p => `
-    <li>
-      <span class="pm-num">${esc(p.n)}</span>
-      <span class="pm-nom">${esc(p.nombre)}</span>
-      <span class="pm-nac">${p.nac ? esc(p.nac) : '—'}</span>
-    </li>`).join('');
-
-  const logo = equipo.logo
-    ? `<img src="${esc(equipo.logo)}" alt="" class="pm-logo">`
-    : `<span class="pm-logo pm-logo-ini">${esc(initials(equipo.nombre))}</span>`;
-
-  const back = document.createElement('div');
-  back.id = 'plantel-modal';
-  back.className = 'pm-back';
-  back.innerHTML = `
-    <div class="pm-card" role="dialog" aria-modal="true" aria-label="Planilla de ${esc(equipo.nombre)}">
-      <div class="pm-head">
-        ${logo}
-        <div class="pm-ht">
-          <span class="pm-kick">Planilla inscrita · ${jugadores.length} jugadores</span>
-          <h3>${esc(equipo.nombre)}</h3>
-        </div>
-        <button class="pm-close" aria-label="Cerrar">&times;</button>
-      </div>
-      ${statsBlock(stats, matches, scorer)}
-      ${matchesBlock(matches, equipo)}
-      <div class="ts2-sec">Plantel · ${jugadores.length} jugadores</div>
-      <div class="pm-cols">
-        <ol class="pm-list" start="1">${colList(jugadores.slice(0, half))}</ol>
-        <ol class="pm-list">${colList(jugadores.slice(half))}</ol>
-      </div>
-      <div class="pm-foot">Se muestran nombre y fecha de nacimiento. Los RUT se mantienen reservados.</div>
-    </div>`;
-  document.body.appendChild(back);
-
-  const close = () => back.remove();
-  back.querySelector('.pm-close').addEventListener('click', close);
-  back.addEventListener('click', (e) => { if (e.target === back) close(); });
-  document.addEventListener('keydown', function escClose(ev) {
-    if (ev.key === 'Escape') { close(); document.removeEventListener('keydown', escClose); }
-  });
-}
-
-function ensurePlantelStyles() {
+function ensureTeamStyles() {
   if (document.getElementById('plantel-css')) return;
   const st = document.createElement('style');
   st.id = 'plantel-css';
   st.textContent = `
-  .equipo-card.is-clickable{cursor:pointer;border:0;background:var(--c-surface,#fff);font:inherit;text-align:center;transition:transform .12s ease,box-shadow .12s ease}
+  a.equipo-card{display:block;text-decoration:none;color:inherit}
+  .equipo-card.is-clickable{cursor:pointer;transition:transform .12s ease,box-shadow .12s ease}
   .equipo-card.is-clickable:hover{transform:translateY(-3px);box-shadow:var(--shadow-md,0 8px 24px rgba(6,122,62,.14))}
-  .equipo-card[disabled]{opacity:.65;cursor:default}
-  .equipo-cta{display:block;margin-top:6px;font-size:.72rem;font-weight:700;letter-spacing:.02em;color:var(--c-brand,#067A3E);text-transform:uppercase}
+  .equipo-cta{display:block;margin-top:6px;font-size:.74rem;font-weight:800;letter-spacing:.04em;color:var(--c-brand,#067A3E);text-transform:uppercase}
+  /* página de equipo */
+  .eq-back{display:inline-flex;align-items:center;gap:6px;font-weight:700;color:var(--c-brand,#067A3E);text-decoration:none;font-size:.9rem;margin-bottom:12px}
+  .eq-back:hover{text-decoration:underline}
+  .eq-hero{display:flex;align-items:center;gap:16px;margin-bottom:4px}
+  .eq-logo{width:84px;height:84px;flex:0 0 84px;border-radius:16px;background:var(--c-bg-alt,#EEF3EE);display:flex;align-items:center;justify-content:center;padding:10px}
+  .eq-logo img{max-width:100%;max-height:100%;object-fit:contain}
+  .eq-logo-ini{font-family:var(--font-display,Anton),sans-serif;font-size:2rem;color:var(--c-brand,#067A3E)}
+  .eq-name{margin:2px 0 0;font-size:2.1rem;line-height:1}
+  .eq-page .ts2-sec,.eq-page .ts2-top,.eq-page .ts2-metrics,.eq-page .mt-list,.eq-page .pm-cols{padding-left:0;padding-right:0}
+  .eq-page .ts2-scorer{margin-left:0;margin-right:0}
   .pm-back{position:fixed;inset:0;background:rgba(11,18,12,.62);display:flex;align-items:center;justify-content:center;z-index:1000;padding:16px;animation:pmf .15s ease}
   @keyframes pmf{from{opacity:0}to{opacity:1}}
   .pm-card{background:var(--c-bg,#F4F8F5);border-radius:18px;width:100%;max-width:640px;max-height:88vh;overflow:auto;box-shadow:0 24px 70px rgba(11,18,12,.4)}
