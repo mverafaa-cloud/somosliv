@@ -8,7 +8,7 @@ import { toast } from './ui/toast.js';
 
 import { showInicio } from './views/inicio.js';
 import { showLIV } from './views/liv.js';
-import { showEquipos } from './views/equipos.js';
+import { showEquipos, showEquipo } from './views/equipos.js';
 import { showProgramacion } from './views/programacion.js';
 import { showResultados } from './views/resultados.js';
 import { showPosiciones } from './views/posiciones.js';
@@ -34,6 +34,7 @@ async function boot() {
     '/':             () => showInicio(),
     '/liv':          () => showLIV(),
     '/equipos':      () => showEquipos(),
+    '/equipos/:id':  (p) => showEquipo(p.id),
     '/programacion': () => showProgramacion(),
     '/resultados':   () => showResultados(),
     '/posiciones':   () => showPosiciones(),
