@@ -2,6 +2,7 @@ import { getConfig, getPartidos, getEquipos, equiposById, getFixture } from '../
 import { mount, esc, initials, fmtDateLong, fmtTime, parseDate, teamLogo, teamInline } from '../ui/helpers.js';
 import { shell, loading, preSeason } from '../ui/layout.js';
 import { icon } from '../ui/icons.js';
+import { seriesNavHTML, resolveNav, defaultSerie, SNAV_CSS } from '../ui/series-nav.js';
 
 // Selección multi: series = array de ids; fechas = 'all' | array de fecha_num
 let _sel = { series: null, fechas: 'all' };
@@ -113,18 +114,15 @@ function renderPublicFixture(config, fx) {
   const nameOf = id => (series.find(s => s.id === id) || {}).nombre || id;
   const avail = (fx.series || []).filter(s => s.fechas.length || s.amistosos.length);
   if (!avail.length) { mount(shell(`<div class="container"><span class="eyebrow">Calendario</span><h1>Programación</h1>${emptyBox('Aún no hay partidos publicados.')}</div>`, config)); return; }
-  const ORDER = ['libre', 'senior', 'senior-oro', 'senior-plata'];
-  const SENIOR = ['senior', 'senior-oro', 'senior-plata'];
-  const exists = id => !!avail.find(s => s.serieId === id);
-  const isSenior = s => SENIOR.includes(s);
-  if (!_fxSerie || !exists(_fxSerie)) _fxSerie = ORDER.find(exists) || avail[0].serieId;
+  const has = id => !!avail.find(s => s.serieId === id);
+  if (!_fxSerie || !has(_fxSerie)) _fxSerie = defaultSerie(has) || avail[0].serieId;
 
   const inner = `
   <div class="container">
     <span class="eyebrow">Calendario</span>
     <h1>Programación</h1>
     <p class="subtitle mb-2">Fixture oficial · Temporada ${esc(config.temporada || '2026')} · ${esc(config.sede || 'Complejo Deggiano')}.</p>
-    <style>.fx-nav-row{margin-bottom:6px}.fx-nav-sub{padding-left:4px}.fx-nav-sub .chip{font-size:.82rem;padding:5px 12px}</style>
+    <style>${SNAV_CSS}</style>
     <div id="fx-nav" class="fx-nav mb-2"></div>
     <div class="chips filter-row mb-2" id="fx-fechas"></div>
     <div id="fx-body"></div>
@@ -145,32 +143,11 @@ function renderPublicFixture(config, fx) {
       _fx = c.dataset.fx === 'all' ? 'all' : Number(c.dataset.fx); draw();
     }));
   }
-  const navBtn = (label, active, key) => `<button class="chip ${active ? 'active' : ''}" data-nav="${key}">${esc(label)}</button>`;
   function renderNav() {
-    const rows = [];
-    const top = [];
-    if (exists('libre')) top.push(navBtn('Junior', _fxSerie === 'libre', 'libre'));
-    if (SENIOR.some(exists)) top.push(navBtn('Senior', isSenior(_fxSerie), 'senior-group'));
-    if (top.length) rows.push(`<div class="chips filter-row fx-nav-row">${top.join('')}</div>`);
-    if (isSenior(_fxSerie)) {
-      const sub = [];
-      if (exists('senior')) sub.push(navBtn('Fase Regular', _fxSerie === 'senior', 'senior'));
-      if (exists('senior-oro') || exists('senior-plata')) sub.push(navBtn('Playoffs', _fxSerie !== 'senior', 'playoffs'));
-      if (sub.length > 1) rows.push(`<div class="chips filter-row fx-nav-row fx-nav-sub">${sub.join('')}</div>`);
-      if (_fxSerie === 'senior-oro' || _fxSerie === 'senior-plata') {
-        const pl = [];
-        if (exists('senior-oro')) pl.push(navBtn('Oro', _fxSerie === 'senior-oro', 'senior-oro'));
-        if (exists('senior-plata')) pl.push(navBtn('Plata', _fxSerie === 'senior-plata', 'senior-plata'));
-        if (pl.length) rows.push(`<div class="chips filter-row fx-nav-row fx-nav-sub">${pl.join('')}</div>`);
-      }
-    }
-    const el = document.getElementById('fx-nav'); el.innerHTML = rows.join('');
+    const el = document.getElementById('fx-nav');
+    el.innerHTML = seriesNavHTML(_fxSerie, has, esc);
     el.querySelectorAll('[data-nav]').forEach(c => c.addEventListener('click', () => {
-      const k = c.dataset.nav;
-      if (k === 'libre') _fxSerie = 'libre';
-      else if (k === 'senior-group') _fxSerie = exists('senior') ? 'senior' : (exists('senior-oro') ? 'senior-oro' : 'senior-plata');
-      else if (k === 'playoffs') _fxSerie = exists('senior-oro') ? 'senior-oro' : 'senior-plata';
-      else _fxSerie = k;
+      _fxSerie = resolveNav(c.dataset.nav, has) || _fxSerie;
       _fx = 'all'; draw();
     }));
   }
