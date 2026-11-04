@@ -6,14 +6,18 @@
    3,
    4,
    5,
-   6
+   6,
+   7,
+   8
   ],
   "senior": [
    1,
    2,
    3,
    4,
-   5
+   5,
+   6,
+   7
   ]
  },
  "presentes": {
@@ -99,6 +103,43 @@
     "Matías Brain",
     "Matías Tristain",
     "Miguel Cena",
+    "Tomas Chulak"
+   ],
+   "8": [
+    "Agustín Nauman",
+    "Alan Burns",
+    "Antonio Cayó",
+    "Javier Rios",
+    "Joaquin Romero",
+    "José Andrade",
+    "Josepablo Rojas",
+    "Juan Meriño",
+    "Juan Pablo Mur Contreras",
+    "Luciano Stevenson",
+    "Marcos Vega",
+    "Martín Pando",
+    "Matias Brain",
+    "Matias Tristain",
+    "Miguel Cena",
+    "Tomas Chulak"
+   ],
+   "7": [
+    "Agustín Nauman",
+    "Antonio Cayó",
+    "Javier Ríos",
+    "Joaquin Romero",
+    "Jorge González",
+    "José Andrade",
+    "Josepablo Rojas",
+    "Juan Meriño",
+    "Juan Pablo Mur Contreras",
+    "Luciano Stevenson",
+    "Marcos Vega",
+    "Martín Pando",
+    "Matias Brain",
+    "Matias Tristain",
+    "Maximiliano Kework",
+    "Maximiliano Rojas",
     "Tomas Chulak"
    ]
   },
@@ -190,6 +231,38 @@
     "Roberto Figueroa",
     "Roy Orozco",
     "Sebastián Recabarren"
+   ],
+   "8": [
+    "Benjamin Valenzuela",
+    "Carlos Carmona",
+    "Cristian Fernández",
+    "Cristian Huerta",
+    "David Guerra",
+    "Fabio Veliz",
+    "Gianny Orozco",
+    "Gonzalo Bassa",
+    "Ignacio Corral",
+    "Javier Musrri",
+    "Jezeer Rocco",
+    "Joaquín Gatica",
+    "Joaquín Villanueva",
+    "Mauricio Alfaro",
+    "Mauricio Tabilo",
+    "Máximo Soto"
+   ],
+   "7": [
+    "Carlos Barrios Arias",
+    "Carlos Carmona",
+    "Cristian Fernández",
+    "Felipe Romo Pizarro",
+    "Fernando Soto",
+    "Gianny Orozco",
+    "Gonzalo Bassa",
+    "Jezeer Rocco",
+    "Joaquín Gatica",
+    "Joaquín Villanueva",
+    "Máximo Soto",
+    "Roberto Figueroa"
    ]
   },
   "jr-los-pibes": {
@@ -284,6 +357,41 @@
     "Román Corral Callegari",
     "Sebastián Gutiérrez",
     "Simón Muñoz"
+   ],
+   "8": [
+    "Agustín Capdevilla",
+    "Bastian Bracho",
+    "Camilo Sepúlveda",
+    "Diego Meneses Dallaserra",
+    "Felipe Urquieta",
+    "Francesco Corral Callegari",
+    "Gaspar Silva",
+    "Gerardo Torres",
+    "Hugo Molina",
+    "Juan Ignacio Silva",
+    "Lucas Martinez Callegari",
+    "Matheiu Peyreblanque Kuhn",
+    "Moises Henriquez",
+    "Nicolás Javier Gallo Carmona",
+    "Raúl Hernán Palacios Rivera",
+    "Román Corral Callegari",
+    "Simon Muñoz",
+    "Victor Daniel Perez Ceballos"
+   ],
+   "7": [
+    "Alvaro Romero",
+    "Bastian Bracho",
+    "Felipe Urquieta",
+    "Gaspar Silva",
+    "Gerardo Torres",
+    "Moises Henriquez",
+    "Nicolás Javier Gallo Carmona",
+    "Pablo Quintana",
+    "Raúl Hernán Palacios Rivera",
+    "Román Corral Callegari",
+    "Sebastián Gutiérrez",
+    "Simon Muñoz",
+    "Victor Daniel Perez Ceballos"
    ]
   },
   "jr-capibara": {
@@ -389,6 +497,40 @@
     "Nicolas Ignacio Castillo Jorquera",
     "Patricio Hernan Olate Duran",
     "Ricardo Guerrero Rodriguez"
+   ],
+   "8": [
+    "Alex Patricio Roco Bouey",
+    "Christopher Lopez Madariaga",
+    "Fabrizio Stefano Anfossi Pavez",
+    "Francis Vera Dulcien",
+    "Gerson Ignacio Madrid Veas",
+    "Ignacio Javier Espinoza Robles",
+    "Jorge Andres Diaz Varela",
+    "Kevin Javier Gonzalez Cortes",
+    "Leonardo Alberto Flores Piñones",
+    "Marcelo Estay Cortes",
+    "Marcelo Sebastian Jorquera Soto",
+    "Marco Diaz Ramirez",
+    "Matias Lopez Bravo",
+    "Nicolas Ignacio Castillo Jorquera",
+    "Patricio Hernan Olate Duran",
+    "Raul Ignacio Rojas Leiva",
+    "Ricardo Guerrero Rodriguez"
+   ],
+   "7": [
+    "Benjamin Sebastian Rojas Leiva",
+    "Christopher Lopez Madariaga",
+    "Fabrizio Stefano Anfossi Pavez",
+    "Guido Alonso Paez Salas",
+    "Ignacio Javier Espinoza Robles",
+    "Javier Jesus Torrejon Alvarez",
+    "Jorge Andres Diaz Varela",
+    "Marcel Pastran Araya",
+    "Marcos Javier Contreras Aguirre",
+    "Martin Ignacio Gonzales Marin",
+    "Matias Lopez Bravo",
+    "Raul Ignacio Rojas Leiva",
+    "Ricardo Guerrero Rodriguez"
    ]
   },
   "jr-mesa-cuadrada": {
@@ -486,6 +628,43 @@
     "Maximiliano Vera",
     "Michel Maluenda",
     "Máximo Díaz",
+    "Oscar Carrasco",
+    "Pablo Largo"
+   ],
+   "8": [
+    "Alejandro Díaz",
+    "Angelo Ramos",
+    "Bastián Toro",
+    "Boris Barrera",
+    "Brandon Guerra",
+    "Diego Blanco",
+    "Fabián Carvajal",
+    "Ignacio Núñez",
+    "Jaime Contreras",
+    "Javier Valdebenito",
+    "Joaquin Jorquera",
+    "Matías Huinao",
+    "Matías Urizar",
+    "Maximiliano Vera",
+    "Máximo Díaz",
+    "Michel Maluenda",
+    "Oscar Carrasco",
+    "Pablo Largo"
+   ],
+   "7": [
+    "Angelo Ramos",
+    "Bastián Toro",
+    "Brandon Guerra",
+    "Bruno Herrera",
+    "Diego Blanco",
+    "Fabián Carvajal",
+    "Felipe Rojas",
+    "Ignacio Núñez",
+    "Javier Valdebenito",
+    "Matías Guerra",
+    "Matías Huinao",
+    "Maximiliano Vera",
+    "Máximo Diaz",
     "Oscar Carrasco",
     "Pablo Largo"
    ]
@@ -586,6 +765,40 @@
     "Nicolas Quezada Pinto",
     "Nicolas Rudolffi Rudolffi",
     "Osvaldo Esquivel Castillo"
+   ],
+   "8": [
+    "Bruno Gallardo Donoso",
+    "Carlo Gazzolo Chavez",
+    "Cristobal Gonzalez Luengo",
+    "Diego Carmona Jofre",
+    "Diego Mario Rivera Yapur",
+    "Jeronimo Narea Medina",
+    "Joaquin Castillo",
+    "Julio Egaña Tabilo",
+    "Lucciano Cassanova Ortiz",
+    "Mario Salvatierra Carpatios",
+    "Martin Diaz Segovia",
+    "Matias Diaz Santander",
+    "Nicolas Pefaur Yapur",
+    "Nicolas Quezada Pinto",
+    "Nicolas Vargas Rivera"
+   ],
+   "7": [
+    "Andres Navas Martinez",
+    "Carlo Gazzolo Chavez",
+    "Carlos Campos Hernandez",
+    "Diego Anacona Peña",
+    "Felipe González Zuleta",
+    "Guillermo Figueroa Zamora",
+    "Joaquin Castillo",
+    "Jose Cienfuegos Astroza",
+    "Julio Egaña Tabilo",
+    "Lucciano Cassanova Ortiz",
+    "Matias Jofre Angel",
+    "Mauricio Rodriguez Gonzalez",
+    "Nicolas Pefaur Yapur",
+    "Nicolas Vargas Rivera",
+    "Sebastian Sepulveda Varela"
    ]
   },
   "jr-huracan": {
@@ -683,6 +896,50 @@
     "Pedro Cifuentes",
     "Raul Pavez Jorquera",
     "Victor Contreras"
+   ],
+   "8": [
+    "Bastian Valenzuela",
+    "Carlos Esquivel",
+    "Cesar Plaza",
+    "Christian Miranda",
+    "Claudio Alvarez",
+    "Cristian Gajardo",
+    "Francisco Villarroel",
+    "Franco Oyanadel",
+    "Giuliano Ledezma",
+    "Lucas Galvez",
+    "Marco Salinas",
+    "Matias Contreras",
+    "Mauricio Aguirre",
+    "Mauricio Godoy",
+    "Mauro Rodriguez",
+    "Nicolas Orostegui",
+    "Pablo Galleguillos",
+    "Patricio Lazo",
+    "Pedro Cifuentes",
+    "Raul Pavez Jorquera",
+    "Rodrigo Cortes"
+   ],
+   "7": [
+    "Bastian Valenzuela",
+    "Carlos Esquivel",
+    "Cesar Plaza",
+    "Claudio Alvarez",
+    "Francisco Villarroel",
+    "Franco Oyanadel",
+    "Giuliano Ledezma",
+    "Gustavo Gallardo",
+    "Lucas Galvez",
+    "Marco Salinas",
+    "Mauricio Godoy",
+    "Mauro Rodriguez",
+    "Nicolas Orostegui",
+    "Pablo Galleguillos",
+    "Patricio Lazo",
+    "Pedro Cifuentes",
+    "Vicente Codoceo",
+    "Victor Contreras",
+    "Wilson Arancibia"
    ]
   },
   "jr-camilo-enriquez": {
@@ -755,6 +1012,44 @@
     "Miguel Isaias Montano Espinoza",
     "Misael Esteban Rojas Guzman",
     "Tomas Luciano Rosende Tirado"
+   ],
+   "8": [
+    "Axel Mauricio Varas Gonzales",
+    "Bastian Matias Blanco Salinas",
+    "Bayron Gael Alexander Canipa",
+    "Camilo Alfredo Ramirez Moyano",
+    "Cristopher Alexis Fre Rubina",
+    "Kevin Alexis Lisera Cuevas",
+    "Kevin Nelson Guajardo Barrera",
+    "Luis Phillips Araya Gonzalez",
+    "Matias Alonso Ortega Garin",
+    "Mauricio Stephan Regodeceves Cabrera",
+    "Miguel Isaias Montano Espinoza",
+    "Misael Esteban Rojas Guzman",
+    "Tomas Luciano Rosende Tirado",
+    "Victor Israel Tapia Escobar"
+   ],
+   "7": [
+    "Axel Mauricio Varas Gonzales",
+    "Cristopher Alejandro Torres Flores",
+    "Cristopher Alexis Fre Rubina",
+    "Dylan Patricio Cisternas Valenzuela",
+    "Felipe Andres Guerra Gonzalez",
+    "Felipe Ignacio Gomez Torres",
+    "Felipe Javier Calderon Muñoz",
+    "Gustavo Nicolas Fuentealba Tobar",
+    "Ignacio Alfonso Fredes Alcayaga",
+    "Ivan Alejandro Contreras Araya",
+    "Javier Ignacio Calderon Muñoz",
+    "Kevin Alexis Lisera Cuevas",
+    "Kevin Nelson Guajardo Barrera",
+    "Luis Phillips Araya Gonzalez",
+    "Matias Alonso Ortega Garin",
+    "Mauricio Stephan Regodeceves Cabrera",
+    "Misael Esteban Rojas Guzman",
+    "Nicolas Edwards Hinostroza Perez",
+    "Raul Enrique Rojas Guzman",
+    "Victor Israel Tapia Escobar"
    ]
   },
   "jr-arquitectura": {
@@ -855,6 +1150,45 @@
     "Patricio Chirino",
     "Pedro Moreno Salas",
     "Renato Cerda Escobar"
+   ],
+   "8": [
+    "Agustín Opazo",
+    "Brandon Urzua Araya",
+    "Cristopher Barraza Soto",
+    "Daniel Bahamondes",
+    "Diego Rojas Orostegui",
+    "Enzo Barraza Salinas",
+    "Jhon Valero Martinez",
+    "Joaquin Martinez Erazo",
+    "Johan Gomez Esquivel",
+    "Jorge Lagos Rivera",
+    "Marcelo Opazo",
+    "Marcelo Serrano Diaz",
+    "Maximiliano Contreras Rodriguez",
+    "Patricio Chirino"
+   ],
+   "7": [
+    "Agustín Opazo",
+    "Andres Mondaca",
+    "Axceil Casanga",
+    "Brandon Urzua Araya",
+    "Cristopher Leiva Gonzalez",
+    "Diego Rojas Orostegui",
+    "Edson Maximiliano Barraza Salinas",
+    "Gabriel Videla Black",
+    "Jhon Valero Martinez",
+    "Joaquin Martinez Erazo",
+    "Joaquin Montero Ortega",
+    "Johan Gomez Esquivel",
+    "Jorge Lagos Rivera",
+    "Maicol Campos Ramos",
+    "Marcelo Opazo",
+    "Matías Peralta Barraza",
+    "Maximiliano Contreras Rodriguez",
+    "Patricio Chirino",
+    "Renato Cerda Escobar",
+    "Robinson Aguilera Jil",
+    "Sebastian Galvez Oyanadel"
    ]
   },
   "jr-bayern": {
@@ -953,6 +1287,40 @@
     "Sebastian Callegari Moreno",
     "Sergio Pizarro Castillo",
     "Yanko Venegas Ahumada"
+   ],
+   "8": [
+    "Alem Gorosito Gomez",
+    "Alvaro Maximiliano Rodriguez Araya",
+    "Benjamin Andres Maluenda Valenzuela",
+    "Deiker Maldonado",
+    "Diego Hernan Carvajal Iturrieta",
+    "Felipe Aracena Vargas",
+    "Felipe Eduardo Varas",
+    "Gonzalo Perez Hernandez",
+    "Hernan Horacio Carrasco",
+    "Hugo Andres Roco",
+    "Jorge Andre Briceño Rivas",
+    "Jose Ignacio Galleguillos Tirado",
+    "Juan Carlos Marquez Arvelo",
+    "Luis Felipe Castillo Camacho",
+    "Maicol Jesus Rojas Rojas",
+    "Sergio Pizarro Castillo"
+   ],
+   "7": [
+    "Alem Gorosito Gomez",
+    "Alvaro Maximiliano Rodriguez Araya",
+    "Benjamin Andres Maluenda Valenzuela",
+    "Deiker Maldonado",
+    "Felipe Aracena Vargas",
+    "Gonzalo Perez Hernandez",
+    "Jorge Andre Briceño Rivas",
+    "Jose Ignacio Galleguillos Tirado",
+    "Juan Carlos Marquez Arvelo",
+    "Luis Felipe Castillo Camacho",
+    "Luis Francisco Sena Vergara",
+    "Maicol Jesus Rojas Rojas",
+    "Mauricio Aguirre Torres",
+    "Sergio Pizarro Castillo"
    ]
   },
   "sr-ariel-honores": {
@@ -1028,6 +1396,40 @@
     "Patricio Silva",
     "Rodrigo Araya",
     "Rodrigo Garcia"
+   ],
+   "7": [
+    "Carlos Carmona",
+    "Cristian Arce",
+    "Cristian Cuto",
+    "Eduardo Araya",
+    "Enrique Castro",
+    "Francisco Marin",
+    "Franco Araya",
+    "Javier Valdebenito",
+    "Jimmy Letelier",
+    "Joaquin Gatica",
+    "Jose Mesina",
+    "Jose Ossandon",
+    "Mario Gutierrez",
+    "Michael Castillo",
+    "Patricio Silva",
+    "Ricardo Ponce",
+    "Rodrigo Araya",
+    "Rodrigo Garcia"
+   ],
+   "6": [
+    "Cristian Arce",
+    "Cristian Fernández",
+    "Enrique Castro",
+    "Felipe Gallardo",
+    "Franco Araya",
+    "Javier Valdebenito",
+    "Jesus Fuentes",
+    "Jimmy Letelier",
+    "Joaquin Gatica",
+    "Mario Gutierrez",
+    "Michael Castillo",
+    "Rodrigo Garcia"
    ]
   },
   "sr-gunners": {
@@ -1087,6 +1489,40 @@
     "Luciano Daniel Contreras Guzmán",
     "Manuel Arancibia Henríquez",
     "Mauricio Antonio Gatica Munita",
+    "Maxs González",
+    "Rubén Eduardo Rodríguez"
+   ],
+   "7": [
+    "Carlos Alemao Echeverria Matamoros",
+    "Carlos Soto Zeballos",
+    "Daniel Valdés Gutiérrez",
+    "Francisco Arturo Esquivel Retamal",
+    "Francisco Javier Caceres",
+    "Gonzalo Bastian Araya Monardez",
+    "Jonhatan Acosta Contador",
+    "José Manuel Toro González",
+    "Kevin Rojer Illanes Araya",
+    "Luciano Daniel Contreras Guzmán",
+    "Manuel Arancibia Henríquez",
+    "Maxs González",
+    "Robert Sànchez Lazarte",
+    "Rubén Eduardo Rodríguez"
+   ],
+   "6": [
+    "Álvaro Elias Rodriguez Gertosio",
+    "Carlos Alemao Echeverría Matamoros",
+    "Carlos Soto Zeballos",
+    "Daniel Valdés Gutiérrez",
+    "Francisco Arturo Esquivel Retamal",
+    "Francisco Javier Caceres",
+    "Gonzalo Andrés Diaz Peña",
+    "Gonzalo Bastian Araya Monardez",
+    "Jhonny Esteban Jiménez Guzman",
+    "Jonhatan Acosta Contador",
+    "José Manuel Toro González",
+    "Luciano Daniel Contreras Guzmán",
+    "Luis Felipe Lizardi Pimienta",
+    "Luis Osvaldo Bravo Torrejón",
     "Maxs González",
     "Rubén Eduardo Rodríguez"
    ]
@@ -1171,6 +1607,49 @@
     "Mario Ibar Olivares",
     "Mauricio Alejandro Marín",
     "Paulo Cesar Gonzalez"
+   ],
+   "7": [
+    "Agustin Antonio Lizardi",
+    "Andres Mondaca",
+    "Cristian Marcelo Trujillo",
+    "Cristobal Andres Jones",
+    "Diego Antonio Aoun Cartagena",
+    "Diego Antonio Riera",
+    "Felipe Enrique Araya",
+    "Franco Raul Humeres",
+    "Hernan Jesus Saldaña",
+    "Jaime Burle",
+    "Joaquin Martinez Erazo",
+    "José Rojas Castillo",
+    "Luis Gonzalo Trujillo",
+    "Mauricio Alejandro Marín",
+    "Paulo Cesar Gonzalez",
+    "Paulo Sebastian Fernandez",
+    "Richard Esteban Pizarro"
+   ],
+   "6": [
+    "Andres Mondaca",
+    "Cristian Marcelo Trujillo",
+    "Daniel Alfonso Castillo",
+    "Dicson Sebastian Gonzalez",
+    "Diego Antonio Aoun Cartagena",
+    "Diego Antonio Riera",
+    "Felipe Enrique Araya",
+    "Felipe Francisco Jiles",
+    "Felipe Rojas Zamora",
+    "Franco Raul Humeres",
+    "Hernan Jesus Saldaña",
+    "Joaquin Martinez Erazo",
+    "José Rojas Castillo",
+    "Lucas Alfredo Leandro Rivera",
+    "Luis Gonzalo Trujillo",
+    "Manuel Martinez Rivera",
+    "Mario Ibar Olivares",
+    "Mauricio Alejandro Marín",
+    "Nicolas Barraza Caimanque",
+    "Paulo Cesar Gonzalez",
+    "Paulo Sebastian Fernandez",
+    "Renzo Hernan Manterola"
    ]
   },
   "sr-historicos": {
@@ -1225,6 +1704,31 @@
     "Rene Mariano Vidal Vidal",
     "Victor Moreira Wantzloeben",
     "Yerko Varas Varas"
+   ],
+   "7": [
+    "Angel Carreño Ballesteros",
+    "Carlos Jimenez Carrillo",
+    "Cristian Arcos Rojas",
+    "Cristian Leyton Alfaro",
+    "Eduardo Corvetto Aqueveque",
+    "Felipe Contreras Coronado",
+    "Francesco Mortarini Olivares",
+    "Rene Mariano Vidal Vidal",
+    "Saul Bustos Ramirez",
+    "Sebastian Plaza Rojas",
+    "Victor Moreira Wantzloeben"
+   ],
+   "6": [
+    "David Antonio Alvarez Cerda",
+    "Eduardo Corvetto Aqueveque",
+    "Felipe Contreras Coronado",
+    "Francesco Mortarini Olivares",
+    "Franco Antonio Pereira Rojas",
+    "Marco Antonio Araya Garces",
+    "Nicolas Sebastian Canibilo Nuñez",
+    "Rene Mariano Vidal Vidal",
+    "Sebastian Plaza Rojas",
+    "Sergio Cortes Nuñez"
    ]
   },
   "sr-camilo-enriquez": {
@@ -1288,6 +1792,40 @@
     "Patrico Alberto Meneses Campillay",
     "Roberto Antonio Sánchez Aguilar",
     "Rodrigo Castillo Matamoros"
+   ],
+   "7": [
+    "Camilo Diego Ávila Sánchez",
+    "Edson Aldair Rios Ochoa",
+    "Felipe Andrés Guerra González",
+    "Gonzalo Francisco Perez Hernandez",
+    "Gregory Ernesto Ardiles Bugueño",
+    "Gustavo Nicolás Fuentealba Tovar",
+    "Kevin Nelson Guajardo Barrera",
+    "Khaled Ben Abrham Chaibun Tapia",
+    "Michel Emilio Maluenda Bugueño",
+    "Oscar José Gómez Escalona",
+    "Oscar José Rojas Lara",
+    "Patrico Alberto Meneses Campillay",
+    "Roberto Antonio Sánchez Aguilar",
+    "Robinson Alejandro Yañez Cortés",
+    "Victor Patricio Cabrera Gonzalez"
+   ],
+   "6": [
+    "Camilo Diego Ávila Sánchez",
+    "Duvan Andres Mejia Alzate",
+    "Edson Aldair Rios Ochoa",
+    "Felipe Ignacio Gomez Torres",
+    "Gonzalo Francisco Perez Hernandez",
+    "Italo Francesco Alejandro Zepeda Rojas",
+    "Jesús Colmenares Quintero",
+    "Juan Sebastian Serna Ospina",
+    "Julio Carmona Rojas",
+    "Kevin Nelson Guajardo Barrera",
+    "Khaled Ben Abrham Chaibun Tapia",
+    "Oscar José Gómez Escalona",
+    "Patricio Alberto Meneses Campillay",
+    "Roberto Antonio Sánchez Aguilar",
+    "Rodrigo Castillo Matamoros"
    ]
   },
   "sr-arsenal": {
@@ -1339,6 +1877,49 @@
     "Eduardo Andres Salinas Espejo",
     "Felipe Ignacio Espejo Martinez",
     "Javier Eduardo Pinilla Marín",
+    "Victor Emilio Contreras Ortiz"
+   ],
+   "7": [
+    "Andres Alexis Olivares Ogalde",
+    "Claudio Mauricio Rojas Pasten",
+    "Cristian Alberto Rojas Pasten",
+    "Cristian Caimanque Valdes",
+    "Diego Cesar Marcelo Romero Varas",
+    "Eduardo Alejandro Largo Varela",
+    "Emilio Enrique Olivares Mendez",
+    "Fabian Ignacio Santander Araya",
+    "Felipe Ignacio Espejo Martinez",
+    "Fernando Andrés Iturriaga Chavez",
+    "Franco Mauro Seida Quiroz",
+    "Gonzalo Jacob Gormaz Fariñez",
+    "Herman Ronald Cuello Carmona",
+    "Javier Eduardo Pinilla Marín",
+    "Jonathan Alejandro Ramos Miranda",
+    "Jorge Alfredo Jorquera Dubo",
+    "Juan Leyton",
+    "Luis Armando Aguirre Torres",
+    "Mauricio Alexis Aguirre Torres",
+    "Miguel Angel Varela Vergara",
+    "Nelson Nicolas Vergara Rojas",
+    "Victor Emilio Contreras Ortiz"
+   ],
+   "6": [
+    "Eduardo Andres Salinas Espejo",
+    "Emerson Arturo Araya Valderrama",
+    "Emilio Enrique Olivares Mendez",
+    "Fabian Ignacio Santander Araya",
+    "Felipe Ignacio Espejo Martinez",
+    "Fernando Andrés Iturriaga Chavez",
+    "Francisco Javier Diaz Gomila",
+    "Francisco Javier Santander Errazuriz",
+    "Franco Mauro Seida Quiroz",
+    "Gabriel Ignacio Rodríguez Ledezma",
+    "Gonzalo Jacob Gormaz Fariñez",
+    "Herman Ronald Cuello Carmona",
+    "Javier Eduardo Pinilla Marín",
+    "Jonathan Alejandro Ramos Miranda",
+    "Miguel Angel Varela Vergara",
+    "Valentin Ignacio Ibarra Martinez",
     "Victor Emilio Contreras Ortiz"
    ]
   },
@@ -1398,6 +1979,42 @@
     "Ronny Marcelo Álvarez Muñoz",
     "Sergio Emilio Villagra Uren",
     "Victor Patricio Pacheco Madariaga"
+   ],
+   "7": [
+    "Alexis Eduardo Pizarro Escobar",
+    "Diego Orlando Contreras Olivares",
+    "Felipe Ignacio Cisternas Muñoz",
+    "Francisco Javier Álvarez Segovia",
+    "Guillermo Iván Lubi León",
+    "Johansson Stephan Garry Bellsham",
+    "Jorge Ignacio Miranda Ojeda",
+    "José Eduardo Rojas Tapia",
+    "Pedro Andrés Escobar López",
+    "Ronny Marcelo Álvarez Muñoz",
+    "Rubén Eduardo Cortes Naranjo",
+    "Sebastián Andrés Ardiles Araya",
+    "Vicente Tomás Alejandro Bugueño Quintero"
+   ],
+   "6": [
+    "Alexis Eduardo Pizarro Escobar",
+    "Diego Alberto Dubó Ortiz",
+    "Diego Orlando Contreras Olivares",
+    "Francisco Javier Álvarez Segovia",
+    "Guillermo Iván Lubi León",
+    "Henry Fabián Quiroz Polentino",
+    "Johansson Stephan Garry Bellsham",
+    "Jorge Armando León Guthrie",
+    "Jorge Ignacio Miranda Ojeda",
+    "José Eduardo Rojas Tapia",
+    "Juan Pablo Fuentes Castro",
+    "Marco Danilo Tejerina Vargas",
+    "Michael Fernando Magalhaes Jara",
+    "Pedro Andrés Escobar López",
+    "Ronny Marcelo Álvarez Muñoz",
+    "Rubén Eduardo Cortes Naranjo",
+    "Sebastián Andrés Ardiles Araya",
+    "Vicente Tomás Alejandro Bugueño Quintero",
+    "Victor Patricio Pacheco Madariaga"
    ]
   },
   "sr-los-pibes": {
@@ -1450,6 +2067,43 @@
     "Jonathan Hernandez",
     "Matias Gallardo",
     "Maximiliano Javier Vera Ferrer"
+   ],
+   "7": [
+    "Camilo Sepulveda",
+    "Carlos Vásquez Aguirre",
+    "Diego Amaya Fernandez",
+    "Diego Espinosa González",
+    "Diego Israel Aguilera Uribe",
+    "Goran Bakulic",
+    "Hugo Molina",
+    "Jaime Ignacio Barceló Ancarola",
+    "Joaquin Barcelo",
+    "Jose Pablo Velasquez Mauad",
+    "Matias Gallardo",
+    "Mauricio Andrés Peyreblanque Kuhn",
+    "Mauricio De La Torre Izquierdo",
+    "Maximiliano Javier Vera Ferrer",
+    "Patricio Rendic",
+    "Román Andrés Corral Callegari"
+   ],
+   "6": [
+    "Alvaro Velasquez Mauad",
+    "Benjamín Herreros Giannerini",
+    "Camilo Sepulveda",
+    "Carlos Vásquez Aguirre",
+    "Diego Amaya Fernandez",
+    "Diego Espinosa González",
+    "Eduardo Bastián Fajardo Cuevas",
+    "Goran Bakulic",
+    "Hugo Molina",
+    "Jaime Ignacio Barceló Ancarola",
+    "Joaquin Barcelo",
+    "Jose Pablo Velasquez Mauad",
+    "Matias Gallardo",
+    "Mauricio Andrés Peyreblanque Kuhn",
+    "Maximiliano Javier Vera Ferrer",
+    "Nicolas Rivera Castillo",
+    "Sebastian Vega Martinez"
    ]
   }
  },
@@ -1477,6 +2131,9 @@
    "4": [
     "Cristobal Gonzalez Luengo",
     "Nicolas Pefaur Yapur"
+   ],
+   "8": [
+    "Diego Anacona Peña"
    ]
   },
   "jr-huracan": {
@@ -1498,6 +2155,9 @@
     "Hugo Andres Roco",
     "Sebastian Callegari Moreno",
     "Sergio Pizarro Castillo"
+   ],
+   "7": [
+    "Patricio Hernandez"
    ]
   },
   "jr-bunker": {
@@ -1510,6 +2170,13 @@
    ],
    "5": [
     "Nicolás Cortes"
+   ],
+   "7": [
+    "Andres Martinez",
+    "Benjamin Valenzuela",
+    "Gaston Huerta",
+    "Mauricio Alfaro",
+    "Fabio Vega"
    ]
   },
   "sr-camilo-enriquez": {
@@ -1519,6 +2186,9 @@
    ],
    "2": [
     "Franco Antonio Cisterna Reyes"
+   ],
+   "6": [
+    "Michel Emilio Maluenda Bugueño"
    ]
   },
   "sr-arsenal": {
@@ -1534,6 +2204,20 @@
    ],
    "5": [
     "Andres Alexis Olivares Ogalde"
+   ],
+   "7": [
+    "Edgard Raul Leyton Montenegro",
+    "Gabriel Ignacio Rodríguez Ledezma",
+    "Gianni Eduardo Arancibia Romero",
+    "Jesus Francisco Ponce Tapia",
+    "Juan Gabriel Collao Lopez"
+   ],
+   "6": [
+    "Eduardo Alejandro Largo Varela",
+    "Eduardo Alonso Ponce Tapia",
+    "Gianni Eduardo Arancibia Romero",
+    "Jesus Francisco Ponce Tapia",
+    "Jorge Alfredo Jorquera Dubo"
    ]
   },
   "jr-capibara": {
@@ -1544,16 +2228,29 @@
   "sr-ariel-honores": {
    "3": [
     "Rodrigo Araya"
+   ],
+   "6": [
+    "Rodrigo Araya"
    ]
   },
   "sr-los-pibes": {
    "3": [
     "Diego Espinosa González"
+   ],
+   "6": [
+    "Cristóbal Ardiles Morales"
    ]
   },
   "jr-arquitectura": {
    "5": [
     "Agustín Opazo"
+   ],
+   "8": [
+    "Cristopher Leiva Gonzalez",
+    "Joaquin Montero Ortega"
+   ],
+   "7": [
+    "Alejandro Varas Carrasco"
    ]
   },
   "sr-gunners": {
@@ -1561,6 +2258,19 @@
     "Andrés Tadeo Helena Lagos",
     "Jhonny Esteban Jiménez Guzman"
    ]
-  }
+  },
+  "sr-equipo-8": {},
+  "jr-40-grados": {},
+  "sr-arquitectura": {
+   "7": [
+    "Mario Ibar Olivares"
+   ]
+  },
+  "sr-historicos": {
+   "6": [
+    "Sebastian Araya Acha"
+   ]
+  },
+  "jr-camilo-enriquez": {}
  }
 }

@@ -8,7 +8,7 @@ import {
   FALTAS_ROJA, faltaById, sancionTexto, suspendidosParaFecha, AMARILLAS_PARA_SUSPENSION,
   getInscripciones, updateInscripcion, deleteInscripcion,
   getPagos, savePagos,
-  getJugadores, saveJugador, deleteJugador, importJugadores, getAsistencia,
+  getJugadores, saveJugador, deleteJugador, importJugadores, getAsistencia, getPlanteles,
   getAudiovisual, saveAudiovisual,
   sandboxOn, setSandbox, resetSandbox,
   equiposById, camarinesPorCancha
@@ -37,7 +37,8 @@ async function loadAll() {
   ]);
   const pagos = await getPagos().catch(() => []);
   const asistencia = await getAsistencia().catch(() => ({ fechas: {}, presentes: {}, dudosos: {} }));
-  C = { config, equipos, partidos, disciplina, inscripciones, av, jugadores, goleadores, pagos, asistencia };
+  const planteles = await getPlanteles().catch(() => ({}));
+  C = { config, equipos, partidos, disciplina, inscripciones, av, jugadores, goleadores, pagos, asistencia, planteles };
 }
 
 /* ---------------- LOGIN ---------------- */
@@ -561,7 +562,9 @@ function renderJugadores(el) {
     const team = byId[jugEq];
     const serie = (team && (team.serie || 'libre') === 'senior') ? 'senior' : 'libre';
     const fechas = (asis.fechas && asis.fechas[serie]) || [];
-    const roster = jugs.filter(j => j.equipo === jugEq).sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+    // Plantel completo desde planteles.json (incluye Senior; la colección 'jugadores' es solo Junior).
+    const roster = ((C.planteles && C.planteles[jugEq]) || jugs.filter(j => j.equipo === jugEq))
+      .slice().sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
     if (!fechas.length || !roster.length) return '';
     const pres = (asis.presentes && asis.presentes[jugEq]) || {};
     const dud = (asis.dudosos && asis.dudosos[jugEq]) || {};
