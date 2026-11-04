@@ -587,6 +587,14 @@ function renderJugadores(el) {
         : '<td class="asis-cell asis-no" title="Ausente">✗</td>';
     };
     const cargadas = fechas.filter(f => pres[String(f)]).length;
+    // Requisito de asistencia para playoffs (reglamento Art. 3): Junior 3+ firmas, Senior 2+ firmas.
+    const minFirmas = serie === 'senior' ? 2 : 3;
+    const firmadosDe = (nombre) => {
+      const key = _an(nombre); let n = 0;
+      for (const f of fechas) { const fk = String(f); if (presSet[fk] && presSet[fk].has(key)) n++; }
+      return n;
+    };
+    const serieLblN = serie === 'senior' ? 'Senior' : 'Junior';
     return `
     <style>
       .asis-wrap{overflow-x:auto;border:1px solid var(--c-line,#dfe5e0);border-radius:10px}
@@ -602,13 +610,24 @@ function renderJugadores(el) {
       .asis-no{color:#b0484a;font-weight:800}
       .asis-dud{color:#b7850f;font-weight:800;background:#fdf6e3}
       .asis-nd{color:#c3c9c4}
+      .asis-firm{font-variant-numeric:tabular-nums;border-left:2px solid var(--c-brand,#067A3E)!important;min-width:60px;font-weight:800}
+      .asis-firm .asis-tot{color:var(--c-muted,#6f766d);font-weight:600;font-size:.78rem}
+      .asis-tbl thead th.asis-sep{border-left:2px solid #fff}
+      .asis-norm{font-weight:800;font-size:.78rem;min-width:84px}
+      .asis-cumple{color:#067A3E;background:#e7f5ec!important}
+      .asis-nocumple{color:#b0484a;background:#fdecec!important}
     </style>
     <div class="card mb-3">
       <h3 class="mb-1">${icon('calendar', { size: 18 })} Asistencia por fecha — ${esc(eqLabel(team))}</h3>
-      <p class="muted" style="font-size:.84rem;margin:0 0 10px"><span class="asis-ok">✓</span> presente (tiene número en el acta) · <span class="asis-no">✗</span> ausente · <span class="asis-dud">?</span> dudoso (revisar a mano) · <span class="asis-nd">—</span> acta aún no cargada. Desliza la tabla →. <span class="muted">(${cargadas}/${fechas.length} fechas cargadas)</span></p>
+      <p class="muted" style="font-size:.84rem;margin:0 0 10px"><span class="asis-ok">✓</span> presente (tiene número en el acta) · <span class="asis-no">✗</span> ausente · <span class="asis-dud">?</span> dudoso (revisar a mano) · <span class="asis-nd">—</span> acta aún no cargada. <strong>Firmados</strong> = fechas con ✓. <strong>Playoff</strong>: cumple con <strong>${minFirmas}+ firmas</strong> en la fase regular (${serieLblN}); los <span class="asis-dud">?</span> no suman hasta confirmarlos. Desliza la tabla →. <span class="muted">(${cargadas}/${fechas.length} fechas cargadas)</span></p>
       <div class="asis-wrap"><table class="tbl asis-tbl">
-        <thead><tr><th class="asis-name">Jugador</th>${fechas.map(f => `<th class="asis-col">F${f}</th>`).join('')}</tr></thead>
-        <tbody>${roster.map(j => `<tr><td class="asis-name">${esc(j.nombre)}</td>${fechas.map(f => cell(j.nombre, f)).join('')}</tr>`).join('')}</tbody>
+        <thead><tr><th class="asis-name">Jugador</th>${fechas.map(f => `<th class="asis-col">F${f}</th>`).join('')}<th class="asis-col asis-sep" title="Fechas firmadas / fechas con acta cargada">Firmados</th><th class="asis-col" title="Requisito reglamento: ${minFirmas}+ firmas">Playoff (≥${minFirmas})</th></tr></thead>
+        <tbody>${roster.map(j => {
+          const fm = firmadosDe(j.nombre); const ok = fm >= minFirmas;
+          return `<tr><td class="asis-name">${esc(j.nombre)}</td>${fechas.map(f => cell(j.nombre, f)).join('')}` +
+            `<td class="asis-firm">${fm}<span class="asis-tot">/${cargadas}</span></td>` +
+            `<td class="asis-norm ${ok ? 'asis-cumple' : 'asis-nocumple'}">${ok ? 'Cumple' : 'No cumple'}</td></tr>`;
+        }).join('')}</tbody>
       </table></div>
     </div>`;
   }
