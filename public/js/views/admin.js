@@ -562,10 +562,14 @@ function renderJugadores(el) {
     const team = byId[jugEq];
     const serie = (team && (team.serie || 'libre') === 'senior') ? 'senior' : 'libre';
     const fechas = (asis.fechas && asis.fechas[serie]) || [];
-    // Plantel completo desde planteles.json (incluye Senior; la colección 'jugadores' es solo Junior).
-    const roster = ((C.planteles && C.planteles[jugEq]) || jugs.filter(j => j.equipo === jugEq))
-      .slice().sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
-    if (!fechas.length || !roster.length) return '';
+    // Asistencia SOLO sobre el plantel oficial de la pestaña Equipos (planteles.json).
+    // No usa la colección interna 'jugadores' (puede tener jugadores de más o de otra serie).
+    const plantelOficial = (C.planteles && C.planteles[jugEq]) || null;
+    const roster = (plantelOficial || []).slice().sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+    if (!fechas.length) return '';
+    if (!roster.length) {
+      return `<div class="card mb-3"><p class="muted" style="margin:0">${icon('calendar', { size: 16 })} El <strong>plantel oficial</strong> de este equipo aún no está cargado en la pestaña Equipos, así que no se puede mostrar la asistencia.</p></div>`;
+    }
     const pres = (asis.presentes && asis.presentes[jugEq]) || {};
     const dud = (asis.dudosos && asis.dudosos[jugEq]) || {};
     // La asistencia se guarda por NOMBRE de jugador (no por id posicional), así
