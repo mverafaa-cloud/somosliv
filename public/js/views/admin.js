@@ -39,6 +39,10 @@ async function loadAll() {
   const asistencia = await getAsistencia().catch(() => ({ fechas: {}, presentes: {}, dudosos: {} }));
   const planteles = await getPlanteles().catch(() => ({}));
   C = { config, equipos, partidos, disciplina, inscripciones, av, jugadores, goleadores, pagos, asistencia, planteles };
+  // Snapshot de la asistencia tal como vino del archivo, para detectar cambios sin guardar
+  // y poder deshacer. Los edits en vivo del admin mutan C.asistencia (se bajan como JSON).
+  asisBaseline = JSON.stringify(asistencia || {});
+  asisDirtyKeys.clear();
 }
 
 /* ---------------- LOGIN ---------------- */
@@ -534,6 +538,9 @@ function renderAnotaciones(el) {
 let editJug = null;
 let jugEq = 'all';
 let jugQ = '';
+// Edición en vivo de la asistencia (admin): baseline para diffs + set de celdas tocadas.
+let asisBaseline = '';
+const asisDirtyKeys = new Set();
 
 function renderJugadores(el) {
   const byId = equiposById(C.equipos);
@@ -555,6 +562,26 @@ function renderJugadores(el) {
 
   // Línea de tiempo de asistencia (presencia fecha por fecha, desde las actas).
   const asis = C.asistencia || { fechas: {}, presentes: {}, dudosos: {} };
+  const _anJ = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9 ]/g, ' ').trim().replace(/\s+/g, ' ');
+  // Estado de una celda (eq, fecha, jugador) dentro de un objeto asistencia dado.
+  const asisStateIn = (obj, eq, fk, key) => {
+    const pres = obj && obj.presentes && obj.presentes[eq] && obj.presentes[eq][fk];
+    if (!pres) return 'nd';                               // — sin acta cargada
+    const dud = obj.dudosos && obj.dudosos[eq] && obj.dudosos[eq][fk];
+    if (dud && dud.some(n => _anJ(n) === key)) return 'dud'; // ?
+    return pres.some(n => _anJ(n) === key) ? 'ok' : 'no';    // ✓ / ✗
+  };
+  // Fija el estado de una celda mutando C.asistencia (en memoria, se baja como JSON).
+  const asisSet = (eq, fk, nombre, state) => {
+    const A = C.asistencia; const key = _anJ(nombre);
+    A.presentes = A.presentes || {}; A.dudosos = A.dudosos || {};
+    A.presentes[eq] = A.presentes[eq] || {}; A.dudosos[eq] = A.dudosos[eq] || {};
+    const rm = (obj) => { if (obj[eq] && obj[eq][fk]) obj[eq][fk] = obj[eq][fk].filter(n => _anJ(n) !== key); };
+    A.presentes[eq][fk] = A.presentes[eq][fk] || []; // la fecha queda "cargada" (no vuelve a —)
+    if (state === 'ok') { rm(A.dudosos); if (!A.presentes[eq][fk].some(n => _anJ(n) === key)) A.presentes[eq][fk].push(nombre); }
+    else if (state === 'no') { rm(A.presentes); rm(A.dudosos); }
+    else if (state === 'dud') { rm(A.presentes); A.dudosos[eq][fk] = A.dudosos[eq][fk] || []; if (!A.dudosos[eq][fk].some(n => _anJ(n) === key)) A.dudosos[eq][fk].push(nombre); }
+  };
   function asistenciaBlock() {
     if (jugEq === 'all') {
       return `<div class="card mb-3"><p class="muted" style="margin:0">${icon('calendar', { size: 16 })} Elige un equipo en los filtros para ver su <strong>línea de tiempo de asistencia</strong> (presencia fecha por fecha).</p></div>`;
@@ -581,14 +608,18 @@ function renderJugadores(el) {
       if (pres[fk]) presSet[fk] = new Set(pres[fk].map(_an));
       if (dud[fk]) dudSet[fk] = new Set(dud[fk].map(_an));
     }
+    const editable = isAdmin();
     const cell = (nombre, f) => {
       const fk = String(f);
-      if (!presSet[fk]) return '<td class="asis-cell asis-nd" title="Sin acta cargada">—</td>';
+      const da = editable ? ` data-fecha="${fk}" data-nombre="${esc(nombre)}"` : '';
+      const ec = editable ? ' asis-edit' : '';
+      const tip = editable ? ' · click para cambiar' : '';
+      if (!presSet[fk]) return `<td class="asis-cell asis-nd${ec}"${da} title="Sin acta cargada${editable ? ' · click para marcar' : ''}">—</td>`;
       const key = _an(nombre);
-      if (dudSet[fk] && dudSet[fk].has(key)) return '<td class="asis-cell asis-dud" title="Dudoso — revisar a mano">?</td>';
+      if (dudSet[fk] && dudSet[fk].has(key)) return `<td class="asis-cell asis-dud${ec}"${da} title="Dudoso — revisar a mano${tip}">?</td>`;
       return presSet[fk].has(key)
-        ? '<td class="asis-cell asis-ok" title="Presente">✓</td>'
-        : '<td class="asis-cell asis-no" title="Ausente">✗</td>';
+        ? `<td class="asis-cell asis-ok${ec}"${da} title="Presente${tip}">✓</td>`
+        : `<td class="asis-cell asis-no${ec}"${da} title="Ausente${tip}">✗</td>`;
     };
     const cargadas = fechas.filter(f => pres[String(f)]).length;
     // Requisito de asistencia para playoffs (reglamento Art. 3): Junior 3+ firmas, Senior 2+ firmas.
@@ -636,10 +667,21 @@ function renderJugadores(el) {
       .asis-tbl tfoot td{border-top:2px solid var(--c-brand,#067A3E);background:#eef5f0;font-weight:800;font-variant-numeric:tabular-nums;color:#0b3d24}
       .asis-tbl tfoot td.asis-name{background:#eef5f0;color:#0b3d24;left:0}
       .asis-footdud{color:#b7850f;font-weight:700;font-size:.72rem}
+      .asis-tbl td.asis-edit{cursor:pointer;-webkit-user-select:none;user-select:none}
+      .asis-tbl td.asis-edit:hover{outline:2px solid var(--c-brand,#067A3E);outline-offset:-2px;filter:brightness(.97)}
+      .asis-editbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 10px;padding:8px 12px;border-radius:8px;background:#f4f8f5;font-size:.84rem}
+      .asis-editbar.on{background:#fff7e6;border:1px solid #f0d9a8;color:#8a5a00}
+      .asis-editbtns{display:flex;gap:6px;flex-wrap:wrap}
     </style>
     <div class="card mb-3">
       <h3 class="mb-1">${icon('calendar', { size: 18 })} Asistencia por fecha — ${esc(eqLabel(team))}</h3>
       <p class="muted" style="font-size:.84rem;margin:0 0 10px"><span class="asis-ok">✓</span> presente (tiene número en el acta) · <span class="asis-no">✗</span> ausente · <span class="asis-dud">?</span> dudoso (revisar a mano) · <span class="asis-nd">—</span> acta aún no cargada. <strong>Firmados</strong> = fechas con ✓. <strong>Playoff</strong>: cumple con <strong>${minFirmas}+ firmas</strong> en la fase regular (${serieLblN}); los <span class="asis-dud">?</span> no suman hasta confirmarlos. Desliza la tabla →. <span class="muted">(${cargadas}/${fechas.length} fechas cargadas)</span></p>
+      ${editable ? `<div class="asis-editbar${asisDirtyKeys.size ? ' on' : ''}">
+        ${asisDirtyKeys.size
+          ? `<span>● <strong>${asisDirtyKeys.size}</strong> celda(s) modificada(s) sin guardar</span>
+             <span class="asis-editbtns"><button class="btn btn-primary btn-sm" id="asis-download" type="button">⬇ Descargar asistencia.json</button><button class="btn btn-ghost btn-sm" id="asis-undo" type="button">Deshacer</button></span>`
+          : `<span class="muted">✎ Click en una celda para editar: <span class="asis-dud">?</span> → <span class="asis-ok">✓</span> → <span class="asis-no">✗</span> → <span class="asis-dud">?</span>. Al terminar, descargá el JSON y commitéalo.</span>`}
+      </div>` : ''}
       <div class="asis-wrap"><table class="tbl asis-tbl">
         <thead><tr><th class="asis-name">Jugador</th>${fechas.map(f => `<th class="asis-col">F${f}</th>`).join('')}<th class="asis-col asis-sep" title="Fechas firmadas / fechas con acta cargada">Firmados</th><th class="asis-col" title="Requisito reglamento: ${minFirmas}+ firmas">Playoff (≥${minFirmas})</th></tr></thead>
         <tbody>${roster.map(j => {
@@ -697,7 +739,7 @@ function renderJugadores(el) {
       <input class="input" id="jug-q" placeholder="Buscar por nombre…" value="${esc(jugQ)}" style="max-width:220px">
     </div>
 
-    ${asistenciaBlock()}
+    <div id="asis-root">${asistenciaBlock()}</div>
 
     <div class="table-wrap"><table class="tbl">
       <thead><tr><th style="width:40px">#</th><th>Nombre</th><th>Equipo</th><th class="num">Edad</th><th></th></tr></thead>
@@ -710,6 +752,48 @@ function renderJugadores(el) {
       </tr>`).join('') || `<tr><td colspan="5" class="muted center">${jugs.length ? 'Sin jugadores para el filtro.' : 'Aún no hay jugadores. Importa el archivo jugadores.json arriba.'}</td></tr>`}</tbody>
     </table></div>
     ${list.length ? `<p class="muted mt-2" style="font-size:.85rem">Mostrando ${list.length} de ${jugs.length} jugadores.</p>` : ''}`;
+
+  // --- Edición en vivo de la asistencia (admin): click en celda cicla ? → ✓ → ✗ → ? ---
+  const asisRoot = el.querySelector('#asis-root');
+  if (asisRoot && isAdmin()) {
+    const baseObj = asisBaseline ? JSON.parse(asisBaseline) : { presentes: {}, dudosos: {} };
+    const rerenderAsis = () => {
+      const sl = asisRoot.querySelector('.asis-wrap')?.scrollLeft || 0;
+      asisRoot.innerHTML = asistenciaBlock();
+      const w = asisRoot.querySelector('.asis-wrap'); if (w) w.scrollLeft = sl;
+    };
+    const downloadAsis = () => {
+      const blob = new Blob([JSON.stringify(C.asistencia, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'asistencia.json';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+      toast('Descargado asistencia.json — reemplázalo en el repo, commit y git push', 'success');
+    };
+    asisRoot.addEventListener('click', (ev) => {
+      if (ev.target.closest('#asis-download')) { downloadAsis(); return; }
+      if (ev.target.closest('#asis-undo')) {
+        if (confirm('¿Descartar todos los cambios de asistencia sin guardar?')) {
+          const fresh = JSON.parse(asisBaseline || '{}');
+          // Mutar en el sitio (no reasignar) para no romper la referencia que usa asistenciaBlock.
+          C.asistencia.presentes = fresh.presentes || {};
+          C.asistencia.dudosos = fresh.dudosos || {};
+          if (fresh.fechas) C.asistencia.fechas = fresh.fechas;
+          asisDirtyKeys.clear(); rerenderAsis();
+        }
+        return;
+      }
+      const td = ev.target.closest('.asis-cell[data-fecha]');
+      if (!td) return;
+      const eq = jugEq, fk = td.dataset.fecha, nombre = td.dataset.nombre, key = _anJ(nombre);
+      const cur = asisStateIn(C.asistencia, eq, fk, key);
+      const next = cur === 'nd' ? 'ok' : cur === 'ok' ? 'no' : cur === 'no' ? 'dud' : 'ok';
+      asisSet(eq, fk, nombre, next);
+      const dk = eq + '|' + fk + '|' + key;
+      if (next === asisStateIn(baseObj, eq, fk, key)) asisDirtyKeys.delete(dk); else asisDirtyKeys.add(dk);
+      rerenderAsis();
+    });
+  }
 
   // Importación masiva
   el.querySelector('#jugimport').onclick = async () => {
