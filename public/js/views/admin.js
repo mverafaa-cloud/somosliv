@@ -595,10 +595,23 @@ function renderJugadores(el) {
     const minFirmas = serie === 'senior' ? 2 : 3;
     const firmadosDe = (nombre) => {
       const key = _an(nombre); let n = 0;
-      for (const f of fechas) { const fk = String(f); if (presSet[fk] && presSet[fk].has(key)) n++; }
+      for (const f of fechas) { const fk = String(f); if (presSet[fk] && presSet[fk].has(key) && !(dudSet[fk] && dudSet[fk].has(key))) n++; }
       return n;
     };
     const serieLblN = serie === 'senior' ? 'Senior' : 'Junior';
+    // Totales verticales (por fecha): cuántos del plantel firmaron (✓) ese día.
+    const firmaronF = (f) => {
+      const fk = String(f); if (!presSet[fk]) return null; // acta no cargada
+      let n = 0;
+      for (const j of roster) { const key = _an(j.nombre); if (presSet[fk].has(key) && !(dudSet[fk] && dudSet[fk].has(key))) n++; }
+      return n;
+    };
+    const dudososF = (f) => {
+      const fk = String(f); if (!dudSet[fk]) return 0;
+      let n = 0; for (const j of roster) { if (dudSet[fk].has(_an(j.nombre))) n++; } return n;
+    };
+    const cumplenCount = roster.filter(j => firmadosDe(j.nombre) >= minFirmas).length;
+    const totalFirmas = roster.reduce((a, j) => a + firmadosDe(j.nombre), 0);
     return `
     <style>
       .asis-wrap{overflow-x:auto;border:1px solid var(--c-line,#dfe5e0);border-radius:10px}
@@ -620,6 +633,9 @@ function renderJugadores(el) {
       .asis-norm{font-weight:800;font-size:.78rem;min-width:84px}
       .asis-cumple{color:#067A3E;background:#e7f5ec!important}
       .asis-nocumple{color:#b0484a;background:#fdecec!important}
+      .asis-tbl tfoot td{border-top:2px solid var(--c-brand,#067A3E);background:#eef5f0;font-weight:800;font-variant-numeric:tabular-nums;color:#0b3d24}
+      .asis-tbl tfoot td.asis-name{background:#eef5f0;color:#0b3d24;left:0}
+      .asis-footdud{color:#b7850f;font-weight:700;font-size:.72rem}
     </style>
     <div class="card mb-3">
       <h3 class="mb-1">${icon('calendar', { size: 18 })} Asistencia por fecha — ${esc(eqLabel(team))}</h3>
@@ -632,6 +648,16 @@ function renderJugadores(el) {
             `<td class="asis-firm">${fm}<span class="asis-tot">/${cargadas}</span></td>` +
             `<td class="asis-norm ${ok ? 'asis-cumple' : 'asis-nocumple'}">${ok ? 'Cumple' : 'No cumple'}</td></tr>`;
         }).join('')}</tbody>
+        <tfoot><tr>
+          <td class="asis-name">Firmaron por fecha</td>
+          ${fechas.map(f => {
+            const n = firmaronF(f); const d = dudososF(f);
+            if (n === null) return '<td class="asis-nd">—</td>';
+            return `<td title="${n} firmaron${d ? ` · ${d} dudoso(s)` : ''}">${n}${d ? `<span class="asis-footdud"> +${d}?</span>` : ''}</td>`;
+          }).join('')}
+          <td class="asis-firm" title="Total de firmas del equipo en toda la fase regular">${totalFirmas}</td>
+          <td class="asis-norm" title="Jugadores que cumplen la norma de playoff">${cumplenCount}/${roster.length}</td>
+        </tr></tfoot>
       </table></div>
     </div>`;
   }
