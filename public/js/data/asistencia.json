@@ -1402,7 +1402,8 @@
         "Jimmy Letelier",
         "Jose Ossandon",
         "Michael Castillo",
-        "Rodrigo Garcia"
+        "Rodrigo Garcia",
+        "Rodrigo Araya"
       ],
       "4": [
         "Claudio Macias",
@@ -1445,7 +1446,8 @@
         "Joaquin Gatica",
         "Mario Gutierrez",
         "Michael Castillo",
-        "Rodrigo Garcia"
+        "Rodrigo Garcia",
+        "Rodrigo Araya"
       ],
       "7": [
         "Carlos Carmona",
@@ -1514,7 +1516,9 @@
         "José Manuel Toro González",
         "Luciano Daniel Contreras Guzmán",
         "Mario Sebastián Covacevich Flores",
-        "Rubén Eduardo Rodríguez"
+        "Rubén Eduardo Rodríguez",
+        "Jhonny Esteban Jiménez Guzman",
+        "Andrés Tadeo Helena Lagos"
       ],
       "5": [
         "Francisco Arturo Esquivel Retamal",
@@ -1685,7 +1689,8 @@
         "Mauricio Alejandro Marín",
         "Paulo Cesar Gonzalez",
         "Paulo Sebastian Fernandez",
-        "Richard Esteban Pizarro"
+        "Richard Esteban Pizarro",
+        "MARIO IBAR OLIVARES"
       ]
     },
     "sr-historicos": {
@@ -1773,7 +1778,9 @@
         "Oscar José Gómez Escalona",
         "Roberto Antonio Sánchez Aguilar",
         "Robinson Alejandro Yañez Cortés",
-        "Rodrigo Braniff Díaz"
+        "Rodrigo Braniff Díaz",
+        "CLAUDIO TOMAS LEDEZMA CONTRERAS",
+        "JUAN SEBASTIAN SERNA OSPINA"
       ],
       "2": [
         "Cristhofher Alejandro Vera Vera",
@@ -1786,7 +1793,8 @@
         "Michel Emilio Maluenda Bugueño",
         "Oscar José Gómez Escalona",
         "Rodrigo Castillo Matamoros",
-        "Victor Patricio Cabrera Gonzalez"
+        "Victor Patricio Cabrera Gonzalez",
+        "FRANCO ANTONIO CISTERNA REYES"
       ],
       "3": [
         "Cristhofher Alejandro Vera Vera",
@@ -1882,7 +1890,8 @@
         "Juan Gabriel Collao Lopez",
         "Mauricio Alexis Aguirre Torres",
         "Valentin Ignacio Ibarra Martinez",
-        "Victor Emilio Contreras Ortiz"
+        "Victor Emilio Contreras Ortiz",
+        "MIGUEL ANGEL VARELA VERGARA"
       ],
       "2": [
         "Claudio Mauricio Rojas Pasten",
@@ -1898,7 +1907,8 @@
         "Jesus Francisco Ponce Tapia",
         "Mauricio Alexis Aguirre Torres",
         "Miguel Angel Varela Vergara",
-        "Valentin Ignacio Ibarra Martinez"
+        "Valentin Ignacio Ibarra Martinez",
+        "VICTOR PASTEN GONZALEZ"
       ],
       "3": [
         "Claudio Mauricio Rojas Pasten",
@@ -1913,7 +1923,8 @@
         "Javier Eduardo Pinilla Marín",
         "Mauricio Alexis Aguirre Torres",
         "Miguel Angel Varela Vergara",
-        "Valentin Ignacio Ibarra Martinez"
+        "Valentin Ignacio Ibarra Martinez",
+        "LUIS ARMANDO AGUIRRE TORRES"
       ],
       "4": [
         "Cristian Caimanque Valdes",
@@ -1922,7 +1933,9 @@
         "Francisco Javier Santander Errazuriz",
         "Gianni Eduardo Arancibia Romero",
         "Mauricio Alexis Aguirre Torres",
-        "Valentin Ignacio Ibarra Martinez"
+        "Valentin Ignacio Ibarra Martinez",
+        "JUAN LEYTON",
+        "EMILIO ENRIQUE OLIVARES MENDEZ"
       ],
       "5": [
         "Diego Cesar Marcelo Romero Varas",
@@ -1932,7 +1945,8 @@
         "Eduardo Andres Salinas Espejo",
         "Felipe Ignacio Espejo Martinez",
         "Javier Eduardo Pinilla Marín",
-        "Victor Emilio Contreras Ortiz"
+        "Victor Emilio Contreras Ortiz",
+        "ANDRES ALEXIS OLIVARES OGALDE"
       ],
       "6": [
         "Eduardo Andres Salinas Espejo",
@@ -1951,7 +1965,8 @@
         "Jonathan Alejandro Ramos Miranda",
         "Miguel Angel Varela Vergara",
         "Valentin Ignacio Ibarra Martinez",
-        "Victor Emilio Contreras Ortiz"
+        "Victor Emilio Contreras Ortiz",
+        "Jorge Alfredo Jorquera Dubo"
       ],
       "7": [
         "Andres Alexis Olivares Ogalde",
@@ -2087,7 +2102,9 @@
         "Jose Pablo Velasquez Mauad",
         "Mauricio Andrés Peyreblanque Kuhn",
         "Maximiliano Javier Vera Ferrer",
-        "Román Andrés Corral Callegari"
+        "Román Andrés Corral Callegari",
+        "Pablo Lazo Torres",
+        "Diego Espinosa González"
       ],
       "2": [
         "Diego Espinosa González",
@@ -2111,7 +2128,8 @@
         "Mauricio Andrés Peyreblanque Kuhn",
         "Pablo Lazo Torres",
         "Patricio Rendic",
-        "Sebastian Vega Martinez"
+        "Sebastian Vega Martinez",
+        "Diego Espinosa González"
       ],
       "4": [
         "Carlos Vásquez Aguirre",
@@ -2251,58 +2269,18 @@
       ]
     },
     "sr-camilo-enriquez": {
-      "1": [
-        "Claudio Tomas Ledezma Contreras",
-        "Juan Sebastian Serna Ospina"
-      ],
-      "2": [
-        "Franco Antonio Cisterna Reyes"
-      ],
-      "6": [
-        "Michel Emilio Maluenda Bugueño"
-      ]
+      "1": [],
+      "2": [],
+      "6": []
     },
     "sr-arsenal": {
-      "1": [
-        "Cristian Alberto Rojas Pasten",
-        "Diego Cesar Marcelo Romero Varas",
-        "Edgard Raul Leyton Montenegro",
-        "Emerson Arturo Araya Valderrama",
-        "Fabian Ignacio Santander Araya",
-        "Francisco Javier Diaz Gomila",
-        "Francisco Javier Santander Errazuriz",
-        "Gabriel Ignacio Rodriguez Ledezma",
-        "Gianni Eduardo Arancibia Romero",
-        "Miguel Angel Varela Vergara",
-        "Victor Pasten Gonzalez"
-      ],
-      "2": [
-        "Victor Pasten Gonzalez"
-      ],
-      "3": [
-        "Luis Armando Aguirre Torres"
-      ],
-      "4": [
-        "Emilio Enrique Olivares Mendez",
-        "Juan Leyton"
-      ],
-      "5": [
-        "Andres Alexis Olivares Ogalde"
-      ],
-      "6": [
-        "Eduardo Alejandro Largo Varela",
-        "Eduardo Alonso Ponce Tapia",
-        "Gianni Eduardo Arancibia Romero",
-        "Jesus Francisco Ponce Tapia",
-        "Jorge Alfredo Jorquera Dubo"
-      ],
-      "7": [
-        "Edgard Raul Leyton Montenegro",
-        "Gabriel Ignacio Rodríguez Ledezma",
-        "Gianni Eduardo Arancibia Romero",
-        "Jesus Francisco Ponce Tapia",
-        "Juan Gabriel Collao Lopez"
-      ]
+      "1": [],
+      "2": [],
+      "3": [],
+      "4": [],
+      "5": [],
+      "6": [],
+      "7": []
     },
     "jr-capibara": {
       "3": [
@@ -2310,23 +2288,13 @@
       ]
     },
     "sr-ariel-honores": {
-      "3": [
-        "Rodrigo Araya"
-      ],
-      "6": [
-        "Rodrigo Araya"
-      ]
+      "3": [],
+      "6": []
     },
     "sr-los-pibes": {
-      "1": [
-        "Diego Espinosa González"
-      ],
-      "3": [
-        "Diego Espinosa González"
-      ],
-      "6": [
-        "Cristóbal Ardiles Morales"
-      ]
+      "1": [],
+      "3": [],
+      "6": []
     },
     "jr-arquitectura": {
       "5": [
@@ -2341,22 +2309,15 @@
       ]
     },
     "sr-gunners": {
-      "4": [
-        "Andrés Tadeo Helena Lagos",
-        "Jhonny Esteban Jiménez Guzman"
-      ]
+      "4": []
     },
     "sr-equipo-8": {},
     "jr-40-grados": {},
     "sr-arquitectura": {
-      "7": [
-        "Mario Ibar Olivares"
-      ]
+      "7": []
     },
     "sr-historicos": {
-      "6": [
-        "Sebastian Araya Acha"
-      ]
+      "6": []
     },
     "jr-camilo-enriquez": {
       "5": [
