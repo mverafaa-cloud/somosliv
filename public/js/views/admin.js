@@ -246,7 +246,12 @@ async function reload(key, fn) {
   catch (err) { toast(err.message || 'Error al guardar', 'error'); }
 }
 function serieOptions(sel) {
-  return (C.config.series || []).map(s => `<option value="${esc(s.id)}" ${sel === s.id ? 'selected' : ''}>${esc(s.nombre)}</option>`).join('');
+  const base = (C.config.series || []).slice();
+  const NAMES = { 'senior-oro': 'Playoff Oro · Senior', 'senior-plata': 'Playoff Plata · Senior', 'senior-descenso': 'Descenso · Senior', 'libre-oro': 'Playoff Oro · Junior', 'libre-plata': 'Playoff Plata · Junior', 'libre-descenso': 'Descenso · Junior' };
+  // Preserva la serie actual aunque no esté en el catálogo base (p.ej. un playoff como
+  // 'senior-plata'); si no, al editar un partido de playoff el <select> la reseteaba a 'libre'.
+  if (sel && !base.some(s => s.id === sel)) base.push({ id: sel, nombre: NAMES[sel] || sel });
+  return base.map(s => `<option value="${esc(s.id)}" ${sel === s.id ? 'selected' : ''}>${esc(s.nombre)}</option>`).join('');
 }
 
 /* ---------- EQUIPOS ---------- */
