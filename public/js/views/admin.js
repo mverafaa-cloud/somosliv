@@ -5,7 +5,7 @@ import {
   getPartidos, savePartido, deletePartido,
   getDisciplina, saveTarjeta, deleteTarjeta,
   getGoleadores, saveGoleador, deleteGoleador,
-  FALTAS_ROJA, faltaById, sancionTexto, suspendidosParaFecha, AMARILLAS_PARA_SUSPENSION,
+  FALTAS_ROJA, faltaById, sancionTexto, suspendidosParaFecha, suspendidosProximaFecha, AMARILLAS_PARA_SUSPENSION,
   getInscripciones, updateInscripcion, deleteInscripcion,
   getPagos, savePagos,
   getJugadores, saveJugador, deleteJugador, importJugadores, getAsistencia, getPlanteles,
@@ -1049,6 +1049,8 @@ let editT = null;
 function renderDisciplina(el) {
   const byId = equiposById(C.equipos);
   const nmEq = id => byId[id]?.nombre || id || '—';
+  const SERIE_LBL = { libre: 'Junior', senior: 'Senior', 'senior-oro': 'Oro · Senior', 'senior-plata': 'Plata · Senior', 'senior-descenso': 'Descenso · Senior', 'libre-oro': 'Oro · Junior', 'libre-plata': 'Plata · Junior', 'libre-descenso': 'Descenso · Junior' };
+  const serieNombreCorto = id => SERIE_LBL[id] || id;
   const cards = C.disciplina.slice();
 
   // Fechas disponibles (de tarjetas + fixture)
@@ -1057,13 +1059,11 @@ function renderDisciplina(el) {
   C.partidos.forEach(p => { if (p.fecha_num != null) fechasSet.add(+p.fecha_num); });
   const fechas = [...fechasSet].sort((a, b) => a - b);
 
-  // Próxima fecha (para el panel de suspendidos)
-  const prog = C.partidos.filter(p => p.estado !== 'finalizado' && p.estado !== 'reprogramado' && p.fecha_num != null).map(p => +p.fecha_num);
-  const jug = C.partidos.filter(p => p.estado === 'finalizado' && p.fecha_num != null).map(p => +p.fecha_num);
-  const maxJug = jug.length ? Math.max(...jug) : 0;
-  const futProg = prog.filter(f => f > maxJug);
-  const proxFecha = futProg.length ? Math.min(...futProg) : (prog.length ? Math.min(...prog) : (jug.length ? maxJug + 1 : null));
-  const susp = proxFecha ? suspendidosParaFecha(cards, proxFecha) : [];
+  // Suspendidos para la próxima fecha de cada serie (incluye playoffs y el
+  // arrastre desde la fase regular). Se calcula por serie porque Junior, Senior
+  // y los playoffs numeran las fechas por separado.
+  const susp = suspendidosProximaFecha(cards, C.partidos);
+  const multiSerieSusp = new Set(susp.map(s => s.serieId)).size > 1;
 
   const list = cards
     .filter(t => discFecha === 'all' || +t.fecha_num === +discFecha)
@@ -1112,14 +1112,13 @@ function renderDisciplina(el) {
   }
 
   el.innerHTML = `
-    ${proxFecha ? `
     <div class="card mb-3" style="border-left:4px solid var(--c-red)">
-      <div class="spread" style="align-items:center"><h3 style="margin:0">${icon('shield', { size: 18 })} Suspendidos para la Fecha ${proxFecha}</h3><span class="muted" style="font-size:.85rem">Se calcula solo</span></div>
+      <div class="spread" style="align-items:center"><h3 style="margin:0">${icon('shield', { size: 18 })} Suspendidos para la próxima fecha</h3><span class="muted" style="font-size:.85rem">Se calcula solo</span></div>
       ${susp.length ? `<div class="table-wrap mt-2"><table class="tbl">
-        <thead><tr><th>Jugador</th><th>Equipo</th><th>Motivo</th><th>Se pierde</th></tr></thead>
-        <tbody>${susp.map(s => `<tr><td style="font-weight:700">${esc(s.nombre || '—')}</td><td class="muted">${esc(nmEq(s.equipo))}</td><td class="muted">${esc(s.motivo || '')}</td><td><span class="pill pill-red">${s.definitivo ? 'Expulsado' : (s.hasta > s.desde ? `Fechas ${s.desde}–${s.hasta}` : `Fecha ${s.desde}`)}</span></td></tr>`).join('')}</tbody>
+        <thead><tr><th>Jugador</th><th>Equipo</th>${multiSerieSusp ? '<th>Serie</th>' : ''}<th>Motivo</th><th>Se pierde</th></tr></thead>
+        <tbody>${susp.map(s => { const n = isFinite(s.hasta) ? Math.max(1, s.hasta - s.fechaObjetivo + 1) : 0; return `<tr><td style="font-weight:700">${esc(s.nombre || '—')}</td><td class="muted">${esc(nmEq(s.equipo))}</td>${multiSerieSusp ? `<td class="muted">${esc(serieNombreCorto(s.serieId))}</td>` : ''}<td class="muted">${esc(s.motivo || '')}${s.arrastre ? ' · arrastre de fase regular' : ''}</td><td><span class="pill pill-red">${s.definitivo ? 'Expulsado' : (n > 1 ? `${n} fechas` : '1 fecha')}</span></td></tr>`; }).join('')}</tbody>
       </table></div>` : '<p class="muted mt-1" style="margin:0">Sin suspendidos para la próxima fecha ✔️</p>'}
-    </div>` : ''}
+    </div>
 
     ${editorHTML}
 

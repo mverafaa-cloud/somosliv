@@ -115,14 +115,15 @@ export async function showDisciplina() {
     const maxJug = jug.length ? Math.max(...jug) : 0;
     const futProg = prog.filter(f => f > maxJug);
     proxPorSerie[sid] = futProg.length ? Math.min(...futProg)
-      : (prog.length ? Math.min(...prog) : (jug.length ? maxJug + 1 : null));
+      : (prog.length ? Math.min(...prog) : null);
   });
-  const serieNombre = (sid) => (series.find(s => s.id === sid) || {}).nombre || (sid === 'libre' ? 'Junior' : (sid === 'senior' ? 'Senior' : sid));
+  const SERIE_LBL = { 'senior-oro': 'Oro · Senior', 'senior-plata': 'Plata · Senior', 'senior-descenso': 'Descenso · Senior', 'libre-oro': 'Oro · Junior', 'libre-plata': 'Plata · Junior', 'libre-descenso': 'Descenso · Junior' };
+  const serieNombre = (sid) => (series.find(s => s.id === sid) || {}).nombre || SERIE_LBL[sid] || (sid === 'libre' ? 'Junior' : (sid === 'senior' ? 'Senior' : sid));
 
   function renderSusp() {
     const el = document.getElementById('disc-susp');
     if (!el) return;
-    const todas = calcSuspensiones(tarjetas);
+    const todas = calcSuspensiones(tarjetas, partidos);
     const sids = (_serie === 'all' ? serieIds : [_serie]).filter(sid => proxPorSerie[sid] != null);
     const susp = [];
     sids.forEach(sid => {

@@ -263,7 +263,7 @@ export function sancionTexto(f) {
 // Calcula todas las suspensiones vigentes a partir del registro de disciplina.
 // Rojas: usan el nº de fechas resuelto (auto = 1; comité = lo que fije el admin). Doble amarilla = sin suspensión.
 // Amarillas: cada AMARILLAS_PARA_SUSPENSION acumuladas gatillan 1 fecha (la inmediatamente siguiente).
-export function calcSuspensiones(disciplina) {
+export function calcSuspensiones(disciplina, partidos = null) {
   const out = [];
   (disciplina || []).filter(d => d.tipo === 'roja').forEach(d => {
     const F = +d.fecha_num; if (!F) return;
@@ -286,12 +286,70 @@ export function calcSuspensiones(disciplina) {
       }
     });
   });
+  // --- Arrastre de suspensiones de la fase regular a los playoffs -----------
+  // Una sanción de la fase regular (serie 'senior' / 'libre') cuyas fechas se
+  // extienden más allá de la última fecha jugada de esa serie se cumple en los
+  // próximos partidos de playoff del equipo. Los playoffs usan otra serie
+  // (senior-oro, senior-plata, …) y renumeran la fecha desde 1, así que se
+  // genera una entrada "espejo" en la serie de playoff del equipo con la fecha
+  // ya traducida (fecha regular − última fecha regular de esa serie).
+  if (partidos && partidos.length) {
+    const esPlayoff = sid => String(sid || '').includes('-');
+    const ultReg = {}, playoffDeEquipo = {};
+    partidos.forEach(p => {
+      const sid = p.serie || 'libre';
+      if (esPlayoff(sid)) {
+        [p.local, p.visita].forEach(eq => { if (eq) playoffDeEquipo[eq] = sid; });
+      } else if (p.fecha_num != null) {
+        ultReg[sid] = Math.max(ultReg[sid] || 0, +p.fecha_num);
+      }
+    });
+    out.slice().forEach(s => {
+      const parent = s.serie || 'libre';
+      if (esPlayoff(parent)) return;
+      const corte = ultReg[parent];
+      if (!corte || !(s.hasta > corte)) return;
+      const pserie = playoffDeEquipo[s.equipo];
+      if (!pserie) return;
+      out.push({ ...s, serie: pserie, desde: Math.max(1, s.desde - corte), hasta: isFinite(s.hasta) ? s.hasta - corte : Infinity, arrastre: true, serieOrigen: parent });
+    });
+  }
   return out;
 }
 export function suspendidosParaFecha(disciplina, fechaObjetivo) {
   if (!fechaObjetivo) return [];
   return calcSuspensiones(disciplina).filter(s => s.desde <= fechaObjetivo && fechaObjetivo <= s.hasta);
 }
+
+// Suspendidos para la PRÓXIMA fecha de cada serie con partidos pendientes
+// (incluye playoffs y el arrastre desde la fase regular). Deduplica por
+// jugador+serie y adjunta serieId y la fecha objetivo (fechaObjetivo) de cada uno.
+export function suspendidosProximaFecha(disciplina, partidos) {
+  const susp = calcSuspensiones(disciplina, partidos);
+  const serieIds = [...new Set((partidos || []).map(p => p.serie || 'libre'))];
+  const prox = {};
+  serieIds.forEach(sid => {
+    const ps = (partidos || []).filter(p => (p.serie || 'libre') === sid && p.fecha_num != null);
+    const prog = ps.filter(p => p.estado !== 'finalizado' && p.estado !== 'reprogramado').map(p => +p.fecha_num);
+    const jug = ps.filter(p => p.estado === 'finalizado').map(p => +p.fecha_num);
+    const maxJug = jug.length ? Math.max(...jug) : 0;
+    const fut = prog.filter(f => f > maxJug);
+    prox[sid] = fut.length ? Math.min(...fut) : (prog.length ? Math.min(...prog) : null);
+  });
+  const seen = new Set(), res = [];
+  serieIds.forEach(sid => {
+    const pf = prox[sid];
+    if (pf == null) return;
+    susp.filter(s => (s.serie || 'libre') === sid && s.desde <= pf && pf <= s.hasta).forEach(s => {
+      const k = (s.jugadorId || s.nombre) + '|' + sid;
+      if (seen.has(k)) return;
+      seen.add(k);
+      res.push({ ...s, serieId: sid, fechaObjetivo: pf });
+    });
+  });
+  return res;
+}
+
 // Total de amarillas por jugador (para mostrar acumulación).
 export function amarillasPorJugador(disciplina) {
   const m = {};
