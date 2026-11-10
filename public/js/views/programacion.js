@@ -9,6 +9,12 @@ let _sel = { series: null, fechas: 'all' };
 let _fx = 'all'; // fecha seleccionada en el fixture publicado
 let _fxSerie = null; // serie seleccionada en el fixture publicado
 
+// Etiqueta de la "fecha": en playoffs de eliminacion directa (los partidos
+// traen `ronda`) mostramos el nombre de la ronda en vez de "Fecha N".
+const RONDA_LBL = { semifinal: 'Semifinales', final: 'Final', descenso: 'Descenso', cuartos: 'Cuartos de final', tercer: 'Tercer lugar' };
+function rondaDe(rd) { return (rd.partidos || []).map(p => p.ronda).find(Boolean) || null; }
+function etiquetaFecha(rd) { const r = rondaDe(rd); return r ? (RONDA_LBL[r] || ('Fecha ' + rd.n)) : ('Fecha ' + rd.n); }
+
 export async function showProgramacion() {
   mount(loading());
   const [config, partidos, equipos, fixture] = await Promise.all([getConfig(), getPartidos(), getEquipos(), getFixture()]);
@@ -136,9 +142,10 @@ function renderPublicFixture(config, fx) {
     const rounds = cur.fechas.slice().sort((a, b) => a.n - b.n);
     if (!rounds.some(r => r.n === _fx)) _fx = 'all';
     const el = document.getElementById('fx-fechas');
-    el.innerHTML = rounds.length ? `<span class="chips-label">Fecha</span>
+    const _lblPref = rounds.some(rondaDe) ? 'Ronda' : 'Fecha';
+    el.innerHTML = rounds.length ? `<span class="chips-label">${_lblPref}</span>
       <button class="chip ${_fx === 'all' ? 'active' : ''}" data-fx="all">Todas</button>
-      ${rounds.map(r => `<button class="chip ${_fx === r.n ? 'active' : ''}" data-fx="${r.n}">Fecha ${r.n}</button>`).join('')}` : '';
+      ${rounds.map(r => `<button class="chip ${_fx === r.n ? 'active' : ''}" data-fx="${r.n}">${esc(etiquetaFecha(r))}</button>`).join('')}` : '';
     el.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
       _fx = c.dataset.fx === 'all' ? 'all' : Number(c.dataset.fx); draw();
     }));
@@ -203,7 +210,7 @@ function fechaBlock(rd, config = {}) {
   return `
     <div class="card mb-2 fx-fecha">
       <div class="fx-fecha-head">
-        <h3 style="margin:0">${icon('calendar', { size: 18 })} Fecha ${rd.n} <span class="muted" style="font-weight:400;font-size:.9rem">· ${esc(fmtDateLong(rd.fecha))}</span></h3>
+        <h3 style="margin:0">${icon('calendar', { size: 18 })} ${esc(etiquetaFecha(rd))} <span class="muted" style="font-weight:400;font-size:.9rem">· ${esc(fmtDateLong(rd.fecha))}</span></h3>
         ${nGrab ? `<span class="muted fx-fecha-sub">${icon('video', { size: 14 })} ${nGrab} grabados · cámaras cancha ${cams.join(' y ')}</span>` : ''}
       </div>
       <div class="table-wrap fx-desktop"><table class="tbl fixture-pub">
@@ -277,5 +284,5 @@ function matchCard(p, byId, series) {
     <div class="vs">${mid}</div>
     <div class="team">${teamLogo(byId[p.visita]?.logo, V, 34)}<span class="name">${esc(V)}</span></div>
   </div>
-  <div class="match-meta-row" style="margin:-4px 4px 12px">${serieName ? `<span class="pill pill-grey">${esc(serieName)}</span>` : ''}${p.fecha_num ? `<span class="pill pill-grey">Fecha ${esc(p.fecha_num)}</span>` : ''}</div>`;
+  <div class="match-meta-row" style="margin:-4px 4px 12px">${serieName ? `<span class="pill pill-grey">${esc(serieName)}</span>` : ''}${p.ronda ? `<span class="pill pill-grey">${esc(RONDA_LBL[p.ronda] || ('Fecha ' + p.fecha_num))}</span>` : (p.fecha_num ? `<span class="pill pill-grey">Fecha ${esc(p.fecha_num)}</span>` : '')}</div>`;
 }

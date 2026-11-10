@@ -450,7 +450,7 @@ function assembleFixture(partidos, equipos) {
       horario: p.hora, cancha: p.cancha, camarinLocal: cam[0], camarinVisita: cam[1],
       grabado: !!p.grabado, clasico: !!p.clasico, premio: p.premio,
       estado: p.estado, golesLocal: p.golesLocal, golesVisita: p.golesVisita,
-      fecha: p.fecha, amistoso: !!p.amistoso
+      fecha: p.fecha, amistoso: !!p.amistoso, ronda: p.ronda || null
     };
   };
   // Una serie por cada 'serie' presente en partidos (libre = Junior, senior = Senior, ...)
