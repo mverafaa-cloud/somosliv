@@ -8,7 +8,8 @@
       5,
       6,
       7,
-      8
+      8,
+      9
     ],
     "senior": [
       1,
@@ -162,6 +163,25 @@
         "Matias Tristain",
         "Miguel Cena",
         "Tomas Chulak"
+      ],
+      "9": [
+        "Agustín Nauman",
+        "Agustín Opaso",
+        "Alan Burns",
+        "Antonio Cayó",
+        "Isaac Raboy",
+        "Javier Ríos",
+        "Joaquín Romero",
+        "Jorge González",
+        "Jorge Torres",
+        "José Andrade",
+        "José López",
+        "Josepablo Rojas",
+        "Luciano Stevenson",
+        "Marcos Vega",
+        "Martín Pando",
+        "Matías Brain",
+        "Tomas Chulak"
       ]
     },
     "jr-bunker": {
@@ -284,6 +304,23 @@
         "Mauricio Alfaro",
         "Mauricio Tabilo",
         "Máximo Soto"
+      ],
+      "9": [
+        "Andres Martinez",
+        "Benjamín Valenzuela",
+        "Cristian Huerta",
+        "Diego Olivares",
+        "Engelbert Spencer",
+        "Fabio Veliz",
+        "Felipe Romo Pizarro",
+        "Fernando Soto",
+        "Gianny Orozco",
+        "Javier Musrri",
+        "Joaquín Villanueva",
+        "Mauricio Alfaro",
+        "Mauricio Tabilo",
+        "Sebastián Recabarren",
+        "Yerko Jerez Carvajal"
       ]
     },
     "jr-los-pibes": {
@@ -413,6 +450,27 @@
         "Román Corral Callegari",
         "Simon Muñoz",
         "Victor Daniel Perez Ceballos"
+      ],
+      "9": [
+        "Francesco Corral Callegari",
+        "Gaspar Silva",
+        "Gerardo Torres",
+        "Joaquín Cerezo",
+        "Juan Ignacio Silva",
+        "Lucas Martínez Callegari",
+        "Luciano Araya Escobar",
+        "Martín Redolfi",
+        "Matheiu Peyreblanque Kuhn",
+        "Matías Gallardo",
+        "Mayko Flores",
+        "Moises Henriquez",
+        "Nicolás Javier Gallo Carmona",
+        "Pablo Quintana",
+        "Patricio Alfaro",
+        "Raúl Hernán palacios rivera",
+        "Román Corral Callegari",
+        "Sebastián Gutiérrez",
+        "Simon Muñoz"
       ]
     },
     "jr-capibara": {
@@ -552,6 +610,23 @@
         "Patricio Hernan Olate Duran",
         "Raul Ignacio Rojas Leiva",
         "Ricardo Guerrero Rodriguez"
+      ],
+      "9": [
+        "ALEX PATRICIO ROCO BOUEY",
+        "BENJAMIN SEBASTIAN ROJAS LEIVA",
+        "CHRISTOPHER LOPEZ MADARIAGA",
+        "JAVIER JESUS TORREJON ALVAREZ",
+        "JORGE ANDRES DIAZ VARELA",
+        "LEONARDO ALBERTO FLORES PIÑONES",
+        "MARCELO ESTAY CORTES",
+        "MARCELO SEBASTIAN JORQUERA SOTO",
+        "MARCOS JAVIER CONTRERAS AGUIRRE",
+        "MARTIN IGNACIO GONZALES MARIN",
+        "MATIAS LOPEZ BRAVO",
+        "NICOLAS IGNACIO CASTILLO JORQUERA",
+        "PATRICIO HERNAN OLATE DURAN",
+        "RAUL IGNACIO ROJAS LEIVA",
+        "RICARDO GUERRERO RODRIGUEZ"
       ]
     },
     "jr-mesa-cuadrada": {
@@ -688,6 +763,20 @@
         "Michel Maluenda",
         "Oscar Carrasco",
         "Pablo Largo"
+      ],
+      "9": [
+        "Diego Anacona",
+        "Diego Blanco",
+        "Fabián Carvajal",
+        "Ignacio Núñez",
+        "Jaime Contreras",
+        "Javier Valdebenito",
+        "Joaquin Jorquera",
+        "Luis Gutierrez",
+        "Matías Huinao",
+        "Maximiliano Vera",
+        "Máximo Díaz",
+        "Pablo Largo"
       ]
     },
     "jr-los-prados": {
@@ -820,6 +909,24 @@
         "Nicolas Pefaur Yapur",
         "Nicolas Quezada Pinto",
         "Nicolas Vargas Rivera"
+      ],
+      "9": [
+        "andres navas martinez",
+        "cristobal gonzalez Luengo",
+        "diego anacona peña",
+        "diego carmona jofre",
+        "diego egaña ibarra",
+        "diego mario rivera yapur",
+        "diego rivera rodriguez",
+        "Diego tabilo Ortiz",
+        "felipe barraza mena",
+        "Felipe González Zuleta",
+        "joaquin Castillo",
+        "Julio egaña tabilo",
+        "matias diaz santander",
+        "Mauricio Rodriguez Gonzalez",
+        "nicolas pefaur yapur",
+        "osvaldo esquivel castillo"
       ]
     },
     "jr-huracan": {
@@ -961,6 +1068,25 @@
         "Pedro Cifuentes",
         "Raul Pavez Jorquera",
         "Rodrigo Cortes"
+      ],
+      "9": [
+        "BASTIAN VALENZUELA",
+        "CARLOS ESQUIVEL",
+        "CLAUDIO ALVAREZ",
+        "CRISTIAN ARAYA",
+        "CRISTIAN GAJARDO",
+        "FRANCISCO VILLARROEL",
+        "FRANCO OYANADEL",
+        "GUILLERMO ALVAREZ",
+        "LUCAS GALVEZ",
+        "NICOLAS OROSTEGUI",
+        "NICOLAS PLAZA",
+        "OWEN GAJARDO",
+        "PABLO COLLAO",
+        "PATRICIO CAZO",
+        "VICENTE CODOCEO",
+        "VICTOR CONTRERAS",
+        "WILSON ARANCIBIA"
       ]
     },
     "jr-camilo-enriquez": {
@@ -1086,6 +1212,26 @@
         "Misael Esteban Rojas Guzman",
         "Tomas Luciano Rosende Tirado",
         "Victor Israel Tapia Escobar"
+      ],
+      "9": [
+        "BAYRON GAEL ALEXANDER CANIPA",
+        "CAMILO ALFREDO RAMIREZ MOYANO",
+        "CRISTOPHER ALEJANDRO TORRES FLORES",
+        "CRISTOPHER ALEXIS FRE RUBINA",
+        "DYLAN PATRICIO CISTERNAS VALENZUELA",
+        "GUSTAVO NICOLAS FUENTEALBA TOBAR",
+        "IGNACIO ALFONSO FREDES ALCAYAGA",
+        "IVAN ALEJANDRO CONTRERAS ARAYA",
+        "KEVIN ALEXIS LISERA CUEVAS",
+        "KEVIN NELSON GUAJARDO BARRERA",
+        "MIGUEL ISAIAS MONTANO ESPINOZA",
+        "MISAEL ESTEBAN ROJAS GUZMAN",
+        "RAUL ALBERTO CORTES GARCIA",
+        "RAUL ENRIQUE ROJAS GUZMAN",
+        "RICARDO JOSE CALDERON GARCIA",
+        "RODRIGO NICOLAS ROJAS CASTILLO",
+        "TOMAS LUCIANO ROSENDE TIRADO",
+        "VICTOR ISRAEL TAPIA ESCOBAR"
       ]
     },
     "jr-arquitectura": {
@@ -1225,6 +1371,21 @@
         "Marcelo Serrano Diaz",
         "Maximiliano Contreras Rodriguez",
         "Patricio Chirino"
+      ],
+      "9": [
+        "AGUSTÍN OPAZO",
+        "BRANDON URZUA ARAYA",
+        "BRYAN OSANDON ADAROS",
+        "CRISTOPHER BARRAZA SOTO",
+        "DANIEL BAHAMONDES",
+        "ENZO BARRAZA SALINAS",
+        "GABRIEL VIDELA BLACK",
+        "JHON VALERO MARTINEZ",
+        "JORGE LAGOS RIVERA",
+        "LUCAS ASENJO SANHUEZA",
+        "MAICOL CAMPOS RAMOS",
+        "MARCELO OPAZO",
+        "ROBINSON AGUILERA JIL"
       ]
     },
     "jr-bayern": {
@@ -1356,6 +1517,21 @@
         "Juan Carlos Marquez Arvelo",
         "Luis Felipe Castillo Camacho",
         "Maicol Jesus Rojas Rojas",
+        "Sergio Pizarro Castillo"
+      ],
+      "9": [
+        "Alem Gorosito Gomez",
+        "Alvaro Maximiliano Rodriguez Araya",
+        "Benjamin Andres Maluenda Valenzuela",
+        "Deiker Maldonado",
+        "Diego Hernan Carvajal Iturrieta",
+        "Gonzalo Perez Hernandez",
+        "Hugo Andres Roco",
+        "Javier Salazar",
+        "jorge Andre Briceño Rivas",
+        "Juan Carlos Marquez Arvelo",
+        "Luis Francisco Sena Vergara",
+        "Sebastian Callegari Moreno",
         "Sergio Pizarro Castillo"
       ]
     },
@@ -2237,6 +2413,10 @@
       ],
       "8": [
         "Diego Anacona Peña"
+      ],
+      "9": [
+        "franco Delgado Costanzi",
+        "jose cienfuegos astroza"
       ]
     },
     "jr-huracan": {
@@ -2261,6 +2441,10 @@
       ],
       "7": [
         "Patricio Hernandez"
+      ],
+      "9": [
+        "Felipe Aracena Vargas",
+        "Ignacio Andres Requena Beck"
       ]
     },
     "jr-bunker": {
@@ -2280,6 +2464,9 @@
         "Gaston Huerta",
         "Mauricio Alfaro",
         "Fabio Vega"
+      ],
+      "9": [
+        "Esteban Valencia Díaz"
       ]
     },
     "sr-camilo-enriquez": {
@@ -2301,6 +2488,9 @@
     "jr-capibara": {
       "3": [
         "Gonzalo Lopez Madariaga"
+      ],
+      "9": [
+        "FABRIZIO STEFANO ANFOSSI PAVEZ"
       ]
     },
     "sr-ariel-honores": {
