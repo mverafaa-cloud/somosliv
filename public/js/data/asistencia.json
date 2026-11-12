@@ -213,7 +213,9 @@
         "Joaquín Villanueva",
         "Mauricio Tabilo",
         "Sebastián Recabarren",
-        "Yerko Jerez Carvajal"
+        "Yerko Jerez Carvajal",
+        "Carlos Barrios Arias",
+        "Cristian Fernández"
       ],
       "3": [
         "David Guerra",
@@ -228,7 +230,8 @@
         "Mauricio Tabilo",
         "Nicolás Cortes",
         "Roy Orozco",
-        "Sebastián Recabarren"
+        "Sebastián Recabarren",
+        "Joaquín Villanueva"
       ],
       "4": [
         "Diego Olivares",
@@ -255,7 +258,8 @@
         "Joaquín Villanueva",
         "Martín Meneses",
         "Mauricio Tabilo",
-        "Yerko Jerez Carvajal"
+        "Yerko Jerez Carvajal",
+        "Nicolás Cortes"
       ],
       "6": [
         "Andres Martinez",
@@ -285,7 +289,9 @@
         "Joaquín Gatica",
         "Joaquín Villanueva",
         "Máximo Soto",
-        "Roberto Figueroa"
+        "Roberto Figueroa",
+        "Benjamín Valenzuela",
+        "Mauricio Alfaro"
       ],
       "8": [
         "Benjamin Valenzuela",
@@ -387,7 +393,8 @@
         "Mauricio Peyreblanque Kuhn",
         "Mayko Flores",
         "Pablo Quintana",
-        "Sebastián Gutiérrez"
+        "Sebastián Gutiérrez",
+        "Simon Muñoz"
       ],
       "5": [
         "Dani Vene Perez",
@@ -461,7 +468,6 @@
         "Luciano Araya Escobar",
         "Martín Redolfi",
         "Matheiu Peyreblanque Kuhn",
-        "Matías Gallardo",
         "Mayko Flores",
         "Moises Henriquez",
         "Nicolás Javier Gallo Carmona",
@@ -646,7 +652,6 @@
         "Matías Huinao",
         "Matías Pizarro",
         "Matías Urizar",
-        "Maximiliano Vera",
         "Máximo Díaz",
         "Oscar Carrasco"
       ],
@@ -2388,17 +2393,11 @@
   },
   "dudosos": {
     "jr-los-pibes": {
-      "1": [
-        "Sebastián Gutiérrez"
-      ],
-      "4": [
-        "Simón Muñoz"
-      ]
+      "1": [],
+      "4": []
     },
     "jr-mesa-cuadrada": {
-      "1": [
-        "Maximiliano Vera"
-      ]
+      "1": []
     },
     "jr-los-prados": {
       "1": [
@@ -2448,26 +2447,14 @@
       ]
     },
     "jr-bunker": {
-      "2": [
-        "Carlos Barrios Arias",
-        "Cristian Fernández"
-      ],
-      "3": [
-        "Joaquín Villanueva"
-      ],
-      "5": [
-        "Nicolás Cortes"
-      ],
+      "2": [],
+      "3": [],
+      "5": [],
       "7": [
-        "Andres Martinez",
-        "Benjamin Valenzuela",
         "Gaston Huerta",
-        "Mauricio Alfaro",
         "Fabio Vega"
       ],
-      "9": [
-        "Esteban Valencia Díaz"
-      ]
+      "9": []
     },
     "sr-camilo-enriquez": {
       "1": [],
@@ -2532,9 +2519,7 @@
       "6": []
     },
     "jr-camilo-enriquez": {
-      "5": [
-        "RICARDO JOSE CALDERON GARCIA"
-      ]
+      "5": []
     }
   }
 }
