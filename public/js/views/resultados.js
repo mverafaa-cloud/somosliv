@@ -103,11 +103,15 @@ function resultCard(p, byId, series) {
   const L = byId[p.local]?.nombre || p.local;
   const V = byId[p.visita]?.nombre || p.visita;
   const gl = +p.golesLocal, gv = +p.golesVisita;
+  const hasPen = p.penalesLocal != null && p.penalesVisita != null && gl === gv;
+  const pl = +p.penalesLocal, pv = +p.penalesVisita;
+  const lWin = gl > gv || (hasPen && pl > pv);
+  const vWin = gv > gl || (hasPen && pv > pl);
   const serieName = p.amistoso ? 'Amistoso' : ((series.find(s => s.id === p.serie) || {}).nombre || '');
   return `
   <div class="match-card finished">
-    <div class="team home"><span class="name" style="${gl > gv ? 'font-weight:800' : ''}">${esc(L)}</span>${teamLogo(byId[p.local]?.logo, L, 34)}</div>
-    <div class="vs"><div class="score">${gl} - ${gv}</div><div class="meta">${serieName ? esc(serieName) : 'Final'}</div></div>
-    <div class="team">${teamLogo(byId[p.visita]?.logo, V, 34)}<span class="name" style="${gv > gl ? 'font-weight:800' : ''}">${esc(V)}</span></div>
+    <div class="team home"><span class="name" style="${lWin ? 'font-weight:800' : ''}">${esc(L)}</span>${teamLogo(byId[p.local]?.logo, L, 34)}</div>
+    <div class="vs"><div class="score">${gl} - ${gv}</div>${hasPen ? `<div class="meta" style="color:var(--c-brand);font-weight:800">Penales ${pl}–${pv}</div>` : ''}<div class="meta">${serieName ? esc(serieName) : 'Final'}</div></div>
+    <div class="team">${teamLogo(byId[p.visita]?.logo, V, 34)}<span class="name" style="${vWin ? 'font-weight:800' : ''}">${esc(V)}</span></div>
   </div>`;
 }

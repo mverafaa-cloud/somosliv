@@ -220,6 +220,7 @@ function renderResultados(el) {
                 <input class="rscore" type="number" inputmode="numeric" min="0" data-gl="${esc(p.id)}" value="${p.golesLocal ?? ''}" placeholder="0"></div>
               <div class="rteam"><span class="rteam-name">${esc(V)}</span>
                 <input class="rscore" type="number" inputmode="numeric" min="0" data-gv="${esc(p.id)}" value="${p.golesVisita ?? ''}" placeholder="0"></div>
+              ${String(p.serie||'').includes('-') ? `<div class="rpen"><span class="rpen-lab">Penales (si hubo empate)</span><div class="rpen-in"><input class="rscore rscore-sm" type="number" inputmode="numeric" min="0" data-pl="${esc(p.id)}" value="${p.penalesLocal ?? ''}" placeholder="–"><span>-</span><input class="rscore rscore-sm" type="number" inputmode="numeric" min="0" data-pv="${esc(p.id)}" value="${p.penalesVisita ?? ''}" placeholder="–"></div></div>` : ''}
               <div class="rmatch-actions">
                 <button class="btn btn-primary btn-block" data-saveres="${esc(p.id)}">Guardar</button>
                 ${fin ? `<button class="btn btn-ghost" data-reabrir="${esc(p.id)}">Reabrir</button>` : ''}
@@ -234,7 +235,9 @@ function renderResultados(el) {
     const gl = el.querySelector(`[data-gl="${id}"]`).value;
     const gv = el.querySelector(`[data-gv="${id}"]`).value;
     const both = gl !== '' && gv !== '';
-    reload('res', () => savePartido({ id, golesLocal: gl === '' ? null : +gl, golesVisita: gv === '' ? null : +gv, estado: both ? 'finalizado' : 'programado' }));
+    const _pe = el.querySelector(`[data-pl="${id}"]`), _pvx = el.querySelector(`[data-pv="${id}"]`);
+    const plv = _pe ? _pe.value : '', pvv = _pvx ? _pvx.value : '';
+    reload('res', () => savePartido({ id, golesLocal: gl === '' ? null : +gl, golesVisita: gv === '' ? null : +gv, penalesLocal: plv === '' ? null : +plv, penalesVisita: pvv === '' ? null : +pvv, estado: both ? 'finalizado' : 'programado' }));
   });
   el.querySelectorAll('[data-reabrir]').forEach(b => b.onclick = () => {
     reload('res', () => savePartido({ id: b.dataset.reabrir, estado: 'programado' }));
