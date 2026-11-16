@@ -21,16 +21,20 @@ export async function showResultados() {
     return;
   }
 
-  // Fechas disponibles (de partidos finalizados), ordenadas por calendario
-  const fechaDate = {};
-  finished.forEach(p => {
-    if (p.fecha_num == null) return;
-    const d = parseDate(p.fecha);
-    if (!(p.fecha_num in fechaDate) || (d && d < parseDate(fechaDate[p.fecha_num]))) fechaDate[p.fecha_num] = p.fecha;
-  });
-  const fechas = Object.keys(fechaDate).map(Number).sort((a, b) => parseDate(fechaDate[a]) - parseDate(fechaDate[b]));
+  // Periodos: fechas regulares + rondas de playoff (Semifinales, Descenso, Finales).
+  const periodOf = (p) => {
+    const s = p.serie || '', r = p.ronda || '';
+    if (r === 'final' || s.endsWith('-final')) return { key: 'final', label: 'Finales', order: 10002 };
+    if (r === 'descenso' || s.endsWith('-descenso')) return { key: 'descenso', label: 'Descenso', order: 10001 };
+    if (r === 'semifinal') return { key: 'semi', label: 'Semifinales', order: 10000 };
+    if (s.includes('-')) return { key: 'po' + (p.fecha_num ?? ''), label: 'Playoffs · Fecha ' + (p.fecha_num ?? ''), order: 9000 + (+p.fecha_num || 0) };
+    return { key: 'f' + (p.fecha_num ?? 0), label: 'Fecha ' + (p.fecha_num ?? 0), order: (+p.fecha_num || 0) };
+  };
+  const periodMap = {};
+  finished.forEach(p => { const pr = periodOf(p); if (!periodMap[pr.key]) periodMap[pr.key] = pr; });
+  const periods = Object.values(periodMap).sort((a, b) => a.order - b.order);
 
-  _sel = { serie: 'all', fechas: 'all' };
+  _sel = { serie: 'all', periods: 'all' };
 
   const inner = `
   <div class="container">
@@ -49,11 +53,11 @@ export async function showResultados() {
         <button class="chip ${_sel.serie === 'all' ? 'active' : ''}" data-serie="all">Todas</button>
         ${series.map(s => `<button class="chip ${_sel.serie === s.id ? 'active' : ''}" data-serie="${esc(s.id)}">${esc(s.nombre)}</button>`).join('')}
       </div>`;
-    const fechaRow = fechas.length ? `
+    const fechaRow = periods.length ? `
       <div class="chips filter-row" id="res-fecha">
         <span class="chips-label">Fecha</span>
-        <button class="chip ${_sel.fechas === 'all' ? 'active' : ''}" data-fecha="all">Todas</button>
-        ${fechas.map(f => `<button class="chip ${_sel.fechas !== 'all' && _sel.fechas.includes(f) ? 'active' : ''}" data-fecha="${f}">Fecha ${f}</button>`).join('')}
+        <button class="chip ${_sel.periods === 'all' ? 'active' : ''}" data-per="all">Todas</button>
+        ${periods.map(pr => `<button class="chip ${_sel.periods !== 'all' && _sel.periods.includes(pr.key) ? 'active' : ''}" data-per="${esc(pr.key)}">${esc(pr.label)}</button>`).join('')}
       </div>` : '';
     document.getElementById('res-filters').innerHTML = serieRow + fechaRow;
 
@@ -63,15 +67,14 @@ export async function showResultados() {
     }));
 
     document.querySelectorAll('#res-fecha .chip').forEach(c => c.addEventListener('click', () => {
-      const val = c.dataset.fecha;
-      if (val === 'all') { _sel.fechas = 'all'; }
+      const val = c.dataset.per;
+      if (val === 'all') { _sel.periods = 'all'; }
       else {
-        const f = Number(val);
-        if (_sel.fechas === 'all') _sel.fechas = [f];
+        if (_sel.periods === 'all') _sel.periods = [val];
         else {
-          const i = _sel.fechas.indexOf(f);
-          if (i >= 0) _sel.fechas.splice(i, 1); else _sel.fechas.push(f);
-          if (!_sel.fechas.length) _sel.fechas = 'all';
+          const i = _sel.periods.indexOf(val);
+          if (i >= 0) _sel.periods.splice(i, 1); else _sel.periods.push(val);
+          if (!_sel.periods.length) _sel.periods = 'all';
         }
       }
       render();
@@ -81,18 +84,21 @@ export async function showResultados() {
   function renderList() {
     const list = finished
       .filter(p => _sel.serie === 'all' || p.serie === _sel.serie)
-      .filter(p => _sel.fechas === 'all' || (p.fecha_num != null && _sel.fechas.includes(p.fecha_num)))
-      .sort((a, b) => parseDate(b.fecha) - parseDate(a.fecha)); // más reciente primero
+      .filter(p => _sel.periods === 'all' || _sel.periods.includes(periodOf(p).key));
 
     const groups = {};
-    list.forEach(p => { (groups[p.fecha] = groups[p.fecha] || []).push(p); });
-    const dates = Object.keys(groups).sort((a, b) => parseDate(b) - parseDate(a)); // descendente
+    list.forEach(p => { const pr = periodOf(p); (groups[pr.key] = groups[pr.key] || { pr, items: [] }).items.push(p); });
+    const keys = Object.keys(groups).sort((a, b) => groups[b].pr.order - groups[a].pr.order); // más reciente primero
 
-    document.getElementById('res-body').innerHTML = dates.length ? dates.map(d => `
-      <div class="fixture-day">
-        <h3>${icon('calendar', { size: 18 })} ${esc(fmtDateLong(d))}</h3>
-        ${groups[d].map(p => resultCard(p, byId, series)).join('')}
-      </div>`).join('') : emptyBox(finished.length ? 'No hay resultados para los filtros seleccionados.' : 'Aún no se han jugado partidos. Los marcadores aparecerán aquí apenas arranque la fecha 1.');
+    document.getElementById('res-body').innerHTML = keys.length ? keys.map(k => {
+      const g = groups[k];
+      const date = g.items.map(p => p.fecha).filter(Boolean).sort((a, b) => parseDate(b) - parseDate(a))[0];
+      g.items.sort((a, b) => parseDate(b.fecha) - parseDate(a.fecha) || (a.hora || '').localeCompare(b.hora || ''));
+      return `<div class="fixture-day">
+        <h3>${icon('calendar', { size: 18 })} ${esc(g.pr.label)}${date ? ` · ${esc(fmtDateLong(date))}` : ''}</h3>
+        ${g.items.map(p => resultCard(p, byId, series)).join('')}
+      </div>`;
+    }).join('') : emptyBox(finished.length ? 'No hay resultados para los filtros seleccionados.' : 'Aún no se han jugado partidos. Los marcadores aparecerán aquí apenas arranque la fecha 1.');
   }
 
   function render() { renderFilters(); renderList(); }
@@ -107,7 +113,8 @@ function resultCard(p, byId, series) {
   const pl = +p.penalesLocal, pv = +p.penalesVisita;
   const lWin = gl > gv || (hasPen && pl > pv);
   const vWin = gv > gl || (hasPen && pv > pl);
-  const serieName = p.amistoso ? 'Amistoso' : ((series.find(s => s.id === p.serie) || {}).nombre || '');
+  const SR_LBL = { 'senior-oro': 'Copa de Oro', 'senior-plata': 'Copa de Plata', 'senior-descenso': 'Descenso', 'libre-oro': 'Copa de Oro', 'libre-plata': 'Copa de Plata', 'libre-descenso': 'Descenso' };
+  const serieName = p.amistoso ? 'Amistoso' : ((series.find(s => s.id === p.serie) || {}).nombre || SR_LBL[p.serie] || '');
   return `
   <div class="match-card finished">
     <div class="team home"><span class="name" style="${lWin ? 'font-weight:800' : ''}">${esc(L)}</span>${teamLogo(byId[p.local]?.logo, L, 34)}</div>

@@ -77,7 +77,17 @@ export async function showPosiciones() {
   }
 
   // ---------- BRACKET / LLAVE (playoffs Junior: semifinal + final) ----------
-  const winnerId = (p) => (!p || p.estado !== 'finalizado' || p.golesLocal == null) ? null : (+p.golesLocal > +p.golesVisita ? p.local : (+p.golesVisita > +p.golesLocal ? p.visita : null));
+  const winnerId = (p) => {
+    if (!p || p.estado !== 'finalizado' || p.golesLocal == null) return null;
+    const gl = +p.golesLocal, gv = +p.golesVisita;
+    if (gl > gv) return p.local;
+    if (gv > gl) return p.visita;
+    if (p.penalesLocal != null && p.penalesVisita != null) {   // empate: desempate por penales
+      if (+p.penalesLocal > +p.penalesVisita) return p.local;
+      if (+p.penalesVisita > +p.penalesLocal) return p.visita;
+    }
+    return null;
+  };
   const scoreL = (p) => (p && p.estado === 'finalizado' && p.golesLocal != null) ? p.golesLocal : '';
   const scoreV = (p) => (p && p.estado === 'finalizado' && p.golesVisita != null) ? p.golesVisita : '';
   function metaOf(p) {
@@ -101,11 +111,14 @@ export async function showPosiciones() {
   function brkMatch(p, phL, phR, cls) {
     const w = winnerId(p);
     const meta = metaOf(p);
+    const pen = (p && p.estado === 'finalizado' && p.penalesLocal != null && p.penalesVisita != null && +p.golesLocal === +p.golesVisita)
+      ? `Penales ${p.penalesLocal}–${p.penalesVisita}` : '';
     return `<div class="brk2-match${cls ? ' ' + cls : ''}">
         <div class="brk2-teams">
           ${brkTeam(p ? p.local : null, phL, scoreL(p), !!(w && p && w === p.local))}
           ${brkTeam(p ? p.visita : null, phR, scoreV(p), !!(w && p && w === p.visita))}
         </div>
+        ${pen ? `<div class="brk2-meta" style="color:var(--c-brand,#067A3E);font-weight:800">${pen}</div>` : ''}
         ${meta ? `<div class="brk2-meta">${meta}</div>` : ''}
       </div>`;
   }
