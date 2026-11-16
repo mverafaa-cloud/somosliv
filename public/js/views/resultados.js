@@ -27,12 +27,10 @@ export async function showResultados() {
     if (r === 'final' || s.endsWith('-final')) return { key: 'final', label: 'Finales', order: 10002 };
     if (r === 'descenso' || s.endsWith('-descenso')) return { key: 'descenso', label: 'Descenso', order: 10001 };
     if (r === 'semifinal') return { key: 'semi', label: 'Semifinales', order: 10000 };
-    if (s.includes('-')) return { key: 'po' + (p.fecha_num ?? ''), label: 'Playoffs · Fecha ' + (p.fecha_num ?? ''), order: 9000 + (+p.fecha_num || 0) };
+    if (s.includes('-')) return { key: 'po' + (p.fecha_num ?? ''), label: 'Playoff · Fecha ' + (p.fecha_num ?? ''), order: 9000 + (+p.fecha_num || 0) };
     return { key: 'f' + (p.fecha_num ?? 0), label: 'Fecha ' + (p.fecha_num ?? 0), order: (+p.fecha_num || 0) };
   };
-  const periodMap = {};
-  finished.forEach(p => { const pr = periodOf(p); if (!periodMap[pr.key]) periodMap[pr.key] = pr; });
-  const periods = Object.values(periodMap).sort((a, b) => a.order - b.order);
+  const serieParent = (p) => (p.serie || '').split('-')[0];   // 'libre-oro' -> 'libre'
 
   _sel = { serie: 'all', periods: 'all' };
 
@@ -53,6 +51,10 @@ export async function showResultados() {
         <button class="chip ${_sel.serie === 'all' ? 'active' : ''}" data-serie="all">Todas</button>
         ${series.map(s => `<button class="chip ${_sel.serie === s.id ? 'active' : ''}" data-serie="${esc(s.id)}">${esc(s.nombre)}</button>`).join('')}
       </div>`;
+    const perMatches = finished.filter(p => _sel.serie === 'all' || serieParent(p) === _sel.serie);
+    const periodMap = {};
+    perMatches.forEach(p => { const pr = periodOf(p); if (!periodMap[pr.key]) periodMap[pr.key] = pr; });
+    const periods = Object.values(periodMap).sort((a, b) => a.order - b.order);
     const fechaRow = periods.length ? `
       <div class="chips filter-row" id="res-fecha">
         <span class="chips-label">Fecha</span>
@@ -63,6 +65,7 @@ export async function showResultados() {
 
     document.querySelectorAll('#res-serie .chip').forEach(c => c.addEventListener('click', () => {
       _sel.serie = c.dataset.serie;
+      _sel.periods = 'all';
       render();
     }));
 
@@ -83,7 +86,7 @@ export async function showResultados() {
 
   function renderList() {
     const list = finished
-      .filter(p => _sel.serie === 'all' || p.serie === _sel.serie)
+      .filter(p => _sel.serie === 'all' || serieParent(p) === _sel.serie)
       .filter(p => _sel.periods === 'all' || _sel.periods.includes(periodOf(p).key));
 
     const groups = {};
