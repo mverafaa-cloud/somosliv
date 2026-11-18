@@ -19,7 +19,7 @@ export async function showGoleadores() {
   // se muestran todos y no se deja a nadie fuera por desempate arbitrario.
   function rankSerie(serieId) {
     const acc = {};
-    goles.filter(g => g.serie === serieId).forEach(g => {
+    goles.filter(g => (g.serie || '').split('-')[0] === serieId).forEach(g => {   // incluye playoffs (libre-oro, senior-plata, …) en la serie padre
       const k = g.jugadorId || `${g.equipo}:${g.nombre}`;
       if (!acc[k]) acc[k] = { nombre: g.nombre || '—', equipo: g.equipo, goles: 0 };
       acc[k].goles += (+g.goles || 0);
